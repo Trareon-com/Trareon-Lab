@@ -45,4 +45,4 @@ Lihat **[docs/SELLING-UNSIGNED.md](docs/SELLING-UNSIGNED.md)** — cara membuka 
 
 ## Lisensi
 
-Lihat `LICENSE`.
+Trareon Lab dilisensikan di bawah **GNU General Public License v3.0 only** (`GPL-3.0-only`). Lihat `LICENSE`.
