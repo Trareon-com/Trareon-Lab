@@ -1,0 +1,15 @@
+{
+  "candidate": "C-TAURI",
+  "os": "windows",
+  "cold_start_ms": 2388,
+  "idle_rss_mib": null,
+  "peak_rss_mib": null,
+  "table_display_ms": 1333,
+  "filter_p50_ms": 18,
+  "filter_p95_ms": 24,
+  "cancel_ms": 140,
+  "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
+  "installer_size_mib": null,
+  "a11y_smoke": "PASS_keyboard_focus_controls_present",
+  "notes": "webview_shell=tauri2_svelte5; evidence_bytes_stay_in_rust_core=true; ui_init_ms=1055; rows=1000000; filtered_page_total_check=1000000; hashed=385; export=c85eb765dd857c618429ec6d5341fc914cb68cd6871e20603dc458de53d83496"
+}
