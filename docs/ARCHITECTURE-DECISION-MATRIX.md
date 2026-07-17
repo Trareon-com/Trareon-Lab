@@ -70,15 +70,20 @@ Score **only** candidates that pass every mandatory gate. Total = 100.
 
 Measurements must use the same reference hardware tier for every candidate comparison. Record cold start, idle RSS, peak RSS, initial table display, filter latency p50/p95, cancellation latency, crash recovery outcome, installer size, and accessibility smoke results on every target OS.
 
+Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mechanics used by every UI candidate. UI candidates still require their own shell measurements.
+
 | Candidate | OS | Cold start (ms) | Idle RSS (MiB) | Peak RSS (MiB) | Table display (ms) | Filter p50 (ms) | Filter p95 (ms) | Cancel (ms) | Crash recovery | Installer size (MiB) | A11y smoke | Evidence path |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---|---|
+| harness-core | macOS | 260 | 182.25 | 347.5 | 260 | 4 | 5 | 60 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/macos-harness-core.json` |
+| harness-core | Windows | | | | | | | | | | | pending ThinkPad X270 |
+| harness-core | Linux | | | | | | | | | | | pending Kali |
 | C-TAURI | macOS | | | | | | | | | | | |
 | C-TAURI | Windows | | | | | | | | | | | |
 | C-TAURI | Linux | | | | | | | | | | | |
-| C-SLINT | macOS | | | | | | | | | | | |
+| C-SLINT | macOS | | | | | | | | | | | binary builds; interactive measure pending |
 | C-SLINT | Windows | | | | | | | | | | | |
 | C-SLINT | Linux | | | | | | | | | | | |
-| C-AVALONIA | macOS | | | | | | | | | | | |
+| C-AVALONIA | macOS | | | | | | | | | | | needs .NET SDK |
 | C-AVALONIA | Windows | | | | | | | | | | | |
 | C-AVALONIA | Linux | | | | | | | | | | | |
 
@@ -120,6 +125,9 @@ These are planning risks recorded before spike execution; they are not Gate A re
 
 **Gate A: NOT PASS**
 
+- Shared headless harness measured on macOS (1,000,000 rows) with lock/crash checks PASS.
+- Windows (ThinkPad X270) and Linux (Kali) harness runs are still required.
+- Desktop UI candidates C-TAURI / C-SLINT / C-AVALONIA do not yet have complete three-OS mandatory-gate evidence.
 - Desktop shell: no ACCEPTED selection.
 - Case database/index: no ACCEPTED selection.
-- Next action: execute equal spikes and fill raw measurements on the official platform matrix.
+- Next action: run `spikes/MEASUREMENT-RUNBOOK.md` on ThinkPad X270 and Kali, then complete UI candidate measurements.

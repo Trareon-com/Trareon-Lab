@@ -1,0 +1,15 @@
+{
+  "candidate": "harness-core",
+  "os": "macos",
+  "cold_start_ms": 260,
+  "idle_rss_mib": 182.25,
+  "peak_rss_mib": 347.5,
+  "table_display_ms": 260,
+  "filter_p50_ms": 4,
+  "filter_p95_ms": 5,
+  "cancel_ms": 60,
+  "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
+  "installer_size_mib": null,
+  "a11y_smoke": "N/A_headless",
+  "notes": "rows=1000000; filtered=1000000; hashed=3046; export=5c237dbf607c43f5f76a3c3c5ed772c8f9e79313eb6150fd8665e22d717f306a"
+}

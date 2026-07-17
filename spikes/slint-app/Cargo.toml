@@ -1,0 +1,18 @@
+[package]
+name = "slint-app"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+build = "build.rs"
+
+[[bin]]
+name = "lab-spike-slint"
+path = "src/main.rs"
+
+[dependencies]
+lab-spike-core = { workspace = true }
+slint = "1.9"
+serde_json = { workspace = true }
+
+[build-dependencies]
+slint-build = "1.9"

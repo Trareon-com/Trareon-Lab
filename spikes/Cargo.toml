@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = [
+  "lab-spike-core",
+  "lab-spike-harness",
+  "slint-app",
+]
+exclude = ["tauri", "avalonia"]
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+version = "0.1.0"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+hex = "0.4"
+thiserror = "2"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive"] }
+lab-spike-core = { path = "lab-spike-core" }

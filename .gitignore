@@ -16,3 +16,6 @@ coverage/
 *.fsnap
 test-results/private/
 fixtures/restricted/
+spikes/target/
+spikes/results/macos-case/
+spikes/tauri/src-tauri/target/

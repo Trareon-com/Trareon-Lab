@@ -4,11 +4,12 @@ Equal proof-of-capability spikes for desktop shell selection. Synthetic data onl
 
 ## Candidates
 
-| Directory | Candidate |
-|---|---|
-| `spikes/tauri/` | Tauri 2 + Svelte 5 |
-| `spikes/slint/` | Slint + Rust |
-| `spikes/avalonia/` | Avalonia + Rust FFI |
+| Directory | Candidate | Implementation status |
+|---|---|---|
+| `lab-spike-core/` + `lab-spike-harness/` | Shared Rust core + headless harness | Runnable on macOS/Windows/Linux |
+| `slint-app/` | Slint + Rust (`C-SLINT`) | Builds on macOS |
+| `tauri/` | Tauri 2 + Svelte 5 (`C-TAURI`) | Scaffold / pending install |
+| `avalonia/` | Avalonia + Rust FFI (`C-AVALONIA`) | Scaffold; needs .NET 8 SDK |
 
 ## Required equal workflow
 
@@ -26,20 +27,14 @@ Every spike must implement:
 
 ## Measurement protocol
 
-Record results into `docs/ARCHITECTURE-DECISION-MATRIX.md` raw measurement table:
+Follow [`MEASUREMENT-RUNBOOK.md`](MEASUREMENT-RUNBOOK.md).
 
-- cold start;
-- idle RSS;
-- peak RSS;
-- initial table display;
-- filter latency p50/p95;
-- cancellation latency;
-- crash recovery outcome;
-- installer size;
-- accessibility smoke.
+Record results into `docs/ARCHITECTURE-DECISION-MATRIX.md` and store raw JSON under `spikes/results/`.
 
-Use one reference hardware tier per comparison. Do not compare candidates measured on different tiers.
+## Current macOS harness result (MacBook)
+
+See `results/macos-harness-core.json` (1,000,000 rows). Crash/lock checks: `PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release`.
 
 ## Status
 
-Scaffold only. Implementations and measurements are not yet recorded. Gate A remains `NOT PASS` until every mandatory gate is measured on Windows, macOS, and Linux.
+Gate A remains `NOT PASS` until Tauri/Slint/Avalonia UI measurements and Windows + Linux harness/UI results are recorded for every mandatory gate.

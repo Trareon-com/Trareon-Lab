@@ -4,12 +4,20 @@ Gate A candidate `C-AVALONIA`.
 
 ## Intent
 
-Prove whether Avalonia can ship as a self-contained installer without a separately installed .NET runtime, while keeping forensic business logic in Rust through a typed FFI boundary.
-
-## Required equal workflow
-
-See `../README.md`. Implement the synthetic million-row case workflow; Avalonia must not own evidence hashing, provenance, or case lock semantics.
+Prove self-contained Avalonia packaging without a separately installed .NET runtime for end users, while forensic spike logic remains in `lab-spike-core` via FFI/CLI bridge.
 
 ## Status
 
-Scaffold only. No measurement recorded.
+Scaffold. Requires .NET 8 SDK to build. Prefer measuring this candidate first on the ThinkPad X270 (Windows), then Kali, then macOS if SDK is installed.
+
+## Build (when SDK present)
+
+```bash
+# From spikes/avalonia after project is generated:
+dotnet build -c Release
+dotnet publish -c Release -r win-x64 --self-contained true
+dotnet publish -c Release -r linux-x64 --self-contained true
+dotnet publish -c Release -r osx-arm64 --self-contained true
+```
+
+Gate G1 passes only if the published self-contained artifact runs without requiring a separately installed .NET runtime on a clean machine.

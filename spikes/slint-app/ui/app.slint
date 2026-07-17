@@ -1,0 +1,93 @@
+import { Button, LineEdit, VerticalBox, HorizontalBox, ListView, StandardListView } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    title: "Trareon Lab Gate A Spike — Slint";
+    width: 960px;
+    height: 640px;
+
+    in-out property <string> status_text: "Ready";
+    in-out property <string> filter_text: "";
+    in-out property <[StandardListViewItem]> rows: [];
+    in-out property <string> detail_text: "(no selection)";
+    callback open_case();
+    callback apply_filter();
+    callback start_hash();
+    callback cancel_hash();
+    callback crash_worker();
+    callback export_json();
+    callback select_row(int);
+
+    VerticalBox {
+        padding: 12px;
+        spacing: 8px;
+        Text {
+            text: "Gate A equal workflow (synthetic). Keyboard: Tab/Shift+Tab focuses controls.";
+            wrap: word-wrap;
+        }
+        Text {
+            text: status_text;
+            wrap: word-wrap;
+        }
+        HorizontalBox {
+            Button {
+                text: "Open Case (1M rows)";
+                clicked => {
+                    root.open_case();
+                }
+            }
+            LineEdit {
+                placeholder-text: "hash prefix filter";
+                text <=> root.filter_text;
+                accepted => {
+                    root.apply_filter();
+                }
+            }
+            Button {
+                text: "Filter";
+                clicked => {
+                    root.apply_filter();
+                }
+            }
+        }
+        HorizontalBox {
+            Button {
+                text: "Start Hash Job";
+                clicked => {
+                    root.start_hash();
+                }
+            }
+            Button {
+                text: "Cancel Hash";
+                clicked => {
+                    root.cancel_hash();
+                }
+            }
+            Button {
+                text: "Simulate Crash";
+                clicked => {
+                    root.crash_worker();
+                }
+            }
+            Button {
+                text: "Export JSON";
+                clicked => {
+                    root.export_json();
+                }
+            }
+        }
+        HorizontalBox {
+            StandardListView {
+                width: 520px;
+                model: root.rows;
+                current-item-changed(idx) => {
+                    root.select_row(idx);
+                }
+            }
+            Text {
+                width: 400px;
+                text: detail_text;
+                wrap: word-wrap;
+            }
+        }
+    }
+}
