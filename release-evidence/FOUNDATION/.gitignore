@@ -1,0 +1,5 @@
+*
+!.gitignore
+!gather.sh
+!README.md
+# Generated locally by gather workflow; not committed.
