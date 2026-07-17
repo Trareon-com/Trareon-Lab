@@ -5,6 +5,7 @@ members = [
   "crates/lab-case",
   "crates/lab-store",
   "crates/lab-crypto",
+  "crates/lab-fsnap",
 ]
 
 [workspace.package]
@@ -17,3 +18,4 @@ lab-core = { path = "crates/lab-core" }
 lab-case = { path = "crates/lab-case" }
 lab-store = { path = "crates/lab-store" }
 lab-crypto = { path = "crates/lab-crypto" }
+lab-fsnap = { path = "crates/lab-fsnap" }
