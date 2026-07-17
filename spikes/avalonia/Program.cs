@@ -38,7 +38,7 @@ internal static class MeasureRunner
 
         Console.Error.WriteLine("measure: initializing Avalonia platform");
         var uiStart = Stopwatch.StartNew();
-        BuildAvaloniaApp().SetupWithoutStarting();
+        Program.BuildAvaloniaApp().SetupWithoutStarting();
         var uiInitMs = (ulong)uiStart.ElapsedMilliseconds;
         Console.Error.WriteLine($"measure: avalonia_ui_init_ms={uiInitMs}");
 
