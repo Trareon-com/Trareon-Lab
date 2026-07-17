@@ -1,0 +1,13 @@
+[package]
+name = "lab-case"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Case lifecycle, lock, and metadata database for Trareon Lab"
+
+[dependencies]
+lab-core = { workspace = true }
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+[dev-dependencies]
+tempfile = "3"
