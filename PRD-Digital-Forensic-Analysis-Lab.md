@@ -8,15 +8,36 @@
 | Jenis produk | Desktop digital-forensic analysis laboratory |
 | Platform target | Windows, macOS, Linux |
 | Distribusi utama | Install-first, offline-first |
-| Versi dokumen | 0.9 |
-| Status | Product Baseline Approved; Architecture Pending |
+| Versi dokumen | 1.0 |
+| Status | Product Baseline Finalized; Architecture Pending |
 | Tanggal baseline | 17 Juli 2026 |
+| Tanggal finalisasi | 17 Juli 2026 |
 | Pemilik produk | Trareon |
 | Bahasa produk | Bahasa Indonesia dan Inggris |
+| Official remote | https://github.com/Trareon-com/Trareon-Lab |
 
 Dokumen ini mengikuti struktur `Template/Desktop/PRD-Desktop.md`. Istilah “mendukung” pada dokumen ini berarti menyediakan kontrol dan rekaman yang dapat membantu organisasi menerapkan proses tertentu; istilah tersebut bukan klaim sertifikasi produk, akreditasi laboratorium, admissibility otomatis, atau jaminan bahwa suatu hasil selalu benar.
 
 **change control:** Setiap perubahan ruang lingkup setelah baseline ini disetujui harus dicatat pada `docs/DECISION-REGISTER.md` dan hanya berlaku setelah gate yang relevan dinyatakan lulus.
+
+### Revision History
+
+| Versi | Tanggal | Ringkasan |
+|---|---|---|
+| 0.9 | 17 Juli 2026 | Product baseline approved; architecture pending; controlled planning registers established |
+| 1.0 | 17 Juli 2026 | Best-practice finalization: FR-CASE-016, FR-VAL-009–011; ADR-013–016; SWGDE 18-Q-001 source; Research provenance locked |
+
+### Research provenance
+
+Input riset terkendali (bukan normative standards text):
+
+- `Research/Digital-Forensic-Analysis-Best-Practices.md`
+- `Research/AnalysisLoom-Repository-Assessment.md`
+- `Research/Trareon-Lab-Standards-Compliance-Baseline.md`
+- `Research/Trareon-Lab-Pain-Point-Gap-Analysis.md`
+- `Research/Trareon-Lab-Indonesia-Regulatory-Baseline.md`
+
+Keputusan produk yang menyimpang dari prioritas Research awal dikunci pada `docs/DECISION-REGISTER.md` ADR-013–015.
 
 ---
 
@@ -24,8 +45,8 @@ Dokumen ini mengikuti struktur `Template/Desktop/PRD-Desktop.md`. Istilah “men
 
 - **Nama produk:** Trareon Lab
 - **Platform target:** Windows, macOS, Linux
-- **Versi dokumen:** 0.9
-- **Status:** Product Baseline Approved; Architecture Pending
+- **Versi dokumen:** 1.0
+- **Status:** Product Baseline Finalized; Architecture Pending
 
 Trareon Lab adalah aplikasi desktop install-first dan offline-first untuk pemeriksaan serta analisis barang bukti digital dari media penyimpanan, filesystem, RAM, network capture, artefak sistem operasi, aplikasi, file, dokumen, gambar, video, dan audio. Produk mengonsumsi paket `.fsnap` dari Trareon Acquire dan format evidence umum, serta dapat menganalisis komputer tempat aplikasi dipasang melalui workflow live-host yang terkontrol.
 
@@ -222,8 +243,10 @@ Yang tidak akan dibangun sebagai capability P0:
 
 - Stable Method ID, intended use, capability matrix, limitation, validation status, owner, dan revalidation trigger.
 - Golden datasets, known ground truth, regression, fuzzing, malformed inputs, cross-version comparison, performance baseline, anomaly/discrepancy register, dan signed validation dossier.
-- Exact rerun dan compare-runs workflow.
+- Function-based tool testing records sebelum casework, mengacu SWGDE 18-Q-001 melalui source register.
+- Exact rerun, compare-runs, dan second-method/cross-tool verification dengan discrepancy disposition.
 - Competency/method authorization gate, deviation, nonconforming work, corrective action, equipment/environment record, dan management-review export.
+- Versioned examination plan dengan contemporaneous notes linkage.
 - Import blind challenge dan export signed participant result untuk membantu laboratory exercise; penyelenggaraan formal PT provider tetap di luar P0.
 
 #### J. Local AI assistance
@@ -335,6 +358,7 @@ Kata **harus** menunjukkan requirement wajib P0. Kata **dapat** menunjukkan capa
 - **FR-CASE-013:** Sistem harus mencegah pengguna menyetujui finding/report sendiri bila policy lab mensyaratkan separation of duties.
 - **FR-CASE-014:** Sistem harus menyimpan competency/method authorization dan memblokir penggunaan method yang tidak diotorisasi pada official casework.
 - **FR-CASE-015:** Sistem harus memisahkan `Legal Authority Record Status` (`Documented`, `Incomplete`, `Disputed`, `NotAssessed`) dari `Technical Authenticity/Integrity Status`; aplikasi tidak boleh memutuskan legalitas perolehan atau admissibility.
+- **FR-CASE-016:** Sistem harus menyimpan versioned examination plan yang mencakup tujuan pemeriksaan, tasks, methods yang diotorisasi, assigned roles, dan tautan ke contemporaneous notes; perubahan plan membuat versi baru tanpa menghapus versi sebelumnya.
 
 ### 7.2 Evidence intake, integrity, dan chain of custody
 
@@ -484,6 +508,9 @@ Kata **harus** menunjukkan requirement wajib P0. Kata **dapat** menunjukkan capa
 - **FR-VAL-006:** One-click validation hanya boleh dinyatakan sebagai menjalankan installed validation suite dan menghasilkan evidence untuk human approval; bukan bukti universal.
 - **FR-VAL-007:** Standards register harus menyimpan edition/status, verification date, owner, mapped controls, exceptions, dan review cadence.
 - **FR-VAL-008:** Traceability matrix harus memetakan source → control objective → PRD requirement → component/owner → verification → evidence → acceptance → exception → revalidation trigger.
+- **FR-VAL-009:** Sistem harus mendukung second-method atau cross-tool verification pada casework: merekam method A dan method B, input yang dibandingkan, output, discrepancy, reviewer disposition, dan residual risk; perbedaan hasil tidak boleh diselesaikan dengan majority-vote diam-diam.
+- **FR-VAL-010:** Sistem harus mendukung import blind challenge package dan export signed participant result untuk laboratory proficiency exercise, termasuk participant isolation, embargoed expected results, scheme/round ID, provider identity, instructions, deadlines, dan submission lock; scheme design, assigned values, scoring, appeals, dan provider impartiality tetap di luar scope produk.
+- **FR-VAL-011:** Validation sebelum casework harus mengikuti function-based tool testing sesuai register sumber `SRC-SWGDE-TEST` (SWGDE 18-Q-001): capability dan limitation method harus ditentukan dan direkam sebelum method tersebut dipakai pada official casework.
 - **FR-REG-001:** Indonesia regulatory register harus menyimpan sumber resmi, status/berlaku, tanggal verifikasi, pasal/ruang lingkup yang dipetakan, product control, role responsibility, exception, owner, dan review trigger.
 - **FR-REG-002:** Sistem harus menyimpan dokumen/record kewenangan, scope penggeledahan/penyitaan atau authority lain yang diberikan pengguna tanpa menyatakan dokumen tersebut sah atau cukup secara hukum.
 - **FR-REG-003:** Sistem harus memisahkan technical authenticity/integrity, documented authority, disputed acquisition, dan court/legal disposition sebagai record yang berbeda.
@@ -737,6 +764,7 @@ Kata **harus** menunjukkan requirement wajib P0. Kata **dapat** menunjukkan capa
 ### Case, scope, dan isolation
 
 - [ ] Case tidak dapat masuk Intake sebelum authority, purpose, scope, handling restriction, dan acceptance decision direkam.
+- [ ] Versioned examination plan tersimpan sebelum/during examination dan perubahan plan membuat versi baru tanpa menghapus versi sebelumnya.
 - [ ] Scope policy terbukti membatasi processing, preview, search, AI context, export, dan report.
 - [ ] Dua case yang dibuka bersamaan mempunyai process, cache, index, temp, AI context, audit, dan clipboard internal yang terisolasi.
 - [ ] Cross-case transfer hanya berhasil melalui workflow export/import yang diaudit.
@@ -814,6 +842,9 @@ Kata **harus** menunjukkan requirement wajib P0. Kata **dapat** menunjukkan capa
 ### Validation, standards, regulasi, dan dokumentasi
 
 - [ ] Tidak ada P0 method berstatus `Validated` tanpa approved validation dossier dan preserved test evidence.
+- [ ] Method yang dipakai pada official casework mempunyai recorded capability/limitation dari function-based tool testing sebelum casework.
+- [ ] Second-method atau cross-tool verification merekam kedua method, discrepancy, reviewer disposition, dan residual risk tanpa majority-vote diam-diam.
+- [ ] Blind challenge import dan signed participant-result export mempertahankan isolation, embargoed expected results, scheme/round ID, dan submission lock tanpa mengklaim PT-provider conformity.
 - [ ] Repeatability dan cross-platform reproducibility tests tersedia untuk official platform matrix.
 - [ ] Revalidation impact assessment berjalan ketika core/parser/rule/dependency/compiler/OS/symbol/model/ground-truth berubah.
 - [ ] Standards register mencantumkan exact edition/status, verification date, mapped controls, exceptions, dan owner.
@@ -1017,6 +1048,7 @@ Open questions berikut tidak mengubah requirement produk yang telah disetujui; j
 | NIST CFTT/Federated Testing | Current program | Function-based test design, criteria, datasets, reports | Test scope harus disebut; bukan universal validation |
 | NIST NSRL RDS | Versioned offline dataset | Known-file filtering | Match bukan verdict harmless |
 | SWGDE 18-F-001-2.0 | Final approved 28 Juli 2025 | Computer forensic examination workflow dan limitations | Best practice harus disesuaikan dengan authority/lab policy |
+| SWGDE 18-Q-001 | Published minimum requirements for testing tools | Function-based tool testing sebelum casework; capability dan limitation method | Testing menentukan expected performance; bukan sertifikasi produk |
 | SWGDE 18-Q-002-1.0 | Published reporting requirement | Minimum report content dan amendments | Tool report bukan full examination report |
 | INTERPOL Global Guidelines for DFL | 2019 | Laboratory operations, evidence, review, report, training | Template harus diterapkan sesuai hukum nasional |
 | CASE/UCO | Version-pinned profile | Provenance dan cyber-investigation interchange | Produk hanya mengklaim tested subset/profile |
