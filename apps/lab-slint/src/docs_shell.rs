@@ -23,6 +23,7 @@ pub fn load_docs_index() -> LabResult<String> {
         "Coverage",
         "Export",
         "Local AI",
+        "Examination shell",
     ] {
         if !body.contains(topic) {
             return Err(LabError::Internal {

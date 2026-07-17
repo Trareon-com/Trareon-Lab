@@ -6,6 +6,6 @@ pub mod lifecycle;
 pub mod lock;
 
 pub use db::CaseDb;
-pub use ledger::{AuditEvent, CoverageRecord, ProvenanceEvent};
+pub use ledger::{AuditEvent, CoverageRecord, EvidenceObject, ProvenanceEvent};
 pub use lifecycle::CaseState;
 pub use lock::CaseLock;

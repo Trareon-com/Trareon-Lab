@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use lab_core::{LabError, LabResult};
 use rusqlite::{Connection, OptionalExtension};
 
-const CURRENT_SCHEMA_VERSION: i32 = 2;
+const CURRENT_SCHEMA_VERSION: i32 = 3;
 
 /// Versioned case metadata database.
 pub struct CaseDb {
@@ -90,6 +90,7 @@ impl CaseDb {
             match next {
                 1 => self.apply_v1()?,
                 2 => self.apply_v2()?,
+                3 => self.apply_v3()?,
                 other => {
                     return Err(LabError::Internal {
                         detail: format!("unknown migration target {other}"),
@@ -117,6 +118,15 @@ impl CaseDb {
             .execute_batch(sql)
             .map_err(|e| LabError::Internal {
                 detail: format!("apply v2 migration: {e}"),
+            })
+    }
+
+    fn apply_v3(&self) -> LabResult<()> {
+        let sql = include_str!("../migrations/003_evidence_registry.sql");
+        self.conn
+            .execute_batch(sql)
+            .map_err(|e| LabError::Internal {
+                detail: format!("apply v3 migration: {e}"),
             })
     }
 

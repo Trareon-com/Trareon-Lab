@@ -38,6 +38,17 @@ pub struct CoverageRecord {
     pub detail_json: String,
 }
 
+/// Evidence object registry row (append-only for Day 9 counts).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EvidenceObject {
+    pub evidence_uuid: String,
+    pub case_uuid: String,
+    pub created_at_utc: String,
+    pub display_name: String,
+    pub evidence_class: String,
+    pub validation_state: String,
+}
+
 impl CaseDb {
     /// Append an audit event. Never updates or deletes prior rows.
     pub fn append_audit_event(&self, event: &AuditEvent) -> LabResult<()> {
@@ -105,6 +116,29 @@ impl CaseDb {
         Ok(())
     }
 
+    /// Append an evidence object registry row.
+    pub fn append_evidence_object(&self, evidence: &EvidenceObject) -> LabResult<()> {
+        self.connection()
+            .execute(
+                "INSERT INTO evidence_object(
+                    evidence_uuid, case_uuid, created_at_utc, display_name,
+                    evidence_class, validation_state
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                params![
+                    evidence.evidence_uuid,
+                    evidence.case_uuid,
+                    evidence.created_at_utc,
+                    evidence.display_name,
+                    evidence.evidence_class,
+                    evidence.validation_state,
+                ],
+            )
+            .map_err(|e| LabError::Internal {
+                detail: format!("append evidence_object: {e}"),
+            })?;
+        Ok(())
+    }
+
     /// Count ledger rows for a case.
     pub fn count_audit_events(&self, case_uuid: &str) -> LabResult<u64> {
         self.count_table("audit_event", case_uuid)
@@ -116,6 +150,10 @@ impl CaseDb {
 
     pub fn count_coverage_records(&self, case_uuid: &str) -> LabResult<u64> {
         self.count_table("coverage_record", case_uuid)
+    }
+
+    pub fn count_evidence_objects(&self, case_uuid: &str) -> LabResult<u64> {
+        self.count_table("evidence_object", case_uuid)
     }
 
     /// Reject mutation helpers — append-only surface has no update/delete API.
@@ -136,6 +174,7 @@ impl CaseDb {
             "audit_event" => "SELECT COUNT(*) FROM audit_event WHERE case_uuid = ?1",
             "provenance_event" => "SELECT COUNT(*) FROM provenance_event WHERE case_uuid = ?1",
             "coverage_record" => "SELECT COUNT(*) FROM coverage_record WHERE case_uuid = ?1",
+            "evidence_object" => "SELECT COUNT(*) FROM evidence_object WHERE case_uuid = ?1",
             other => {
                 return Err(LabError::Internal {
                     detail: format!("unknown ledger table: {other}"),
