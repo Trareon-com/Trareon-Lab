@@ -82,7 +82,7 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 | C-TAURI | Linux | | | | | | | | | | | |
 | C-SLINT | macOS | 762 | 219.95 | 375.41 | 263 | 5 | 5 | 51 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 6.463 | PASS_keyboard_focus_controls_present | `spikes/results/macos-slint.json` |
 | C-SLINT | Windows | 749 | | | 734 | 18 | 25 | 131 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/windows-slint.json` (installer size pending) |
-| C-SLINT | Linux | 512 | 239.48 | 361.44 | 459 | 13 | 16 | 55 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/linux-slint.json` (installer size pending) |
+| C-SLINT | Linux | 512 | 239.48 | 361.44 | 459 | 13 | 16 | 55 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 9.707 | PASS_keyboard_focus_controls_present | `spikes/results/linux-slint.json` |
 | C-AVALONIA | macOS | | | | | | | | | | | needs .NET SDK |
 | C-AVALONIA | Windows | | | | | | | | | | | |
 | C-AVALONIA | Linux | | | | | | | | | | | |
@@ -128,7 +128,7 @@ These are planning risks recorded before spike execution; they are not Gate A re
 - Shared headless harness measured on macOS, Windows (ThinkPad X270), and Linux (Kali) for 1,000,000 rows with lock/crash checks PASS on all three.
 - Windows RSS helpers are not yet implemented (`idle_rss_mib` / `peak_rss_mib` null); timing and lock/crash evidence are recorded.
 - C-SLINT runtime measured on macOS, Windows (ThinkPad), and Linux (Kali); crash/lock checks PASS on all three. Windows RSS null (not implemented).
-- C-SLINT offline package size recorded on macOS: **6.463 MiB** (`macos-slint-package.zip`, unsigned spike artifact, no separate language runtime). Windows + Linux package sizes still pending (`spikes/COPY-PASTE-SLINT-PACKAGE.md`).
+- C-SLINT offline package size: macOS **6.463 MiB**, Linux **9.707 MiB** (unsigned zip, no separate language runtime). Windows package size still pending.
 - Package size is a matrix measurement only; G7 still requires signed installer/update evidence. G6 a11y remains smoke-level (`PASS_keyboard_focus_controls_present`), not full dockable/multi-pane proof.
 - Desktop UI candidates C-TAURI / C-AVALONIA have no three-OS evidence yet.
 - Desktop shell: no ACCEPTED selection.
