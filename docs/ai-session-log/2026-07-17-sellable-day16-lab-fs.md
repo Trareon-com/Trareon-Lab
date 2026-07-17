@@ -18,6 +18,7 @@ Smallest safe next step: **Day 16** — crate `lab-fs`, enumerate synthetic NTFS
 - Checklist: `docs/CHECKLIST-DAY-16.md`.
 - Session log directory created (this file).
 - **Also completed Day 17 in same continuation:** FAT32 + exFAT synthetic enumerate + recipes + tests.
+- **CI root-cause fix:** Ubuntu runner failed Slint GUI build (`fontconfig` missing). Added apt install of Slint Linux deps in `.github/workflows/ci.yml` (same set as `spikes/COPY-PASTE-SLINT.md`).
 
 ## Verification
 
@@ -26,12 +27,13 @@ cargo test -p lab-fs --tests
 cargo clippy -p lab-fs --all-targets -- -D warnings
 ```
 
+Remote Actions still red until commits are pushed (local `main` ahead of `origin`).
+
 ## Explicit non-claims
 
 Synthetic corpora model path/parent/deleted semantics for NTFS/FAT32/exFAT. They are **not** full on-disk boot/FAT/$MFT parsers.
 
 ## Handoff
 
-- **Next:** Day 18 — read file contents → CAS; byte-match test (`lab-store` CAS + `lab-fs` content read API).
-- `main` local-ahead of `origin` (push not requested).
+- **Next:** push `main` (or ask user) so CI re-runs with fontconfig deps; then Day 18 — read file contents → CAS.
 - Do not re-do Days 1–17.

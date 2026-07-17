@@ -17,10 +17,22 @@ jobs:
           components: rustfmt, clippy
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
+      - name: Install Linux GUI deps for Slint
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pkg-config \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxkbcommon-dev \
+            libwayland-dev \
+            libgl1-mesa-dev
       - name: Test workspace (core crates)
         run: cargo test --workspace --exclude lab-slint
       - name: UI model smoke (no display)
-        run: cargo test -p lab-slint --no-default-features --test ui_smoke
+        run: cargo test -p lab-slint --no-default-features --tests
       - name: Slint GUI compile + tests
         run: cargo test -p lab-slint --features gui
       - name: Clippy
@@ -29,7 +41,6 @@ jobs:
           cargo clippy -p lab-slint --all-targets --features gui -- -D warnings
       - name: Format check
         run: cargo fmt --all -- --check
-
   audit:
     name: cargo-audit
     runs-on: ubuntu-latest
