@@ -1,0 +1,15 @@
+{
+  "candidate": "C-SLINT",
+  "os": "windows",
+  "cold_start_ms": 749,
+  "idle_rss_mib": null,
+  "peak_rss_mib": null,
+  "table_display_ms": 734,
+  "filter_p50_ms": 18,
+  "filter_p95_ms": 25,
+  "cancel_ms": 131,
+  "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
+  "installer_size_mib": null,
+  "a11y_smoke": "PASS_keyboard_focus_controls_present",
+  "notes": "slint_ui_init_ms=15; ui_show_ok; rows=1000000; filtered_page_total_check=1000000; hashed=387; export=ff161f48114f5ea71cc3c25907922ecd00696e885db2aa342b0f05507fbd068b"
+}

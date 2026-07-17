@@ -81,7 +81,7 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 | C-TAURI | Windows | | | | | | | | | | | |
 | C-TAURI | Linux | | | | | | | | | | | |
 | C-SLINT | macOS | 762 | 219.95 | 375.41 | 263 | 5 | 5 | 51 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/macos-slint.json` |
-| C-SLINT | Windows | | | | | | | | | | | pending ThinkPad |
+| C-SLINT | Windows | 749 | | | 734 | 18 | 25 | 131 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/windows-slint.json` |
 | C-SLINT | Linux | | | | | | | | | | | pending Kali |
 | C-AVALONIA | macOS | | | | | | | | | | | needs .NET SDK |
 | C-AVALONIA | Windows | | | | | | | | | | | |
@@ -127,7 +127,8 @@ These are planning risks recorded before spike execution; they are not Gate A re
 
 - Shared headless harness measured on macOS, Windows (ThinkPad X270), and Linux (Kali) for 1,000,000 rows with lock/crash checks PASS on all three.
 - Windows RSS helpers are not yet implemented (`idle_rss_mib` / `peak_rss_mib` null); timing and lock/crash evidence are recorded.
-- Desktop UI candidates C-TAURI / C-SLINT / C-AVALONIA do not yet have complete three-OS mandatory-gate evidence.
+- C-SLINT measured on macOS + Windows (ThinkPad); Linux (Kali) still pending. Crash/lock checks PASS on measured OSes. Windows RSS null (not implemented).
+- Desktop UI candidates C-TAURI / C-AVALONIA have no three-OS evidence yet; C-SLINT missing Linux only.
 - Desktop shell: no ACCEPTED selection.
 - Case database/index: no ACCEPTED selection.
-- Next action: run Slint `--measure` on ThinkPad X270 and Kali (`spikes/COPY-PASTE-SLINT.md`), then Tauri/Avalonia candidates.
+- Next action: finish C-SLINT on Kali (`bash spikes/scripts/measure-slint-linux.sh`), then Tauri/Avalonia candidates.
