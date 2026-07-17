@@ -1,0 +1,84 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { SectionCard } from "../components/section_card.slint";
+import { EmptyState } from "../components/empty_state.slint";
+import { StatusBadge } from "../components/status_badge.slint";
+import { LabButton } from "../components/lab_button.slint";
+
+export component ReportScreen inherits Rectangle {
+    in-out property <string> report-state;
+    in-out property <[string]> finding-claims;
+    in-out property <[string]> finding-uuids;
+
+    background: transparent;
+    property <bool> empty: finding-claims.length == 0;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 12px;
+
+        HorizontalLayout {
+            spacing: 12px;
+            alignment: start;
+            Text {
+                text: Strings.report-state;
+                color: Theme.text-secondary;
+                font-size: 12px;
+                vertical-alignment: center;
+            }
+            StatusBadge {
+                label: root.report-state;
+                kind: root.report-state == "draft" ? "warn" : "ok";
+            }
+            Rectangle { horizontal-stretch: 1; }
+            LabButton {
+                primary: false;
+                label: Strings.export-soon;
+                // Honest stub: no file IO
+                clicked => { }
+            }
+        }
+
+        if empty: EmptyState {
+            title: Strings.empty-no-findings;
+            body: Strings.empty-hint-report;
+            vertical-stretch: 1;
+        }
+
+        if !empty: SectionCard {
+            title: Strings.col-claim;
+            vertical-stretch: 1;
+            Flickable {
+                vertical-stretch: 1;
+                viewport-width: parent.width - 28px;
+                VerticalLayout {
+                    spacing: 6px;
+                    width: parent.width - 28px;
+                    for claim[index] in root.finding-claims: Rectangle {
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        border-radius: 4px;
+                        background: Theme.surface-raised;
+                        VerticalLayout {
+                            padding: 10px;
+                            spacing: 4px;
+                            Text {
+                                text: claim;
+                                color: Theme.text-primary;
+                                font-size: 12px;
+                                wrap: word-wrap;
+                            }
+                            Text {
+                                text: index < root.finding-uuids.length ? root.finding-uuids[index] : "";
+                                color: Theme.mono-fg;
+                                font-family: "monospace";
+                                font-size: 11px;
+                                overflow: elide;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,54 @@
+import { Theme } from "../theme.slint";
+
+export component NavItem inherits Rectangle {
+    in-out property <string> label;
+    in-out property <string> glyph: "•";
+    in-out property <bool> active: false;
+    callback clicked();
+
+    height: 32px;
+    background: active ? Theme.surface-raised : transparent;
+    border-radius: 4px;
+
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        spacing: 10px;
+
+        Rectangle {
+            width: 3px;
+            height: 24px;
+            y: 4px;
+            background: root.active ? Theme.nav-active-bar : transparent;
+            border-radius: 1px;
+        }
+
+        Text {
+            text: root.glyph;
+            color: root.active ? Theme.accent : Theme.text-secondary;
+            vertical-alignment: center;
+            font-size: 13px;
+        }
+
+        Text {
+            text: root.label;
+            color: root.active ? Theme.text-primary : Theme.text-secondary;
+            font-size: 13px;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            overflow: elide;
+        }
+    }
+
+    ta := TouchArea {
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    states [
+        hover when ta.has-hover && !root.active: {
+            background: Theme.row-hover;
+        }
+    ]
+}

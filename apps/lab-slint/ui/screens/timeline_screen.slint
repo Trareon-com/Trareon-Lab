@@ -1,0 +1,61 @@
+import { LineEdit } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { SectionCard } from "../components/section_card.slint";
+import { EmptyState } from "../components/empty_state.slint";
+
+export component TimelineScreen inherits Rectangle {
+    in-out property <[string]> timeline-labels;
+
+    background: transparent;
+    property <bool> empty: timeline-labels.length == 0;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 12px;
+
+        HorizontalLayout {
+            LineEdit {
+                placeholder-text: Strings.filter-stub;
+                enabled: false;
+                horizontal-stretch: 1;
+            }
+        }
+
+        if empty: EmptyState {
+            title: Strings.empty-no-timeline;
+            body: Strings.empty-hint-timeline;
+            vertical-stretch: 1;
+        }
+
+        if !empty: SectionCard {
+            title: Strings.col-event;
+            vertical-stretch: 1;
+            Flickable {
+                vertical-stretch: 1;
+                viewport-width: parent.width - 28px;
+                VerticalLayout {
+                    spacing: 2px;
+                    width: parent.width - 28px;
+                    for label in root.timeline-labels: Rectangle {
+                        height: 28px;
+                        border-radius: 4px;
+                        background: transparent;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            Text {
+                                text: label;
+                                color: Theme.mono-fg;
+                                font-family: "monospace";
+                                font-size: 12px;
+                                vertical-alignment: center;
+                                overflow: elide;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
