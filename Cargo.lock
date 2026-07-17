@@ -303,6 +303,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "lab-worker"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "lab-core",
+ "lab-store",
+ "sha2",
+ "tempfile",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"

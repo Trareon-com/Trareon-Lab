@@ -57,7 +57,7 @@ fn rejects_path_traversal_duplicate_bomb_and_partial() {
             "package_version": "1.0",
             "members": ["big.bin"]
         }),
-        &[("big.bin", &vec![0u8; 64])],
+        &[("big.bin", &[0u8; 64])],
     );
     let err = preflight_package(
         &bomb,
