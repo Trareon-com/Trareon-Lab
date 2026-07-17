@@ -89,4 +89,11 @@ impl UiSnapshot {
     pub fn set_bookmark_count(&mut self, count: i32) {
         self.bookmark_count = count;
     }
+
+    /// Demo/stub import: increments evidence count and jumps to Evidence screen.
+    pub fn import_evidence_stub(&mut self) {
+        self.evidence_count += 1;
+        self.active_screen = NavScreen::Evidence;
+        self.open_case_focused = false;
+    }
 }

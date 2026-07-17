@@ -15,6 +15,7 @@ export component AppWindow inherits Window {
     callback open-case-clicked();
     callback focus-open-case();
     callback navigate(string);
+    callback import-evidence-clicked();
 
     focus-open-case => {
         open-case-focused = true;
@@ -67,6 +68,7 @@ export component AppWindow inherits Window {
             }
             Button {
                 text: "Import Evidence";
+                clicked => { root.import-evidence-clicked(); }
             }
         }
     }

@@ -52,6 +52,16 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     });
 
+    let ui_weak = ui.as_weak();
+    let snap_import = Rc::clone(&snapshot);
+    ui.on_import_evidence_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_import.borrow_mut();
+            snap.import_evidence_stub();
+            apply(&ui, &snap);
+        }
+    });
+
     ui.invoke_focus_open_case();
     ui.run()
 }

@@ -46,3 +46,12 @@ fn navigation_covers_six_examination_screens() {
 
     assert_eq!(snap.bookmark_count, 2);
 }
+
+#[test]
+fn import_evidence_stub_increments_and_navigates() {
+    let mut snap = UiSnapshot::default();
+    snap.open_case("CASE-IMPORT", 0, 0);
+    snap.import_evidence_stub();
+    assert_eq!(snap.evidence_count, 1);
+    assert_eq!(snap.active_screen, NavScreen::Evidence);
+}

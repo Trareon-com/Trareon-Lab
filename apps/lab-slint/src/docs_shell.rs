@@ -24,6 +24,7 @@ pub fn load_docs_index() -> LabResult<String> {
         "Export",
         "Local AI",
         "Examination shell",
+        "Disk images",
     ] {
         if !body.contains(topic) {
             return Err(LabError::Internal {
