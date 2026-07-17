@@ -9,7 +9,7 @@
   "filter_p95_ms": 25,
   "cancel_ms": 131,
   "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
-  "installer_size_mib": null,
+  "installer_size_mib": 6.618,
   "a11y_smoke": "PASS_keyboard_focus_controls_present",
-  "notes": "slint_ui_init_ms=15; ui_show_ok; rows=1000000; filtered_page_total_check=1000000; hashed=387; export=ff161f48114f5ea71cc3c25907922ecd00696e885db2aa342b0f05507fbd068b"
+  "notes": "slint_ui_init_ms=15; ui_show_ok; rows=1000000; filtered_page_total_check=1000000; hashed=387; export=ff161f48114f5ea71cc3c25907922ecd00696e885db2aa342b0f05507fbd068b; package=windows-slint-package.zip; package_bytes=6939793; binary_mib=14.459; no_separate_runtime=true; signing=unsigned_spike_artifact"
 }
