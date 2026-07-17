@@ -2765,6 +2765,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "lab-fs"
+version = "0.1.0"
+dependencies = [
+ "lab-core",
+ "tempfile",
+]
+
+[[package]]
 name = "lab-fsnap"
 version = "0.1.0"
 dependencies = [
