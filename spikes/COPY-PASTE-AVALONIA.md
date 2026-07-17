@@ -1,6 +1,6 @@
 # C-AVALONIA measure — copy-paste
 
-Prereq: **.NET 8 SDK** (not just the runtime). Prefer ThinkPad (Windows) first.
+Prereq: **.NET 6+ SDK** (spike targets `net6.0`; Windows may use .NET 8 SDK). Prefer ThinkPad first.
 
 If `git pull` fails on untracked results JSON, move them to `*.local.bak` first.
 
@@ -31,7 +31,15 @@ Manual download if winget fails: https://dotnet.microsoft.com/download/dotnet/8.
 cd ~/Projects/Trareon/Trareon-Lab
 mv -f spikes/results/linux-tauri.json spikes/results/linux-tauri.json.local.bak 2>/dev/null || true
 git pull origin main
-sudo apt install -y dotnet-sdk-8.0
+
+# Distro often has SDK 6 only (enough — spike is net6.0):
+dotnet --list-sdks
+# If no SDK at all:
+#   sudo apt install -y dotnet-sdk-6.0
+# Optional SDK 8 (Microsoft installer):
+#   curl -fsSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0
+#   export PATH="$HOME/.dotnet:$PATH"
+
 bash spikes/scripts/measure-avalonia.sh linux
 ```
 

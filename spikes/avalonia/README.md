@@ -8,7 +8,7 @@ Prove self-contained Avalonia packaging without a separately installed .NET runt
 
 ## Prereq
 
-- .NET 8 SDK
+- .NET 6+ SDK (project targets `net6.0`)
 - Release harness: `cd spikes && cargo build -p lab-spike-harness --release`
 
 ## Interactive
