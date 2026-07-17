@@ -408,10 +408,10 @@ CI harus membedakan community/source checks dari official signed validation. Tid
 | Safety and validation | Threat model, pack sandbox, corpora, false-positive policy | Gate D |
 | Delivery | Platforms, performance profile, docs, Foundation implementation plan | Gate E |
 | Foundation implementation | Case, authority, `.fsnap`, provenance, audit, coverage, validation harness, docs skeleton | After Gate E — **COMPLETE** (F1–F15) |
-| R1 vertical slice | Validated minimum parsers/artifacts per RELEASE-01 | Next |
-| Official Production | Signed builds, named legal/crypto reviews, full R1 validation dossiers | Later |
+| R1 vertical slice | Validated minimum parsers/artifacts per RELEASE-01 | **IN PROGRESS** — Engineering Alpha / sellable unsigned path complete; corpus `Validated` promotion still Official-gated |
+| Official Production | Signed builds, named legal/crypto reviews, full R1 validation dossiers; exit = O1–O12 `PASS` on 2026-10-16 | **PROGRAM ACTIVE** — see `docs/OFFICIAL-RELEASE-RUNBOOK.md` |
 
-Foundation production application code may proceed only after Gate E `PASS` (satisfied). R1 forensic parsers remain out of scope for Foundation.
+Foundation production application code may proceed only after Gate E `PASS` (satisfied). R1 forensic parsers remain out of scope for Foundation. Official Production exit requires every O1–O12 gate in the runbook; unsigned Engineering Alpha must not be relabeled Official.
 
 ## 20. Resolved Architecture Questions (Gates A–E)
 

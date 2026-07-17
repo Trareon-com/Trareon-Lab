@@ -1,0 +1,13 @@
+{
+  "freeze": "official-perf-baseline-draft",
+  "date": "2026-07-17",
+  "source": "spikes/results/macos-slint.json",
+  "note": "Draft freeze from Gate A / spike measurements. Re-measure on release-candidate signed builds before O10/O12.",
+  "cold_start_ms": 762,
+  "idle_rss_mib": 219.953125,
+  "peak_rss_mib": 375.40625,
+  "table_display_ms": 263,
+  "filter_p50_ms": 5,
+  "filter_p95_ms": 5,
+  "cancel_ms": 51
+}

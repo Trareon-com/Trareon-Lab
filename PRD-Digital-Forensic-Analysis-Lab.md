@@ -9,7 +9,7 @@
 | Platform target | Windows, macOS, Linux |
 | Distribusi utama | Install-first, offline-first |
 | Versi dokumen | 1.0 |
-| Status | Product Baseline Finalized; Architecture Accepted (Gates A–E PASS); Foundation Complete; R1 Next |
+| Status | Official R1.0.0 program active (target 2026-10-16); Engineering Alpha sellable path complete; Official O1–O12 gates open |
 | Tanggal baseline | 17 Juli 2026 |
 | Tanggal finalisasi | 17 Juli 2026 |
 | Pemilik produk | Trareon |
@@ -26,6 +26,7 @@ Dokumen ini mengikuti struktur `Template/Desktop/PRD-Desktop.md`. Istilah “men
 |---|---|---|
 | 0.9 | 17 Juli 2026 | Product baseline approved; architecture pending; controlled planning registers established |
 | 1.0 | 17 Juli 2026 | Best-practice finalization: FR-CASE-016, FR-VAL-009–011; ADR-013–016; SWGDE 18-Q-001 source; Research provenance locked |
+| 1.0.1 | 17 Juli 2026 | Official R1.0.0 program status line activated; runbook O1–O12 linked |
 
 ### Research provenance
 

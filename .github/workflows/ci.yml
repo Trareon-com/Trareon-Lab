@@ -54,6 +54,34 @@ jobs:
       - name: Audit dependencies
         run: cargo audit
         # Ignores: .cargo/audit.toml (documented in docs/DEPENDENCY-AUDIT.md)
+        # Official Day 03 chose cargo-audit over cargo-deny; policy is docs/DEPENDENCY-AUDIT.md
+
+  secrets:
+    name: gitleaks-secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # gitleaks-action v3.0.0 (Node 24) — pin by commit SHA
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+
+  geiger:
+    name: cargo-geiger-warn
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.95.0"
+      - name: Install cargo-geiger
+        run: cargo install cargo-geiger --locked
+      - name: Unsafe inventory (warn-only)
+        run: cargo geiger --workspace --all-features || true
 
   sbom:
     name: sbom-cargo-metadata

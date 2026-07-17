@@ -23,11 +23,11 @@ R1 delivers a **validated minimum vertical slice**: case isolation, `.fsnap` ver
 | Domain | R1 formats / versions / operations | Validation level target | Known limitations |
 |---|---|---|---|
 | Package intake | Trareon Acquire `.fsnap` versions declared in FSNAP-READ-CONTRACT compatibility table; verify + import read-only | CORPUS_VALIDATED on synthetic + Acquire fixtures | No silent repair of corrupt packages |
-| Disk images | raw/dd; E01/Ex01 read (selected libewf-compatible subset) | CORPUS_VALIDATED | BitLocker unlock only with supplied key material; no acquisition |
+| Disk images | raw/dd; E01/Ex01 **Limited** fail-closed | UNIT_VERIFIED (raw/dd); E01 Limited | BitLocker unlock only with supplied key material; no acquisition; E01 reader not Official-Validated |
 | Filesystems | NTFS, FAT32/exFAT, APFS (read), ext4 (read) | UNIT_VERIFIED on synthetic corpora (progress toward CORPUS_VALIDATED) | **APFS:** primary validation path is macOS; Linux APFS claims remain **Limited**. Not full on-disk boot/$MFT/APFS container parsers yet. HFS+/ReFS/Btrfs P0-LATER |
-| Search | Metadata + content index via D-RUST-INDEX; hash/path/name filters; 1M-row UI navigation | UNIT_VERIFIED + CORPUS_VALIDATED | 100M SQLite reconsider is Gate E |
-| OS artifacts | Windows Prefetch, LNK, JumpLists (selected); macOS Unified Logs subset; Linux auth/syslog subset | CORPUS_VALIDATED | Browser/cloud artifacts P0-LATER |
-| Timeline | Unified normalized events from R1 parsers | CORPUS_VALIDATED | Correlation graphs beyond R1 edges are P0-LATER |
+| Search | Metadata + content index via D-RUST-INDEX; hash/path/name filters; 1M-row UI navigation | UNIT_VERIFIED | 100M SQLite reconsider is Gate E; Official CORPUS_VALIDATED deferred to corpus freeze |
+| OS artifacts | Windows Prefetch, LNK, JumpLists (selected); macOS Unified Logs subset; Linux auth/syslog subset | UNIT_VERIFIED (synthetic) | Browser/cloud artifacts P0-LATER; Official CORPUS_VALIDATED deferred |
+| Timeline | Unified normalized events from R1 parsers | UNIT_VERIFIED (synthetic) | Correlation graphs beyond R1 edges are P0-LATER; Official CORPUS_VALIDATED deferred |
 | Reporting | Deterministic HTML/JSON export; technical review + authorization workflow skeleton | UNIT_VERIFIED | Full CASE/UCO round-trip is P0-LATER profile expansion |
 | AI | Optional loopback Ollama/LM Studio adapters present but disabled by default for official casework | UNIT_VERIFIED | No R1 dependency on AI outputs |
 
@@ -175,8 +175,8 @@ R1 delivers a **validated minimum vertical slice**: case isolation, `.fsnap` ver
 | FR-VAL-006 | R1 | `docs/VALIDATION-STRATEGY.md` | Required for validated Foundation-to-Artifacts vertical slice |
 | FR-VAL-007 | R1 | `docs/VALIDATION-STRATEGY.md` | Required for validated Foundation-to-Artifacts vertical slice |
 | FR-VAL-008 | R1 | `docs/VALIDATION-STRATEGY.md` | Required for validated Foundation-to-Artifacts vertical slice |
-| FR-VAL-009 | P0-LATER | `docs/VALIDATION-STRATEGY.md` | P0 obligation deferred past R1 with named milestone ownership |
-| FR-VAL-010 | P0-LATER | `docs/VALIDATION-STRATEGY.md` | P0 obligation deferred past R1 with named milestone ownership |
+| FR-VAL-009 | R1 | `docs/PROFICIENCY-TESTING-PROFILE.md`; `crates/lab-case` validation hooks | Official Scope IN: second-method discrepancy recording without silent majority vote |
+| FR-VAL-010 | R1 | `docs/PROFICIENCY-TESTING-PROFILE.md`; `crates/lab-case` validation hooks | Official Scope IN: blind PT participant import/export only (not ISO/IEC 17043 provider) |
 | FR-VAL-011 | P0-LATER | `docs/VALIDATION-STRATEGY.md` | P0 obligation deferred past R1 with named milestone ownership |
 | NFR-MNT-001 | R1 | `docs/DEPENDENCY-AND-LICENSE-POLICY.md` | Required for validated Foundation-to-Artifacts vertical slice |
 | NFR-MNT-002 | R1 | `docs/DEPENDENCY-AND-LICENSE-POLICY.md` | Required for validated Foundation-to-Artifacts vertical slice |

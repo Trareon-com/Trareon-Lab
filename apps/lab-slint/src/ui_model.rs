@@ -82,6 +82,9 @@ pub struct UiSnapshot {
     pub last_shortcut: String,
     pub provenance_open: Option<String>,
     pub transfer_status: String,
+    pub second_method_count: i32,
+    pub blind_pt_status: String,
+    pub about_disclosure: String,
 }
 
 impl Default for UiSnapshot {
@@ -105,6 +108,9 @@ impl Default for UiSnapshot {
             last_shortcut: String::new(),
             provenance_open: None,
             transfer_status: String::new(),
+            second_method_count: 0,
+            blind_pt_status: "none".into(),
+            about_disclosure: "SBOM: release-evidence/sbom/; licenses: docs/DEPENDENCY-AND-LICENSE-POLICY.md; notes: docs/user/RELEASE-NOTES-1.0.0.md".into(),
         }
     }
 }
@@ -210,5 +216,17 @@ impl UiSnapshot {
 
     pub fn set_transfer_status(&mut self, status: impl Into<String>) {
         self.transfer_status = status.into();
+    }
+
+    /// FR-VAL-009 UI hook: record that a second-method comparison is open.
+    pub fn record_second_method_stub(&mut self) {
+        self.second_method_count += 1;
+        self.active_screen = NavScreen::Report;
+    }
+
+    /// FR-VAL-010 UI hook: participant blind-PT import/export status string.
+    pub fn set_blind_pt_status(&mut self, status: impl Into<String>) {
+        self.blind_pt_status = status.into();
+        self.active_screen = NavScreen::CaseHome;
     }
 }

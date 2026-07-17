@@ -1,0 +1,3 @@
+# Official R1.0.0 evidence manifest
+# Fill at freeze: tip SHA, CI URL, artifact digests, gate owners.
+status: NOT_STARTED
