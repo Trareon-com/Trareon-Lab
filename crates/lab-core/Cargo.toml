@@ -1,0 +1,15 @@
+[package]
+name = "lab-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Authoritative forensic core for Trareon Lab"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+hex = "0.4"

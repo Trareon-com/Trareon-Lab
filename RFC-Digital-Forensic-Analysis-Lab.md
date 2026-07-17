@@ -5,9 +5,10 @@
 - **Nama produk:** Trareon Lab
 - **Jenis produk:** Desktop digital-forensic analysis laboratory, install-first, offline-first
 - **Baseline PRD:** `PRD-Digital-Forensic-Analysis-Lab.md` versi 1.0, finalisasi 17 Juli 2026
-- **Status RFC:** Architecture Baseline v1.0 — Gates A–E PASS; Foundation plan ready for execution
+- **Status RFC:** Architecture Baseline v1.0 — Gates A–E PASS; Foundation implementation complete (merge to `main`); next phase is R1 vertical slice
 - **Change control:** Perubahan normative memerlukan ADR update, traceability update, dan validation-impact review
 - **Foundation plan:** `docs/superpowers/plans/2026-07-17-trareon-lab-foundation.md`
+- **Foundation code:** Cargo workspace under `crates/` and `apps/lab-slint/` (tasks F1–F15)
 - **Architecture matrix:** `docs/ARCHITECTURE-DECISION-MATRIX.md` (Gate A PASS)
 - **Release matrix:** `docs/RELEASE-01-CAPABILITY-MATRIX.md` (Gate B PASS)
 - **Decision register:** `docs/DECISION-REGISTER.md` (ADR-001–016)
@@ -20,7 +21,7 @@
 
 Trareon Lab mengonsumsi paket `.fsnap` dari Trareon Acquire dan format evidence umum, lalu menyediakan intake verification, processing, examination, interpretation, correlation, review, reporting, validation, dan case closure. Produk diposisikan sebagai case-centric, defensible laboratory — bukan kumpulan viewer atau tombol parser.
 
-RFC ini membekukan batas arsitektur setelah Gates A–E `PASS`. Production application code may begin only by executing `docs/superpowers/plans/2026-07-17-trareon-lab-foundation.md`.
+RFC ini membekukan batas arsitektur setelah Gates A–E `PASS`. Foundation milestone (F1–F15) telah diimplementasikan. Fase berikutnya adalah R1 vertical-slice parsers/artifacts sesuai `docs/RELEASE-01-CAPABILITY-MATRIX.md` dan `docs/IMPLEMENTATION-ROADMAP.md`.
 
 ### 1.1 Prinsip yang tidak boleh dilanggar
 
@@ -97,14 +98,14 @@ Rust menjadi authoritative core karena memory safety, kontrol I/O, shared librar
 | Authoritative forensic core | Rust | Foundation plan global constraint; PRD Lampiran B |
 | Presentation shell | **Slint + Rust** (`C-SLINT`) | ADR-001 `ACCEPTED`; Gate A matrix score 83 |
 | Case database/index | **Purpose-built Rust index** (`D-RUST-INDEX`) | ADR-002 `ACCEPTED`; Gate A matrix |
-| Case isolation | One open case per isolated application process; no writable cross-case state | ADR-004 `PROPOSED` pending Gate C/D evidence; PRD FR-CASE-006–008 |
-| Evidence immutability | Source bytes read-only; derived artifacts content-addressed | PRD FR-EVI; ADR-006 |
-| `.fsnap` import | Read/import verification only; no silent rewrite | ADR-006 `PROPOSED` |
-| Local AI | Optional loopback Ollama/LM Studio; suggestion-only | ADR-007 `PROPOSED`; ADR-014 `ACCEPTED` for P0 optional priority |
+| Case isolation | One open case per isolated application process; no writable cross-case state | ADR-004 `ACCEPTED`; `docs/contracts/CASE-LIFECYCLE.md` |
+| Evidence immutability | Source bytes read-only; derived artifacts content-addressed | PRD FR-EVI; ADR-006 `ACCEPTED` |
+| `.fsnap` import | Read/import verification only; no silent rewrite | ADR-006 `ACCEPTED`; `docs/contracts/FSNAP-READ-CONTRACT.md` |
+| Local AI | Optional loopback Ollama/LM Studio; suggestion-only | ADR-007 `ACCEPTED`; ADR-014 `ACCEPTED` for P0 optional priority |
 | Priority model | P0 / P2 / companion only; no P1 feature bucket | ADR-013 `ACCEPTED` |
 | Second-method + blind PT participant support | P0 capabilities | ADR-015 `ACCEPTED` |
-| Minimum digest | SHA-256 | Foundation plan; PRD integrity model |
-| Candidate signature algorithm | Ed25519 pending Gate C crypto profile | ADR-003 `PROPOSED` |
+| Minimum digest | SHA-256 | ADR-003 `ACCEPTED`; `docs/CRYPTOGRAPHIC-PROFILE.md` |
+| Signature algorithm | Ed25519 envelopes; offline trust bundles | ADR-003 `ACCEPTED`; production signing keys still require named external crypto review before Official Production |
 | Serialization | JSON/JSONL; canonical JSON for signed objects | Foundation plan |
 | Official remote | Private `Trareon-com/Trareon-Lab` | ADR-016 `ACCEPTED` |
 
@@ -381,7 +382,7 @@ Import blind challenge dan export signed participant result dengan isolation, em
 - Installers, core, helpers, packs, rules, symbols, updates, dan official documentation harus signed dan diverifikasi sebelum digunakan.
 - Setiap release menghasilkan SBOM, third-party license inventory, capability matrix, known issues, dan support period.
 - Offline update bundles adalah satu-satunya jalur update resmi.
-- Exact signing/notarization matrix menunggu ADR-009 / Gate E platform docs.
+- Exact signing/notarization matrix: `docs/SUPPORTED-PLATFORMS.md` (ADR-009 `ACCEPTED`); production certs remain cert-gated until Official Production.
 
 ## 18. Test Pyramid dan Platform CI Matrix
 
@@ -406,35 +407,43 @@ CI harus membedakan community/source checks dari official signed validation. Tid
 | Evidence trust | `.fsnap`, provenance, crypto, audit, isolation contracts | Gate C |
 | Safety and validation | Threat model, pack sandbox, corpora, false-positive policy | Gate D |
 | Delivery | Platforms, performance profile, docs, Foundation implementation plan | Gate E |
-| Foundation implementation | Case, authority, `.fsnap`, provenance, audit, coverage, validation harness, docs skeleton | After Gate E |
+| Foundation implementation | Case, authority, `.fsnap`, provenance, audit, coverage, validation harness, docs skeleton | After Gate E — **COMPLETE** (F1–F15) |
+| R1 vertical slice | Validated minimum parsers/artifacts per RELEASE-01 | Next |
+| Official Production | Signed builds, named legal/crypto reviews, full R1 validation dossiers | Later |
 
-Production application code di luar spikes tidak dimulai sebelum Gate A `PASS` untuk shell dan index, serta gate terkait untuk jalur yang disentuh.
+Foundation production application code may proceed only after Gate E `PASS` (satisfied). R1 forensic parsers remain out of scope for Foundation.
 
-## 20. Open Questions Controlled by Later Gates
+## 20. Resolved Architecture Questions (Gates A–E)
 
-Open questions ini tidak mengubah requirement PRD v1.0; jawabannya dikunci oleh ADR/gate berikut:
+Pertanyaan arsitektur berikut sudah dikunci (ADR `ACCEPTED`). Lihat `docs/DECISION-REGISTER.md`.
 
-1. Desktop shell selection — ADR-001 / Gate A.
-2. Case database/index selection — ADR-002 / Gate A.
-3. Cryptographic profile — ADR-003 / Gate C.
-4. Reference hardware profiles — ADR-009 / Gate E.
-5. Exact first-release OS/distribution/build matrix — ADR-009 / Gate E.
-6. Decoder/codec licensing allowlist — ADR-010 / Gate E.
-7. Memory-engine strategy — ADR-011 / Gate E.
-8. Role identity binding model — Gate C/D identity profile.
-9. Encrypted workspace key recovery model — Gate C/D.
-10. CASE/UCO tested subset — ADR-012 / Gate C.
-11. Named Indonesian legal/quality reviewers before Official Production — Gate E review.
-12. Exact R1 vertical-slice formats/artifacts — ADR-008 / Gate B.
+1. Desktop shell — ADR-001 / Gate A → **C-SLINT**
+2. Case database/index — ADR-002 / Gate A → **D-RUST-INDEX**
+3. Cryptographic profile — ADR-003 / Gate C → SHA-256 + Ed25519
+4. Reference hardware profiles — ADR-009 / Gate E
+5. Exact first-release OS/distribution/build matrix — ADR-009 / Gate E
+6. Decoder/codec licensing allowlist — ADR-010 / Gate E
+7. Memory-engine strategy — ADR-011 / Gate E
+8. Role identity binding model — `docs/IDENTITY-AND-ROLE-MODEL.md`
+9. Encrypted workspace key recovery model — `docs/CRYPTOGRAPHIC-PROFILE.md`
+10. CASE/UCO tested subset — ADR-012 / Gate C
+11. Exact R1 vertical-slice formats/artifacts — ADR-008 / Gate B → `docs/RELEASE-01-CAPABILITY-MATRIX.md`
 
-## 21. Acceptance of This RFC Draft
+## 20.1 Remaining before Official Production (not architecture blockers)
 
-RFC v0.1 diterima sebagai architecture baseline draft apabila:
+1. Named Indonesian legal/quality reviewers for Official Production sign-off
+2. Named external cryptography review before production signing keys
+3. Physical reference-hardware validation runs for published performance claims
+4. Production code-signing / notarization certificates
+5. R1 corpus-validated parser dossiers (`Validated` promotion)
 
-- batas Rust-core, case isolation, evidence immutability, pack sandbox intent, AI loopback boundary, dan `.fsnap` read-only import konsisten dengan PRD v1.0;
-- Gate A matrix dan spike scaffolds ada;
-- ADR-001 dan ADR-002 tetap `PROPOSED` sampai measurements `PASS`;
+## 21. Acceptance of This RFC
+
+RFC Architecture Baseline v1.0 diterima apabila:
+
+- batas Rust-core, case isolation, evidence immutability, pack sandbox, AI loopback boundary, dan `.fsnap` read-only import konsisten dengan PRD v1.0;
+- Gates A–E `PASS` dan ADR-001 through ADR-016 `ACCEPTED`;
 - tidak ada klaim sertifikasi/akreditasi/admissibility;
-- tidak ada production forensic parser yang diotorisasi oleh dokumen ini.
+- Foundation implementation mengikuti `docs/superpowers/plans/2026-07-17-trareon-lab-foundation.md` tanpa production forensic parsers di luar R1 matrix.
 
-RFC amendment berikutnya yang memilih shell/index harus menautkan raw measurements dan mengubah ADR-001/ADR-002 menjadi `ACCEPTED` hanya setelah Gate A `PASS`.
+Amendment berikutnya untuk R1 harus menautkan validation dossiers dan tidak membuka kembali ADR-001/002 tanpa reopen condition.
