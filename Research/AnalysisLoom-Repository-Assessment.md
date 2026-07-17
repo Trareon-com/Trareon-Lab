@@ -1,7 +1,7 @@
 # Assessment Repository AnalysisLoom untuk Trareon Lab
 
-**Tanggal pemeriksaan:** 17 Juli 2026  
-**Repository:** [YSF-Studio/analysisloom](https://github.com/YSF-Studio/analysisloom)  
+**Tanggal pemeriksaan:** 17 Juli 2026
+**Repository:** [YSF-Studio/analysisloom](https://github.com/YSF-Studio/analysisloom)
 **Commit yang diperiksa:** [`f187f614a5be6e7a11788d7b77307e05153c94d8`](https://github.com/YSF-Studio/analysisloom/commit/f187f614a5be6e7a11788d7b77307e05153c94d8)
 
 ## Kesimpulan

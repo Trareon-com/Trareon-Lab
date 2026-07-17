@@ -1,7 +1,7 @@
 # Trareon Lab — Indonesia Regulatory Baseline
 
-**Snapshot:** 17 Juli 2026  
-**Tujuan:** baseline product-control Indonesia untuk PRD Trareon Lab.  
+**Snapshot:** 17 Juli 2026
+**Tujuan:** baseline product-control Indonesia untuk PRD Trareon Lab.
 **Batas:** bukan nasihat hukum, legal opinion, atau pernyataan conformity/akreditasi.
 
 ## Posisi aman
@@ -114,4 +114,3 @@ Hindari tanpa substantiation independen:
 - “Sah sebagai alat bukti”, “court-admissible”, atau “court-approved”.
 - “ISO/SNI compliant software”, “laboratorium otomatis terakreditasi”.
 - “Hash membuktikan perolehan sah” atau “dokumen kewenangan membuktikan integritas teknis”.
-

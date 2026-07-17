@@ -1,6 +1,6 @@
 # Riset Praktik Terbaik Aplikasi Analisis Digital Forensik
 
-**Tanggal riset:** 17 Juli 2026  
+**Tanggal riset:** 17 Juli 2026
 **Konteks:** Produk desktop native, portable dan installable, full offline untuk Windows, macOS, dan Linux; mengonsumsi paket `.fsnap` dari Trareon Acquire serta format bukti umum.
 
 ## Ringkasan eksekutif

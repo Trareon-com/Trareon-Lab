@@ -1,7 +1,7 @@
 # Trareon Lab — Standards and Compliance Baseline
 
-**Snapshot date:** 2026-07-17  
-**Purpose:** Product-control baseline for an offline forensic analysis application.  
+**Snapshot date:** 2026-07-17
+**Purpose:** Product-control baseline for an offline forensic analysis application.
 **Authority:** Official ISO catalogue/status pages, NIST, SWGDE, and CASE/UCO sources only.
 
 ## 1. Executive position
@@ -196,4 +196,3 @@ Example:
 3. Every report lists evidence identifiers/hashes, method/tool versions, scope, results, limitations, deviations, and authorizer.
 4. Every released build can reproduce a prior run in a preserved supported environment or explain why exact reproduction is impossible.
 5. Standards status and controlled wording are reviewed before every major release.
-
