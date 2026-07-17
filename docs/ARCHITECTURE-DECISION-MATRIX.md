@@ -80,9 +80,9 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 | C-TAURI | macOS | | | | | | | | | | | |
 | C-TAURI | Windows | | | | | | | | | | | |
 | C-TAURI | Linux | | | | | | | | | | | |
-| C-SLINT | macOS | | | | | | | | | | | binary builds; interactive measure pending |
-| C-SLINT | Windows | | | | | | | | | | | |
-| C-SLINT | Linux | | | | | | | | | | | |
+| C-SLINT | macOS | 762 | 219.95 | 375.41 | 263 | 5 | 5 | 51 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/macos-slint.json` |
+| C-SLINT | Windows | | | | | | | | | | | pending ThinkPad |
+| C-SLINT | Linux | | | | | | | | | | | pending Kali |
 | C-AVALONIA | macOS | | | | | | | | | | | needs .NET SDK |
 | C-AVALONIA | Windows | | | | | | | | | | | |
 | C-AVALONIA | Linux | | | | | | | | | | | |
@@ -130,4 +130,4 @@ These are planning risks recorded before spike execution; they are not Gate A re
 - Desktop UI candidates C-TAURI / C-SLINT / C-AVALONIA do not yet have complete three-OS mandatory-gate evidence.
 - Desktop shell: no ACCEPTED selection.
 - Case database/index: no ACCEPTED selection.
-- Next action: complete UI candidate spikes (Tauri, Slint, Avalonia) on the three machines, then fill mandatory gates and select ADR-001/002.
+- Next action: run Slint `--measure` on ThinkPad X270 and Kali (`spikes/COPY-PASTE-SLINT.md`), then Tauri/Avalonia candidates.

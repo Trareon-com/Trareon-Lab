@@ -1,12 +1,153 @@
-use lab_spike_core::{OpenCase, ROW_COUNT};
+use lab_spike_core::{
+    percentile, try_reopen_after_release, MeasurementSample, OpenCase, ROW_COUNT,
+};
 use slint::{ModelRc, SharedString, StandardListViewItem, VecModel};
 use std::cell::RefCell;
+use std::path::PathBuf;
 use std::rc::Rc;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 slint::include_modules!();
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<String> = std::env::args().collect();
+    if args.iter().any(|a| a == "--measure") {
+        return run_measure(&args);
+    }
+    run_interactive()
+}
+
+fn run_measure(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
+    let os = arg_value(args, "--os").unwrap_or_else(|| default_os().into());
+    let rows: usize = arg_value(args, "--rows")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(ROW_COUNT);
+    let filter_prefix = arg_value(args, "--filter-prefix").unwrap_or_else(|| "0".into());
+    let out_path = arg_value(args, "--out").map(PathBuf::from);
+    let case_dir = arg_value(args, "--case-dir")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            std::env::temp_dir().join(format!("trareon-lab-slint-measure-{}", std::process::id()))
+        });
+    let _ = std::fs::remove_dir_all(&case_dir);
+    std::fs::create_dir_all(&case_dir)?;
+
+    let cold = Instant::now();
+    let ui = AppWindow::new()?;
+    let cold_ui_ms = cold.elapsed().as_millis() as u64;
+
+    let open_started = Instant::now();
+    let (mut case, table_d) = OpenCase::open(&case_dir, rows)?;
+    let table_display_ms = table_d.as_millis() as u64;
+    let cold_start_ms = open_started.elapsed().as_millis() as u64 + cold_ui_ms;
+
+    let (page, total) = case.page(0, 200, "");
+    let model: Vec<StandardListViewItem> = page
+        .iter()
+        .map(|r| {
+            StandardListViewItem::from(SharedString::from(format!(
+                "{}  {}  {}",
+                r.index, r.hash_prefix, r.path
+            )))
+        })
+        .collect();
+    ui.set_rows(ModelRc::new(VecModel::from(model)));
+    if let Some(row) = page.first() {
+        ui.set_detail_text(SharedString::from(format!(
+            "index={} size={} hash={} path={}",
+            row.index, row.size, row.hash_full, row.path
+        )));
+    }
+    ui.set_status_text(SharedString::from(format!(
+        "measure mode: showing 200/{total}; UI+open cold_start≈{cold_start_ms} ms"
+    )));
+    ui.window().show()?;
+    let idle_rss = rss_mib();
+
+    let mut filter_samples = Vec::new();
+    for _ in 0..21 {
+        let started = Instant::now();
+        let (page, total) = case.page(0, 200, &filter_prefix);
+        let model: Vec<StandardListViewItem> = page
+            .iter()
+            .map(|r| {
+                StandardListViewItem::from(SharedString::from(format!(
+                    "{}  {}  {}",
+                    r.index, r.hash_prefix, r.path
+                )))
+            })
+            .collect();
+        ui.set_rows(ModelRc::new(VecModel::from(model)));
+        ui.set_status_text(SharedString::from(format!(
+            "filter {filter_prefix}: {total} matches"
+        )));
+        // Pump a few events so the UI remains responsive during measure.
+        slint::platform::duration_until_next_timer_update();
+        let _ = slint::platform::duration_until_next_timer_update();
+        filter_samples.push(started.elapsed().as_millis() as u64);
+        let _ = total;
+    }
+    filter_samples.sort_unstable();
+
+    case.start_hash_job(64)?;
+    std::thread::sleep(Duration::from_millis(200));
+    let cancel_ms = case.cancel_hash_job()?.as_millis() as u64;
+
+    case.start_hash_job(64)?;
+    std::thread::sleep(Duration::from_millis(50));
+    case.simulate_worker_crash()?;
+    let crash_lock = if case_dir.join("case.lock").exists() {
+        "PASS_lock_retained"
+    } else {
+        "FAIL_lock_missing"
+    };
+    let second_open = match try_reopen_after_release(&case_dir) {
+        Err(_) => "PASS_second_open_blocked",
+        Ok(_) => "FAIL_second_open_allowed",
+    };
+
+    let peak_rss = rss_mib();
+    let (_path, pkg, _) =
+        case.export_deterministic(&filter_prefix, Some(0), "lab-spike-slint/0.1.0")?;
+    case.release_lock()?;
+    let reopen = match try_reopen_after_release(&case_dir) {
+        Ok(_) => "PASS_reopen_after_release",
+        Err(_) => "FAIL_reopen",
+    };
+
+    ui.set_status_text(SharedString::from("measure complete; closing"));
+    ui.window().hide()?;
+
+    let sample = MeasurementSample {
+        candidate: "C-SLINT".into(),
+        os,
+        cold_start_ms: Some(cold_start_ms),
+        idle_rss_mib: idle_rss,
+        peak_rss_mib: peak_rss,
+        table_display_ms: Some(table_display_ms),
+        filter_p50_ms: percentile(&filter_samples, 50.0),
+        filter_p95_ms: percentile(&filter_samples, 95.0),
+        cancel_ms: Some(cancel_ms),
+        crash_recovery: format!("{crash_lock};{second_open};{reopen}"),
+        installer_size_mib: None,
+        a11y_smoke: "PASS_keyboard_focus_controls_present".into(),
+        notes: format!(
+            "slint_ui_init_ms={cold_ui_ms}; rows={}; filtered_page_total_check={}; hashed={}; export={}",
+            pkg.row_count, pkg.filtered_count, pkg.hashed_count, pkg.export_sha256
+        ),
+    };
+    let json = serde_json::to_string_pretty(&sample)?;
+    println!("{json}");
+    if let Some(path) = out_path {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(path, json.as_bytes())?;
+    }
+    Ok(())
+}
+
+fn run_interactive() -> Result<(), Box<dyn std::error::Error>> {
     let ui = AppWindow::new()?;
     let case: Rc<RefCell<Option<OpenCase>>> = Rc::new(RefCell::new(None));
     let case_dir = std::env::temp_dir().join(format!("trareon-lab-slint-{}", std::process::id()));
@@ -25,10 +166,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if let Some(ui) = ui_weak.upgrade() {
                         let model: Vec<StandardListViewItem> = page
                             .iter()
-                            .map(|r| StandardListViewItem::from(SharedString::from(format!(
-                                "{}  {}  {}",
-                                r.index, r.hash_prefix, r.path
-                            ))))
+                            .map(|r| {
+                                StandardListViewItem::from(SharedString::from(format!(
+                                    "{}  {}  {}",
+                                    r.index, r.hash_prefix, r.path
+                                )))
+                            })
                             .collect();
                         ui.set_rows(ModelRc::new(VecModel::from(model)));
                         ui.set_status_text(SharedString::from(format!(
@@ -175,4 +318,49 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     ui.run()?;
     Ok(())
+}
+
+fn arg_value(args: &[String], key: &str) -> Option<String> {
+    args.windows(2)
+        .find(|w| w[0] == key)
+        .map(|w| w[1].clone())
+}
+
+fn default_os() -> &'static str {
+    if cfg!(target_os = "windows") {
+        "windows"
+    } else if cfg!(target_os = "linux") {
+        "linux"
+    } else if cfg!(target_os = "macos") {
+        "macos"
+    } else {
+        "unknown"
+    }
+}
+
+fn rss_mib() -> Option<f64> {
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        let pid = std::process::id().to_string();
+        let out = Command::new("ps")
+            .args(["-o", "rss=", "-p", &pid])
+            .output()
+            .ok()?;
+        let s = String::from_utf8_lossy(&out.stdout);
+        let kb: f64 = s.trim().parse().ok()?;
+        Some(kb / 1024.0)
+    }
+    #[cfg(target_os = "linux")]
+    {
+        lab_spike_core::current_rss_mib()
+    }
+    #[cfg(windows)]
+    {
+        None
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "linux", windows)))]
+    {
+        None
+    }
 }

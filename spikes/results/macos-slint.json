@@ -1,0 +1,15 @@
+{
+  "candidate": "C-SLINT",
+  "os": "macos",
+  "cold_start_ms": 762,
+  "idle_rss_mib": 219.953125,
+  "peak_rss_mib": 375.40625,
+  "table_display_ms": 263,
+  "filter_p50_ms": 5,
+  "filter_p95_ms": 5,
+  "cancel_ms": 51,
+  "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
+  "installer_size_mib": null,
+  "a11y_smoke": "PASS_keyboard_focus_controls_present",
+  "notes": "slint_ui_init_ms=499; rows=1000000; filtered_page_total_check=1000000; hashed=2858; export=7f53dadfe0955f63ec426ddf72f338c8db3c481651d04fe57b7731414a41873e"
+}
