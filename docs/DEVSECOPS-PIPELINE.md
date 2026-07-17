@@ -8,7 +8,7 @@ Maps each Official security-release obligation to the CI job and artifact path t
 | Dependency / license policy | `docs/DEPENDENCY-AND-LICENSE-POLICY.md` + `cargo audit` | Policy docs; audit ignores in `.cargo/audit.toml` / `docs/DEPENDENCY-AUDIT.md` | IMPLEMENTED for advisory gate |
 | Vulnerability review | Job `cargo-audit` fails on unignored HIGH+ advisories | CI run URL recorded into Official manifest at release | IMPLEMENTED |
 | SAST | Clippy `-D warnings` in `cargo-test-workspace`; optional `cargo-geiger` warn-only job | CI logs | IMPLEMENTED (Clippy); geiger warn-only |
-| Secret scan | Job `secrets` (`gitleaks/gitleaks-action` SHA-pinned) | CI logs | IMPLEMENTED |
+| Secret scan | Job `secrets` (gitleaks OSS CLI; no org license required) | CI logs | IMPLEMENTED |
 | Provenance / attestation | Release gather + signed package evidence | `release-evidence/OFFICIAL-1.0.0/` | BLOCKED until O1–O3 signed artifacts exist |
 | Platform signing status | Packaging scripts + Official runbook O1–O3 | `windows-sig.txt`, `macos-notarization.json`, `linux-sig.txt` | BLOCKED — certs / notarization are operator Path C |
 
