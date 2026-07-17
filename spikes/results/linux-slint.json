@@ -9,7 +9,7 @@
   "filter_p95_ms": 16,
   "cancel_ms": 55,
   "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
-  "installer_size_mib": null,
+  "installer_size_mib": 9.707,
   "a11y_smoke": "PASS_keyboard_focus_controls_present",
-  "notes": "slint_ui_init_ms=53; ui_show_ok; rows=1000000; filtered_page_total_check=1000000; hashed=1859; export=569fe8bc510e23895ba280726091fd63d360ef849e1b0c05df5efea16a6fd7c5"
+  "notes": "slint_ui_init_ms=53; ui_show_ok; rows=1000000; filtered_page_total_check=1000000; hashed=1859; export=569fe8bc510e23895ba280726091fd63d360ef849e1b0c05df5efea16a6fd7c5; package=linux-slint-package.zip; package_bytes=10178986; binary_mib=22.248; no_separate_runtime=true; signing=unsigned_spike_artifact"
 }
