@@ -9,7 +9,7 @@ end_state_doc: docs/OFFICIAL-END-STATE.md
 
 ## Known tip (last repo-complete push before this manifest refresh)
 
-git_tip_at_manifest_authoring: REFRESH_AT_COMMIT
+git_tip_at_manifest_authoring: 3ced2c0 @ 2026-07-17T11:33:59Z
 
 ## CI
 
