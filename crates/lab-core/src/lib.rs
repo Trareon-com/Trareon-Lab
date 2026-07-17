@@ -1,5 +1,11 @@
 //! Authoritative forensic core for Trareon Lab (Foundation).
 
+pub mod error;
+pub mod result;
+
+pub use error::LabError;
+pub use result::LabResult;
+
 /// Workspace package version as a semver string (`MAJOR.MINOR.PATCH`).
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")
