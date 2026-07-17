@@ -164,16 +164,12 @@ impl UiSnapshot {
                 self.navigate_to(NavScreen::Search);
                 self.open_case_focused = false;
             }
-            "b" => {
-                if self.selected_file_index.is_some() {
-                    self.bookmark_count += 1;
-                    self.navigate_to(NavScreen::Bookmarks);
-                }
+            "b" if self.selected_file_index.is_some() => {
+                self.bookmark_count += 1;
+                self.navigate_to(NavScreen::Bookmarks);
             }
-            "Enter" => {
-                if self.selected_file_index.is_some() {
-                    self.open_case_focused = false;
-                }
+            "Enter" if self.selected_file_index.is_some() => {
+                self.open_case_focused = false;
             }
             "Escape" => {
                 self.selected_file_index = None;
