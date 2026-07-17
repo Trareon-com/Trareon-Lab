@@ -1,0 +1,28 @@
+import { Theme } from "../theme.slint";
+
+export component SectionCard inherits Rectangle {
+    in-out property <string> title: "";
+    in-out property <bool> show-title: true;
+
+    background: Theme.surface;
+    border-width: 1px;
+    border-color: Theme.border;
+    border-radius: 6px;
+    horizontal-stretch: 1;
+    vertical-stretch: 1;
+    clip: true;
+
+    VerticalLayout {
+        padding: 14px;
+        spacing: 10px;
+
+        if root.show-title: Text {
+            text: root.title;
+            color: Theme.text-primary;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @children
+    }
+}

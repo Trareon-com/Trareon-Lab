@@ -1,0 +1,152 @@
+import { LineEdit } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { SectionCard } from "../components/section_card.slint";
+import { EmptyState } from "../components/empty_state.slint";
+import { LabButton } from "../components/lab_button.slint";
+
+export component SearchScreen inherits Rectangle {
+    in-out property <string> search-query;
+    in-out property <[string]> search-results;
+    in-out property <[string]> artifact-kinds;
+    in-out property <[string]> artifact-summaries;
+    in-out property <[string]> artifact-provenances;
+    in-out property <bool> search-attempted: false;
+    callback search-submitted();
+    callback query-changed(string);
+    callback open-in-evidence-clicked();
+    callback bookmark-hit-clicked();
+
+    background: transparent;
+    property <bool> use-artifacts: artifact-kinds.length > 0;
+    property <int> hit-count: use-artifacts ? artifact-kinds.length : search-results.length;
+    property <bool> show-empty: search-attempted && hit-count == 0;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 12px;
+
+        HorizontalLayout {
+            spacing: 8px;
+            LineEdit {
+                text <=> root.search-query;
+                placeholder-text: Strings.search-placeholder;
+                horizontal-stretch: 1;
+                edited => { root.query-changed(self.text); }
+                accepted => {
+                    root.search-attempted = true;
+                    root.search-submitted();
+                }
+            }
+            LabButton {
+                primary: true;
+                label: Strings.search-action;
+                clicked => {
+                    root.search-attempted = true;
+                    root.search-submitted();
+                }
+            }
+        }
+
+        if show-empty: EmptyState {
+            title: Strings.empty-no-search;
+            body: Strings.empty-hint-search;
+            vertical-stretch: 1;
+        }
+
+        if !show-empty: SectionCard {
+            title: Strings.results-title;
+            vertical-stretch: 1;
+
+            VerticalLayout {
+                spacing: 6px;
+                vertical-stretch: 1;
+
+                if root.hit-count > 0: HorizontalLayout {
+                    spacing: 8px;
+                    LabButton {
+                        primary: false;
+                        label: Strings.open-in-evidence;
+                        clicked => { root.open-in-evidence-clicked(); }
+                    }
+                    LabButton {
+                        primary: false;
+                        label: Strings.add-bookmark;
+                        clicked => { root.bookmark-hit-clicked(); }
+                    }
+                    Rectangle { horizontal-stretch: 1; }
+                    Text {
+                        text: "\{root.hit-count} " + Strings.hits;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                    }
+                }
+
+                HorizontalLayout {
+                    spacing: 8px;
+                    Text { text: Strings.col-kind; color: Theme.text-secondary; font-size: 11px; width: 120px; }
+                    Text { text: Strings.col-summary; color: Theme.text-secondary; font-size: 11px; horizontal-stretch: 1; }
+                    Text { text: Strings.col-provenance; color: Theme.text-secondary; font-size: 11px; width: 160px; }
+                }
+
+                Rectangle { height: 1px; background: Theme.border; }
+
+                Flickable {
+                    vertical-stretch: 1;
+                    viewport-width: parent.width;
+                    VerticalLayout {
+                        spacing: 2px;
+                        width: parent.width;
+
+                        if root.use-artifacts: VerticalLayout {
+                            spacing: 2px;
+                            for kind[index] in root.artifact-kinds: HorizontalLayout {
+                                padding-top: 4px;
+                                padding-bottom: 4px;
+                                spacing: 8px;
+                                Text {
+                                    text: kind;
+                                    color: Theme.text-primary;
+                                    font-size: 12px;
+                                    width: 120px;
+                                    overflow: elide;
+                                }
+                                Text {
+                                    text: index < root.artifact-summaries.length ? root.artifact-summaries[index] : "";
+                                    color: Theme.text-primary;
+                                    font-size: 12px;
+                                    horizontal-stretch: 1;
+                                    overflow: elide;
+                                }
+                                Text {
+                                    text: index < root.artifact-provenances.length ? root.artifact-provenances[index] : "";
+                                    color: Theme.mono-fg;
+                                    font-family: "monospace";
+                                    font-size: 11px;
+                                    width: 160px;
+                                    overflow: elide;
+                                }
+                            }
+                        }
+
+                        if !root.use-artifacts: VerticalLayout {
+                            spacing: 2px;
+                            for row in root.search-results: HorizontalLayout {
+                                padding-top: 4px;
+                                padding-bottom: 4px;
+                                Text {
+                                    text: row;
+                                    color: Theme.text-primary;
+                                    font-size: 12px;
+                                    horizontal-stretch: 1;
+                                    overflow: elide;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

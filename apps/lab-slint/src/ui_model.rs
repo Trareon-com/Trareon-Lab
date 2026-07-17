@@ -85,6 +85,8 @@ pub struct UiSnapshot {
     pub second_method_count: i32,
     pub blind_pt_status: String,
     pub about_disclosure: String,
+    pub dark_mode: bool,
+    pub locale: String,
 }
 
 impl Default for UiSnapshot {
@@ -111,6 +113,8 @@ impl Default for UiSnapshot {
             second_method_count: 0,
             blind_pt_status: "none".into(),
             about_disclosure: "SBOM: release-evidence/sbom/; licenses: docs/DEPENDENCY-AND-LICENSE-POLICY.md; notes: docs/user/RELEASE-NOTES-1.0.0.md".into(),
+            dark_mode: true,
+            locale: "en".into(),
         }
     }
 }
@@ -228,5 +232,18 @@ impl UiSnapshot {
     pub fn set_blind_pt_status(&mut self, status: impl Into<String>) {
         self.blind_pt_status = status.into();
         self.active_screen = NavScreen::CaseHome;
+    }
+
+    pub fn set_dark_mode(&mut self, dark: bool) {
+        self.dark_mode = dark;
+    }
+
+    pub fn set_locale(&mut self, locale: impl Into<String>) {
+        let loc = locale.into();
+        self.locale = if loc == "en" || loc == "id" {
+            loc
+        } else {
+            "en".into()
+        };
     }
 }

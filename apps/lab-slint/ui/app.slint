@@ -1,80 +1,470 @@
-import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
+import { Theme } from "theme.slint";
+import { Strings } from "strings.slint";
+import { NavItem } from "components/nav_item.slint";
+import { NavGroupLabel } from "components/nav_group_label.slint";
+import { StatusBadge } from "components/status_badge.slint";
+import { CaseScreen } from "screens/case_screen.slint";
+import { EvidenceScreen } from "screens/evidence_screen.slint";
+import { SearchScreen } from "screens/search_screen.slint";
+import { TimelineScreen } from "screens/timeline_screen.slint";
+import { BookmarksScreen } from "screens/bookmarks_screen.slint";
+import { ReportScreen } from "screens/report_screen.slint";
+
+component SegmentBtn inherits Rectangle {
+    in-out property <string> label;
+    in-out property <bool> active: false;
+    callback clicked();
+
+    height: 28px;
+    min-width: 40px;
+    border-radius: 4px;
+    background: active ? Theme.accent : transparent;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        Text {
+            text: root.label;
+            color: root.active ? Theme.on-accent : Theme.text-secondary;
+            font-size: 11px;
+            font-weight: 600;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+        }
+    }
+
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+    states [
+        hover when ta.has-hover && !root.active: { background: Theme.row-hover; }
+    ]
+}
+
+component HeaderSearchChip inherits Rectangle {
+    callback clicked();
+    height: 32px;
+    min-width: 220px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: Theme.border;
+    background: Theme.surface-raised;
+
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 8px;
+        Text {
+            text: "⌕";
+            color: Theme.text-secondary;
+            vertical-alignment: center;
+        }
+        Text {
+            text: Strings.header-search-hint;
+            color: Theme.text-secondary;
+            font-size: 12px;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+    }
+
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+    states [
+        hover when ta.has-hover: { background: Theme.row-hover; }
+    ]
+}
 
 export component AppWindow inherits Window {
-    title: "Trareon Lab";
-    preferred-width: 880px;
-    preferred-height: 520px;
+    title: Strings.brand;
+    preferred-width: 1280px;
+    preferred-height: 800px;
+    min-width: 1100px;
+    min-height: 680px;
+    background: Theme.canvas;
 
     in-out property <string> case-title: "(no case)";
+    in-out property <string> case-state-label: "created";
     in-out property <int> evidence-count: 0;
     in-out property <int> coverage-count: 0;
     in-out property <int> bookmark-count: 0;
     in-out property <bool> open-case-focused: true;
     in-out property <string> active-screen: "Case";
-    in-out property <string> about-line: "GPL-3.0-only · unsigned builds · see docs/SELLING-UNSIGNED.md";
+    in-out property <string> about-line: "";
+    in-out property <bool> dark-mode: true;
+    in-out property <string> locale: "en";
+    in-out property <bool> prefs-open: false;
+
+    in-out property <[string]> evidence-names: [];
+    in-out property <[string]> evidence-paths: [];
+    in-out property <[string]> evidence-sizes: [];
+    in-out property <[bool]> evidence-deleted: [];
+    in-out property <int> selected-file-index: -1;
+    in-out property <string> evidence-filter: "";
+
+    in-out property <string> search-query: "";
+    in-out property <[string]> search-results: [];
+    in-out property <[string]> artifact-kinds: [];
+    in-out property <[string]> artifact-summaries: [];
+    in-out property <[string]> artifact-provenances: [];
+    in-out property <bool> search-attempted: false;
+
+    in-out property <[string]> timeline-labels: [];
+    in-out property <[string]> finding-claims: [];
+    in-out property <[string]> finding-uuids: [];
+    in-out property <string> report-state: "draft";
+    in-out property <[string]> activity-lines: [];
 
     callback open-case-clicked();
     callback focus-open-case();
     callback navigate(string);
     callback import-evidence-clicked();
+    callback theme-toggled(bool);
+    callback locale-toggled(string);
+    callback search-submitted();
+    callback evidence-row-selected(int);
+    callback bookmark-selection-clicked();
+    callback find-related-clicked();
+    callback header-search-clicked();
+
+    changed dark-mode => {
+        Theme.apply(dark-mode);
+    }
+
+    changed locale => {
+        Strings.locale = locale;
+    }
+
+    init => {
+        Theme.apply(dark-mode);
+        Strings.locale = locale;
+    }
 
     focus-open-case => {
         open-case-focused = true;
-        open-btn.focus();
+        case-view.focus-open();
     }
 
-    VerticalBox {
-        padding: 16px;
-        spacing: 12px;
+    VerticalLayout {
+        Rectangle {
+            height: 49px;
+            background: Theme.surface;
+            VerticalLayout {
+                spacing: 0px;
+                HorizontalLayout {
+                    height: 48px;
+                    padding-left: 14px;
+                    padding-right: 14px;
+                    spacing: 12px;
 
-        Text {
-            text: "Trareon Lab";
-            font-size: 22px;
-            font-weight: 700;
-        }
+                    Text {
+                        text: Strings.brand;
+                        color: Theme.text-primary;
+                        font-size: 16px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
 
-        HorizontalBox {
-            spacing: 6px;
-            Button { text: "Case"; clicked => { root.navigate("Case"); } }
-            Button { text: "Evidence"; clicked => { root.navigate("Evidence"); } }
-            Button { text: "Search"; clicked => { root.navigate("Search"); } }
-            Button { text: "Timeline"; clicked => { root.navigate("Timeline"); } }
-            Button { text: "Bookmarks"; clicked => { root.navigate("Bookmarks"); } }
-            Button { text: "Report"; clicked => { root.navigate("Report"); } }
-        }
+                    Rectangle { width: 1px; height: 20px; background: Theme.border; }
 
-        Text {
-            text: "Screen: " + root.active-screen;
-            font-size: 14px;
-        }
+                    Text {
+                        text: root.case-title;
+                        color: Theme.mono-fg;
+                        font-family: "monospace";
+                        font-size: 12px;
+                        vertical-alignment: center;
+                        overflow: elide;
+                        horizontal-stretch: 1;
+                    }
 
-        Text {
-            text: "Case: " + root.case-title;
-            font-size: 16px;
-        }
+                    StatusBadge {
+                        label: root.case-state-label;
+                        kind: "info";
+                    }
 
-        Text {
-            text: "Evidence: " + root.evidence-count
-                + "  |  Coverage: " + root.coverage-count
-                + "  |  Bookmarks: " + root.bookmark-count;
-            font-size: 14px;
-        }
+                    HeaderSearchChip {
+                        clicked => { root.header-search-clicked(); }
+                    }
 
-        Text {
-            text: root.about-line;
-            font-size: 12px;
-        }
-
-        HorizontalBox {
-            spacing: 8px;
-            open-btn := Button {
-                text: "Open Case";
-                primary: true;
-                clicked => { root.open-case-clicked(); }
+                    Rectangle {
+                        height: 32px;
+                        min-width: 36px;
+                        border-radius: 4px;
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        background: root.prefs-open ? Theme.surface-raised : Theme.surface;
+                        HorizontalLayout {
+                            padding-left: 10px;
+                            padding-right: 10px;
+                            Text {
+                                text: "⚙";
+                                color: Theme.text-secondary;
+                                vertical-alignment: center;
+                            }
+                        }
+                        TouchArea {
+                            clicked => { root.prefs-open = !root.prefs-open; }
+                        }
+                    }
+                }
+                Rectangle { height: 1px; background: Theme.border; }
             }
-            Button {
-                text: "Import Evidence";
-                clicked => { root.import-evidence-clicked(); }
+        }
+
+        if root.prefs-open: Rectangle {
+            height: 44px;
+            background: Theme.surface-raised;
+            HorizontalLayout {
+                padding-left: 14px;
+                padding-right: 14px;
+                spacing: 16px;
+                Text {
+                    text: Strings.prefs;
+                    color: Theme.text-secondary;
+                    font-size: 12px;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                }
+                Rectangle {
+                    border-width: 1px;
+                    border-color: Theme.border;
+                    border-radius: 4px;
+                    background: Theme.surface;
+                    HorizontalLayout {
+                        padding: 2px;
+                        spacing: 2px;
+                        SegmentBtn {
+                            label: Strings.lang-id;
+                            active: root.locale == "id";
+                            clicked => {
+                                root.locale = "id";
+                                root.locale-toggled("id");
+                            }
+                        }
+                        SegmentBtn {
+                            label: Strings.lang-en;
+                            active: root.locale == "en";
+                            clicked => {
+                                root.locale = "en";
+                                root.locale-toggled("en");
+                            }
+                        }
+                    }
+                }
+                Rectangle {
+                    border-width: 1px;
+                    border-color: Theme.border;
+                    border-radius: 4px;
+                    background: Theme.surface;
+                    HorizontalLayout {
+                        padding: 2px;
+                        spacing: 2px;
+                        SegmentBtn {
+                            label: Strings.theme-dark;
+                            active: root.dark-mode;
+                            clicked => {
+                                root.dark-mode = true;
+                                root.theme-toggled(true);
+                            }
+                        }
+                        SegmentBtn {
+                            label: Strings.theme-light;
+                            active: !root.dark-mode;
+                            clicked => {
+                                root.dark-mode = false;
+                                root.theme-toggled(false);
+                            }
+                        }
+                    }
+                }
+                Rectangle { horizontal-stretch: 1; }
+            }
+        }
+
+        HorizontalLayout {
+            vertical-stretch: 1;
+
+            Rectangle {
+                width: 201px;
+                background: Theme.surface;
+                HorizontalLayout {
+                    spacing: 0px;
+                    VerticalLayout {
+                        width: 200px;
+                        padding: 10px;
+                        spacing: 2px;
+
+                        NavGroupLabel { label: Strings.nav-group-case; }
+                        NavItem {
+                            glyph: "▣";
+                            label: Strings.nav-case;
+                            active: root.active-screen == "Case";
+                            clicked => { root.navigate("Case"); }
+                        }
+
+                        NavGroupLabel { label: Strings.nav-group-examine; }
+                        NavItem {
+                            glyph: "▤";
+                            label: Strings.nav-evidence;
+                            active: root.active-screen == "Evidence";
+                            clicked => { root.navigate("Evidence"); }
+                        }
+                        NavItem {
+                            glyph: "⌕";
+                            label: Strings.nav-search;
+                            active: root.active-screen == "Search";
+                            clicked => { root.navigate("Search"); }
+                        }
+                        NavItem {
+                            glyph: "⏱";
+                            label: Strings.nav-timeline;
+                            active: root.active-screen == "Timeline";
+                            clicked => { root.navigate("Timeline"); }
+                        }
+
+                        NavGroupLabel { label: Strings.nav-group-work; }
+                        NavItem {
+                            glyph: "★";
+                            label: Strings.nav-bookmarks;
+                            active: root.active-screen == "Bookmarks";
+                            clicked => { root.navigate("Bookmarks"); }
+                        }
+                        NavItem {
+                            glyph: "☰";
+                            label: Strings.nav-report;
+                            active: root.active-screen == "Report";
+                            clicked => { root.navigate("Report"); }
+                        }
+
+                        Rectangle { vertical-stretch: 1; }
+                    }
+                    Rectangle { width: 1px; background: Theme.border; }
+                }
+            }
+
+            Rectangle {
+                background: Theme.canvas;
+                horizontal-stretch: 1;
+                clip: true;
+
+                case-view := CaseScreen {
+                    visible: root.active-screen == "Case";
+                    width: 100%;
+                    height: 100%;
+                    case-title: root.case-title;
+                    case-state-label: root.case-state-label;
+                    evidence-count: root.evidence-count;
+                    coverage-count: root.coverage-count;
+                    bookmark-count: root.bookmark-count;
+                    activity-lines: root.activity-lines;
+                    open-case-clicked => { root.open-case-clicked(); }
+                    import-evidence-clicked => { root.import-evidence-clicked(); }
+                    navigate(s) => { root.navigate(s); }
+                }
+
+                EvidenceScreen {
+                    visible: root.active-screen == "Evidence";
+                    width: 100%;
+                    height: 100%;
+                    evidence-names: root.evidence-names;
+                    evidence-paths: root.evidence-paths;
+                    evidence-sizes: root.evidence-sizes;
+                    evidence-deleted: root.evidence-deleted;
+                    selected-file-index: root.selected-file-index;
+                    filter-text <=> root.evidence-filter;
+                    import-evidence-clicked => { root.import-evidence-clicked(); }
+                    evidence-row-selected(i) => { root.evidence-row-selected(i); }
+                    bookmark-selection-clicked => { root.bookmark-selection-clicked(); }
+                    find-related-clicked => { root.find-related-clicked(); }
+                }
+
+                SearchScreen {
+                    visible: root.active-screen == "Search";
+                    width: 100%;
+                    height: 100%;
+                    search-query <=> root.search-query;
+                    search-results: root.search-results;
+                    artifact-kinds: root.artifact-kinds;
+                    artifact-summaries: root.artifact-summaries;
+                    artifact-provenances: root.artifact-provenances;
+                    search-attempted <=> root.search-attempted;
+                    search-submitted => { root.search-submitted(); }
+                    query-changed(q) => { root.search-query = q; }
+                    open-in-evidence-clicked => { root.navigate("Evidence"); }
+                    bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
+                }
+
+                TimelineScreen {
+                    visible: root.active-screen == "Timeline";
+                    width: 100%;
+                    height: 100%;
+                    timeline-labels: root.timeline-labels;
+                    jump-evidence-clicked => { root.navigate("Evidence"); }
+                    bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
+                }
+
+                BookmarksScreen {
+                    visible: root.active-screen == "Bookmarks";
+                    width: 100%;
+                    height: 100%;
+                    finding-claims: root.finding-claims;
+                    finding-uuids: root.finding-uuids;
+                    bookmark-count: root.bookmark-count;
+                    navigate-report => { root.navigate("Report"); }
+                }
+
+                ReportScreen {
+                    visible: root.active-screen == "Report";
+                    width: 100%;
+                    height: 100%;
+                    report-state: root.report-state;
+                    finding-claims: root.finding-claims;
+                    finding-uuids: root.finding-uuids;
+                    about-line: root.about-line;
+                }
+            }
+        }
+
+        Rectangle {
+            height: 29px;
+            background: Theme.status-bar-bg;
+            VerticalLayout {
+                spacing: 0px;
+                Rectangle { height: 1px; background: Theme.border; }
+                HorizontalLayout {
+                    height: 28px;
+                    padding-left: 14px;
+                    padding-right: 14px;
+                    spacing: 16px;
+                    Text {
+                        text: Strings.status-evidence + ": \{root.evidence-count}";
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                    }
+                    Text {
+                        text: Strings.status-coverage + ": \{root.coverage-count}";
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                    }
+                    Text {
+                        text: Strings.status-bookmarks + ": \{root.bookmark-count}";
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                    }
+                    Text {
+                        text: Strings.shortcuts-hint;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                        overflow: elide;
+                        horizontal-alignment: right;
+                    }
+                }
             }
         }
     }

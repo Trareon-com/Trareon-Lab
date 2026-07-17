@@ -1,0 +1,27 @@
+import { Theme } from "../theme.slint";
+
+export component StatusBadge inherits Rectangle {
+    in-out property <string> label;
+    // neutral | ok | warn | danger | info
+    in-out property <string> kind: "neutral";
+
+    border-radius: 4px;
+    height: 22px;
+    background: kind == "ok" ? Theme.success
+        : kind == "warn" ? Theme.warning
+        : kind == "danger" ? Theme.danger
+        : kind == "info" ? Theme.info
+        : Theme.accent-muted;
+
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        Text {
+            text: root.label;
+            color: kind == "warn" ? #1A1400 : Theme.on-accent;
+            font-size: 11px;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+    }
+}

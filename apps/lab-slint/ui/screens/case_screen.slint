@@ -1,0 +1,227 @@
+import { Button } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { SectionCard } from "../components/section_card.slint";
+import { MetricTile } from "../components/metric_tile.slint";
+import { LabButton } from "../components/lab_button.slint";
+import { StatusBadge } from "../components/status_badge.slint";
+
+export component PlaceTile inherits Rectangle {
+    in-out property <string> label;
+    in-out property <bool> enabled: true;
+    callback clicked();
+
+    height: 36px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: Theme.border;
+    background: Theme.surface-raised;
+    opacity: enabled ? 1.0 : 0.45;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        Text {
+            text: root.label;
+            color: Theme.text-primary;
+            font-size: 12px;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+    }
+
+    ta := TouchArea {
+        enabled: root.enabled;
+        clicked => { root.clicked(); }
+    }
+    states [
+        hover when ta.has-hover && root.enabled: { background: Theme.row-hover; }
+    ]
+}
+
+export component CaseScreen inherits Rectangle {
+    in-out property <string> case-title;
+    in-out property <string> case-state-label: "open";
+    in-out property <int> evidence-count;
+    in-out property <int> coverage-count;
+    in-out property <int> bookmark-count;
+    in-out property <[string]> activity-lines;
+    callback open-case-clicked();
+    callback import-evidence-clicked();
+    callback navigate(string);
+
+    background: transparent;
+    property <bool> has-case: case-title != "" && case-title != "(no case)";
+    property <int> stage: !has-case ? 0
+        : evidence-count <= 0 ? 1
+        : bookmark-count > 0 ? 3
+        : 2;
+    property <string> next-body: stage == 0 ? Strings.next-open
+        : stage == 1 ? Strings.next-import
+        : stage == 3 ? Strings.next-report
+        : Strings.next-examine;
+    property <string> next-cta: stage == 0 ? Strings.open-case
+        : stage == 1 ? Strings.import-evidence
+        : stage == 3 ? Strings.go-report
+        : Strings.browse-evidence;
+
+    open-btn := Button {
+        x: -10000px;
+        y: -10000px;
+        width: 1px;
+        height: 1px;
+        text: Strings.open-case;
+        primary: true;
+        clicked => { root.open-case-clicked(); }
+    }
+
+    public function focus-open() {
+        open-btn.focus();
+    }
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 12px;
+
+        SectionCard {
+            title: Strings.next-action;
+            VerticalLayout {
+                spacing: 12px;
+                Text {
+                    text: root.next-body;
+                    color: Theme.text-primary;
+                    font-size: 14px;
+                    font-weight: 600;
+                    wrap: word-wrap;
+                }
+                Text {
+                    text: root.has-case ? root.case-title : Strings.empty-no-case;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    LabButton {
+                        primary: true;
+                        label: root.next-cta;
+                        clicked => {
+                            if root.stage == 0 {
+                                root.open-case-clicked();
+                            } else if root.stage == 1 {
+                                root.import-evidence-clicked();
+                            } else if root.stage == 3 {
+                                root.navigate("Report");
+                            } else {
+                                root.navigate("Evidence");
+                            }
+                        }
+                    }
+                    if root.stage >= 2: LabButton {
+                        primary: false;
+                        label: Strings.go-search;
+                        clicked => { root.navigate("Search"); }
+                    }
+                    if root.stage >= 2: LabButton {
+                        primary: false;
+                        label: Strings.go-timeline;
+                        clicked => { root.navigate("Timeline"); }
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+
+            SectionCard {
+                title: Strings.case-overview;
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 10px;
+                    StatusBadge {
+                        label: root.case-state-label;
+                        kind: "info";
+                    }
+                    LabButton {
+                        primary: false;
+                        label: Strings.open-case;
+                        clicked => { root.open-case-clicked(); }
+                    }
+                    LabButton {
+                        primary: false;
+                        label: Strings.import-evidence;
+                        clicked => { root.import-evidence-clicked(); }
+                    }
+                }
+            }
+
+            SectionCard {
+                title: Strings.evidence-overview;
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 10px;
+                    MetricTile {
+                        label: Strings.status-evidence;
+                        value: root.evidence-count;
+                    }
+                    MetricTile {
+                        label: Strings.status-coverage;
+                        value: root.coverage-count;
+                    }
+                    MetricTile {
+                        label: Strings.status-bookmarks;
+                        value: root.bookmark-count;
+                    }
+                }
+            }
+
+            SectionCard {
+                title: Strings.examine-now;
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 8px;
+                    PlaceTile {
+                        label: Strings.go-evidence;
+                        enabled: root.evidence-count > 0;
+                        clicked => { root.navigate("Evidence"); }
+                    }
+                    PlaceTile {
+                        label: Strings.go-search;
+                        clicked => { root.navigate("Search"); }
+                    }
+                    PlaceTile {
+                        label: Strings.go-timeline;
+                        clicked => { root.navigate("Timeline"); }
+                    }
+                    PlaceTile {
+                        label: Strings.go-bookmarks;
+                        enabled: root.bookmark-count > 0;
+                        clicked => { root.navigate("Bookmarks"); }
+                    }
+                }
+            }
+        }
+
+        SectionCard {
+            title: Strings.activity;
+            if root.activity-lines.length == 0: Text {
+                text: Strings.activity-empty;
+                color: Theme.text-secondary;
+                font-size: 12px;
+            }
+            if root.activity-lines.length > 0: VerticalLayout {
+                spacing: 4px;
+                for line in root.activity-lines: Text {
+                    text: "·  " + line;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                    overflow: elide;
+                }
+            }
+        }
+    }
+}

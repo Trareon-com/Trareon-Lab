@@ -1,0 +1,63 @@
+// Institutional Dark Lab color tokens (spec §4.2).
+
+export global Theme {
+    in-out property <bool> dark: true;
+    in-out property <color> canvas: #0F1218;
+    in-out property <color> surface: #171B24;
+    in-out property <color> surface-raised: #1E2430;
+    in-out property <color> border: #2A3140;
+    in-out property <color> text-primary: #E8ECF2;
+    in-out property <color> text-secondary: #9AA3B5;
+    in-out property <color> accent: #3D9B8F;
+    in-out property <color> accent-muted: #2A6B63;
+    in-out property <color> danger: #C45C5C;
+    in-out property <color> warning: #C9A227;
+    in-out property <color> success: #4F9F6A;
+    in-out property <color> info: #5B8FD9;
+    in-out property <color> row-hover: #222836;
+    in-out property <color> nav-active-bar: #3D9B8F;
+    in-out property <color> mono-fg: #B8C0D0;
+    in-out property <color> status-bar-bg: #12161E;
+    in-out property <color> on-accent: #F4FFFC;
+
+    public function apply(is-dark: bool) {
+        dark = is-dark;
+        if is-dark {
+            canvas = #0F1218;
+            surface = #171B24;
+            surface-raised = #1E2430;
+            border = #2A3140;
+            text-primary = #E8ECF2;
+            text-secondary = #9AA3B5;
+            accent = #3D9B8F;
+            accent-muted = #2A6B63;
+            danger = #C45C5C;
+            warning = #C9A227;
+            success = #4F9F6A;
+            info = #5B8FD9;
+            row-hover = #222836;
+            nav-active-bar = #3D9B8F;
+            mono-fg = #B8C0D0;
+            status-bar-bg = #12161E;
+            on-accent = #F4FFFC;
+        } else {
+            canvas = #F4F6F9;
+            surface = #FFFFFF;
+            surface-raised = #EEF1F6;
+            border = #D8DEE8;
+            text-primary = #12151C;
+            text-secondary = #5A6478;
+            accent = #2F7F75;
+            accent-muted = #C5E4DF;
+            danger = #B04040;
+            warning = #A8841A;
+            success = #2F7A4A;
+            info = #3A6FB5;
+            row-hover = #E4E9F1;
+            nav-active-bar = #2F7F75;
+            mono-fg = #3A4254;
+            status-bar-bg = #E8ECF2;
+            on-accent = #FFFFFF;
+        }
+    }
+}

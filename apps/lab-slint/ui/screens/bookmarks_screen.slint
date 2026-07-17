@@ -1,0 +1,88 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { SectionCard } from "../components/section_card.slint";
+import { EmptyState } from "../components/empty_state.slint";
+import { MetricTile } from "../components/metric_tile.slint";
+import { LabButton } from "../components/lab_button.slint";
+
+export component BookmarksScreen inherits Rectangle {
+    in-out property <[string]> finding-claims;
+    in-out property <[string]> finding-uuids;
+    in-out property <int> bookmark-count;
+    callback navigate-report();
+
+    background: transparent;
+    property <bool> empty: finding-claims.length == 0 && bookmark-count == 0;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 12px;
+
+        HorizontalLayout {
+            spacing: 12px;
+            MetricTile {
+                label: Strings.status-bookmarks;
+                value: root.bookmark-count;
+                min-height: 64px;
+                horizontal-stretch: 1;
+            }
+            VerticalLayout {
+                spacing: 8px;
+                alignment: center;
+                Text {
+                    text: Strings.work-product-hint;
+                    color: Theme.text-secondary;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                if !empty: LabButton {
+                    primary: true;
+                    label: Strings.go-report;
+                    clicked => { root.navigate-report(); }
+                }
+            }
+        }
+
+        if empty: EmptyState {
+            title: Strings.empty-no-bookmarks;
+            body: Strings.empty-hint-bookmarks;
+            vertical-stretch: 1;
+        }
+
+        if !empty: SectionCard {
+            title: Strings.queue-for-report;
+            vertical-stretch: 1;
+            Flickable {
+                vertical-stretch: 1;
+                viewport-width: parent.width - 28px;
+                VerticalLayout {
+                    spacing: 6px;
+                    width: parent.width - 28px;
+                    for claim[index] in root.finding-claims: Rectangle {
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        border-radius: 4px;
+                        background: Theme.surface-raised;
+                        VerticalLayout {
+                            padding: 10px;
+                            spacing: 4px;
+                            Text {
+                                text: claim;
+                                color: Theme.text-primary;
+                                font-size: 12px;
+                                wrap: word-wrap;
+                            }
+                            Text {
+                                text: index < root.finding-uuids.length ? root.finding-uuids[index] : "";
+                                color: Theme.mono-fg;
+                                font-family: "monospace";
+                                font-size: 11px;
+                                overflow: elide;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

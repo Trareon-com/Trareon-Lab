@@ -1,0 +1,30 @@
+import { Theme } from "../theme.slint";
+
+export component MetricTile inherits Rectangle {
+    in-out property <string> label;
+    in-out property <int> value;
+
+    background: Theme.surface-raised;
+    border-width: 1px;
+    border-color: Theme.border;
+    border-radius: 6px;
+    min-height: 72px;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 4px;
+
+        Text {
+            text: root.label;
+            color: Theme.text-secondary;
+            font-size: 11px;
+        }
+
+        Text {
+            text: "\{root.value}";
+            color: Theme.text-primary;
+            font-size: 20px;
+            font-weight: 700;
+        }
+    }
+}
