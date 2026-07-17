@@ -32,6 +32,12 @@ All PASS locally.
 - Operator: storefront upload of `dist/1.0.0/` (not GitHub binaries) per `docs/DISTRIBUTION-STOREFRONT.md`.
 - Optional later: prefs persist, full timeline, PDF export, Authenticode (W3).
 
+## Follow-up (same day)
+
+- Committed `ece66c3` and pushed `feat/institutional-ui-polish`.
+- PR #1 was already MERGED; opened **PR #2**: https://github.com/Trareon-com/Trareon-Lab/pull/2
+- Next: wait CI green on PR #2 → merge → operator storefront upload.
+
 ## Next step
 
-Commit + push the LabSession/UI dirty set on `feat/institutional-ui-polish` (exclude `graphify-out/` and screenshot noise under `spikes/results/` unless wanted), then wait for PR CI.
+Merge PR #2 when CI passes, then storefront upload per `docs/DISTRIBUTION-STOREFRONT.md`.
