@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trareon.com/schemas/bookmark.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "bookmark_uuid",
+    "case_uuid",
+    "target_kind",
+    "target_ref",
+    "citation",
+    "author_role",
+    "created_at_utc",
+    "review_state"
+  ],
+  "properties": {
+    "schema_version": { "const": "bookmark-1" },
+    "bookmark_uuid": { "type": "string", "format": "uuid" },
+    "case_uuid": { "type": "string", "format": "uuid" },
+    "target_kind": {
+      "enum": [
+        "evidence_object",
+        "artifact_hit",
+        "timeline_event",
+        "fs_path",
+        "byte_range"
+      ]
+    },
+    "target_ref": { "type": "string", "minLength": 1 },
+    "citation": { "type": "string", "minLength": 1 },
+    "author_role": { "type": "string", "minLength": 1 },
+    "created_at_utc": { "type": "string", "format": "date-time" },
+    "review_state": {
+      "enum": ["open", "accepted", "rejected", "superseded"]
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "note": { "type": "string" },
+    "evidence_uuid": { "type": "string", "format": "uuid" },
+    "byte_range": {
+      "type": "object",
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "additionalProperties": true
+}
