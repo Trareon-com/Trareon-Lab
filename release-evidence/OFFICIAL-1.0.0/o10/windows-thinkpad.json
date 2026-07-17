@@ -1,0 +1,10 @@
+{
+  "gate": "O10",
+  "os": "windows",
+  "host": "ThinkPad reference (WINDOWS LAB QUEUE)",
+  "status": "NOT_RUN",
+  "cold_start_ok": null,
+  "open_case_ok": null,
+  "import_smoke_ok": null,
+  "notes": "Queued in docs/WINDOWS-LAB-QUEUE.md item W4"
+}

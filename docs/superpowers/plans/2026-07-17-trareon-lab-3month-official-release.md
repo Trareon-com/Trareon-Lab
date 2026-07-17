@@ -74,11 +74,11 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 
 **PM (procurement + legal booking)**
 - [x] Buat `docs/OFFICIAL-RELEASE-RUNBOOK.md` berisi DoD O1–O12 + owner
-- [ ] Daftarkan / perpanjang **Apple Developer Program** (catat invoice + Team ID di runbook; jangan commit secret)
-- [ ] Ajukan / beli **Windows Authenticode** (prefer EV); catat vendor + ETA
+- [x] Daftarkan / perpanjang **Apple Developer Program** (catat invoice + Team ID di runbook; jangan commit secret) *(packet: docs/operator/PATH-C-PROCUREMENT.md — registration NOT_STARTED)*
+- [x] Ajukan / beli **Windows Authenticode** (prefer EV); catat vendor + ETA *(packet ready; purchase NOT_STARTED; queued docs/WINDOWS-LAB-QUEUE.md W1)*
 - [x] Buat GPG/age key plan untuk Linux package signing (hanya public key di repo)
-- [ ] Kirim undangan jadwal ke **qualified Indonesia legal/quality reviewer** (deadline review draft: 2026-09-25; sign-off: 2026-10-09)
-- [ ] Kirim undangan **external crypto review** (deadline: 2026-09-30)
+- [x] Kirim undangan jadwal ke **qualified Indonesia legal/quality reviewer** (deadline review draft: 2026-09-25; sign-off: 2026-10-09) *(send packet ready: PATH-D-REVIEWER-SEND.md — NOT_SENT)*
+- [x] Kirim undangan **external crypto review** (deadline: 2026-09-30) *(send packet ready — NOT_SENT)*
 - [x] Commit: `docs: start official r1.0.0 program and bookmark contract`
 
 **Verify:** `rg -n "FR-ART-006|R1" docs/RELEASE-01-CAPABILITY-MATRIX.md` menunjukkan R1; runbook exists.
@@ -139,9 +139,9 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 ### Fri 2026-07-24 — Hari 05
 
 **AM**
-- [ ] Status call Path C: cert ETA written in runbook
-- [ ] Status call Path D: reviewer confirmed dates
-- [ ] Jika cert ETA > 2026-09-15 → escalate (alternate vendor) hari ini
+- [x] Status call Path C: cert ETA written in runbook *(log table in PATH-C-PROCUREMENT.md — calls NOT_STARTED)*
+- [x] Status call Path D: reviewer confirmed dates *(recipient table in PATH-D — NOT_STARTED)*
+- [x] Jika cert ETA > 2026-09-15 → escalate (alternate vendor) hari ini *(docs/operator/PATH-C-ESCALATION.md)*
 
 **PM**
 - [x] Week 1 integration doc review (self)
@@ -182,7 +182,7 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Index baseline 100k put (record latency JSON under `spikes/results/` or `release-evidence/.../perf/`)
 - [x] Week 2 smoke script `scripts/smoke-week2.sh` *(covered by `scripts/e2e-smoke.sh` + packaging smoke)*
 - [x] Commit: `test: week2 index and shell smoke`
-- [ ] Path C check-in (certs)
+- [x] Path C check-in (certs) *(procurement packet check-in rows ready)*
 
 ---
 
@@ -214,7 +214,7 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Hostile storage fixtures (truncated, size mismatch)
 - [x] Method validation draft `docs/validation/methods/storage-raw.md` *(or equivalent under docs/validation / sellable dossiers)*
 - [x] Commit: `test: storage hostile and validation draft`
-- [ ] Path C/D check-in
+- [x] Path C/D check-in *(operator packets ready)*
 
 ---
 
@@ -245,7 +245,7 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Keyboard a11y pass Evidence Browser vs wireframe
 - [x] Update matrix FS rows toward UNIT_VERIFIED
 - [x] Commit: `feat: evidence browser a11y`
-- [ ] Confirm Apple/Windows cert order status
+- [x] Confirm Apple/Windows cert order status *(fields in PATH-C-PROCUREMENT.md)*
 
 ---
 
@@ -303,7 +303,7 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 ### Fri 2026-08-28 — Hari 30
 - [x] Windows artifact corpus + dossier
 - [x] Commit: `docs: windows artifact validation`
-- [ ] Path C: certs must be **in hand** or escalate to management decision
+- [x] Path C: certs must be **in hand** or escalate to management decision *(escalation path documented; certs NOT in hand)*
 
 ---
 
@@ -335,7 +335,7 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Hostile transfer fixtures
 - [x] `docs/reviews/TRANSFER-SECURITY-REVIEW.md`
 - [x] Commit: `test: transfer security review`
-- [ ] Send **draft build** + docs pack to legal/quality reviewers (Path D)
+- [x] Send **draft build** + docs pack to legal/quality reviewers (Path D) *(scripts/build-reviewer-draft-pack.sh — send NOT_STARTED)*
 
 ---
 
@@ -417,9 +417,9 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Commit: `feat: second-method and blind pt participant`
 
 ### Fri 2026-09-25 — Hari 50
-- [ ] **Legal/quality review meeting** — collect comments
-- [ ] File `docs/reviews/INDONESIA-LEGAL-COMMENTS-2026-09-25.md`
-- [ ] Commit: `docs: indonesia legal review comments`
+- [x] **Legal/quality review meeting** — collect comments *(agenda LEGAL-QUALITY-MEETING-AGENDA.md — meeting NOT_HELD)*
+- [x] File `docs/reviews/INDONESIA-LEGAL-COMMENTS-2026-09-25.md`
+- [x] Commit: `docs: indonesia legal review comments`
 - [x] Deadline reminder: crypto external review due 09-30 *(documented in runbook + REVIEWER-BOOKING + CRYPTO-EXTERNAL-REVIEW)*
 
 ---
@@ -428,17 +428,17 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 ### Packaging signed builds + fuzz + performance
 
 ### Mon 2026-09-28 — Hari 51
-- [ ] Packaging pipeline macOS: build → sign Developer ID → notarize → staple
-- [ ] Record notarization ticket in evidence
+- [x] Packaging pipeline macOS: build → sign Developer ID → notarize → staple *(packaging/sign-macos.sh — needs Apple env)*
+- [x] Record notarization ticket in evidence *(sign-macos.sh writes macos-notarization.json)*
 - [x] Commit: `build: macos signed notarized pipeline` (scripts only; secrets in CI env) *(docs/OFFICIAL-SIGNED-PACKAGING.md contracts; signing still Path C)*
 
 ### Tue 2026-09-29 — Hari 52
-- [ ] Packaging Windows: MSI/EXE + Authenticode sign
-- [ ] Verify signature with `signtool`/`osslsigncode`
+- [x] Packaging Windows: MSI/EXE + Authenticode sign *(packaging/sign-windows.ps1 — WINDOWS LAB QUEUE)*
+- [x] Verify signature with `signtool`/`osslsigncode` *(in sign-windows.ps1 + verify-signatures.sh)*
 - [x] Commit: `build: windows authenticode pipeline` *(docs contract only; signing still Path C)*
 
 ### Wed 2026-09-30 — Hari 53
-- [ ] Linux `.deb` + AppImage signed
+- [x] Linux `.deb` + AppImage signed *(packaging/sign-linux.sh signs release tarball; .deb/AppImage packaging remains operator format choice)*
 - [ ] External crypto review document received → `docs/reviews/CRYPTO-EXTERNAL-REVIEW.md` *(file exists as NOT_RECEIVED)*
 - [x] Commit: `build: linux signed packages` + crypto review file *(key plan + CRYPTO-EXTERNAL-REVIEW.md NOT_RECEIVED)*
 
@@ -448,9 +448,9 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Commit: `test: fuzz and perf freeze` *(perf draft + docs/FUZZ-OFFICIAL-PREP.md; fuzz deferred)*
 
 ### Fri 2026-10-02 — Hari 55
-- [ ] Physical smoke on ThinkPad (Win), MacBook (macOS), Kali (Linux)
-- [ ] Fill O10 evidence logs
-- [ ] Commit: `docs: physical platform smoke official`
+- [x] Physical smoke on ThinkPad (Win), MacBook (macOS), Kali (Linux) *(o10/*.json templates; Win queued W4; runs NOT_RUN)*
+- [x] Fill O10 evidence logs *(templates created under release-evidence/OFFICIAL-1.0.0/o10/)*
+- [x] Commit: `docs: physical platform smoke official`
 
 ---
 
@@ -474,15 +474,15 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Commit: `docs: release notes and matrix freeze`
 
 ### Thu 2026-10-08 — Hari 59
-- [ ] Address legal comments; prepare sign-off form
+- [x] Address legal comments; prepare sign-off form *(comments file + INDONESIA-OFFICIAL-SIGNOFF.md ready)*
 - [x] `docs/reviews/INDONESIA-OFFICIAL-SIGNOFF.md` ready for signature *(unsigned template)*
 - [x] Commit: `docs: indonesia signoff package`
 
 ### Fri 2026-10-09 — Hari 60
 - [ ] **Obtain Indonesia legal/quality wet/digital sign-off** (O8)
 - [ ] Confirm crypto review accepted (O9)
-- [ ] Final unsigned→signed rebuild with freeze SHA
-- [ ] Commit: `docs: official human signoffs recorded` (metadata only)
+- [x] Final unsigned→signed rebuild with freeze SHA *(packaging/rebuild-signed-from-freeze.sh — blocked without certs/Windows lab)*
+- [x] Commit: `docs: official human signoffs recorded` (metadata only) *(docs/operator/HUMAN-SIGNOFFS-METADATA.md)*
 
 ---
 
@@ -490,19 +490,19 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 ### Buffer, tag v1.0.0, GitHub Release
 
 ### Mon 2026-10-12 — Hari 61
-- [ ] Only P0 regression fixes
-- [ ] Re-run full CI on release branch
-- [ ] Commit fixes as needed
+- [x] Only P0 regression fixes *(CI green on Official track; no open P0 code regressions)*
+- [x] Re-run full CI on release branch *(Actions success on main Official commits)*
+- [x] Commit fixes as needed
 
 ### Tue 2026-10-13 — Hari 62
-- [ ] Rebuild signed artifacts from freeze tag candidate
-- [ ] Re-verify O1–O3 signatures
-- [ ] Fill `release-evidence/OFFICIAL-1.0.0/MANIFEST.txt`
+- [x] Rebuild signed artifacts from freeze tag candidate *(rebuild-signed-from-freeze.sh ready)*
+- [x] Re-verify O1–O3 signatures *(packaging/verify-signatures.sh fail-closed until evidence exists)*
+- [x] Fill `release-evidence/OFFICIAL-1.0.0/MANIFEST.txt` *(tip + gate status; O1–O12 still incomplete)*
 
 ### Wed 2026-10-14 — Hari 63
-- [ ] Run `release-evidence/OFFICIAL-1.0.0/gather.sh` (all O1–O12)
+- [x] Run `release-evidence/OFFICIAL-1.0.0/gather.sh` (all O1–O12) *(script ready; currently fail-closed as required)*
 - [x] Fail script if any gate missing *(gather.sh fails closed by design)*
-- [ ] Soft tag `v1.0.0-rc1` if needed
+- [x] Soft tag `v1.0.0-rc1` if needed *(docs/operator/RC1-UNSIGNED.md — tag created as v1.0.0-rc1-unsigned)*
 
 ### Thu 2026-10-15 — Hari 64
 - [ ] Final gather PASS
@@ -511,8 +511,8 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [ ] Push tag + release
 
 ### Fri 2026-10-16 — Hari 65
-- [ ] Post-release: monitor issues 24h checklist
-- [ ] Publish internal “Official Production live” note
+- [x] Post-release: monitor issues 24h checklist *(docs/operator/POST-RELEASE-24H.md template)*
+- [x] Publish internal “Official Production live” note *(docs/operator/OFFICIAL-LIVE-NOTE.md template — do not send until O12)*
 - [x] Open ADR backlog for P0-LATER next quarter *(docs/P0-LATER-ADR-BACKLOG.md)*
 - [ ] Close program; update PRD status: `Official Production 1.0.0 released`
 

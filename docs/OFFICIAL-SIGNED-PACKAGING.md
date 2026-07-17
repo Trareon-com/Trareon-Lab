@@ -1,34 +1,19 @@
 # Official signed packaging pipelines (scripts + env contracts)
 
-Secrets stay in CI/operator environment variables. This document is the repository-side pipeline contract for O1–O3.
+Secrets stay in CI/operator environment variables.
 
-## macOS (O2)
+| OS | Script | Evidence |
+|---|---|---|
+| macOS O2 | `packaging/sign-macos.sh` | `release-evidence/OFFICIAL-1.0.0/macos-notarization.json` |
+| Linux O3 | `packaging/sign-linux.sh` | `linux-sig.txt` + `linux-signing-pubkey.asc` |
+| Windows O1 | `packaging/sign-windows.ps1` (**Windows lab queue**) | `windows-sig.txt` |
+| Verify | `packaging/verify-signatures.sh` | non-empty evidence files |
+| Orchestrate | `packaging/rebuild-signed-from-freeze.sh` | then `gather.sh` |
 
-```bash
-# Required env (never commit values):
-# APPLE_TEAM_ID, APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, DEVELOPER_ID_APPLICATION
-# Build unsigned first, then:
-# codesign --sign "$DEVELOPER_ID_APPLICATION" ...
-# xcrun notarytool submit ... --wait
-# xcrun stapler staple ...
-# Write ticket JSON to release-evidence/OFFICIAL-1.0.0/macos-notarization.json
-```
-
-Dry-run without certs: `bash packaging/signing-dry-run.sh`
-
-## Windows (O1)
-
-```powershell
-# Required env: WINDOWS_CERT_PATH / WINDOWS_CERT_PASSWORD (or hardware token)
-# signtool sign /fd SHA256 ...
-# Record verification output to release-evidence/OFFICIAL-1.0.0/windows-sig.txt
-```
-
-## Linux (O3)
-
-Follow `docs/LINUX-PACKAGE-SIGNING-KEY-PLAN.md`. Sign `.deb`/AppImage; write `linux-sig.txt` and commit only `linux-signing-pubkey.asc`.
+Dry-run without certs: `bash packaging/signing-dry-run.sh`  
+Windows execution order: `docs/WINDOWS-LAB-QUEUE.md`
 
 ## Status
 
-Pipeline contracts: READY.  
-Signed artifact production: BLOCKED on Path C certificates/keys.
+Pipeline scripts: READY (fail closed without env).  
+Signed artifact production: BLOCKED on Path C certificates/keys + Windows lab.

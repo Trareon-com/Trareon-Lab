@@ -1,3 +1,36 @@
 # Official R1.0.0 evidence manifest
-# Fill at freeze: tip SHA, CI URL, artifact digests, gate owners.
-status: NOT_STARTED
+
+status: IN_PROGRESS (repo artifacts complete; O1–O12 evidence incomplete)
+program_tag: program/official-w1
+engineering_alpha_tag: v0.9.0-sellable
+rc_unsigned_tag: v1.0.0-rc1-unsigned (created when soft-tagged)
+official_v1_tag: NOT_CREATED (blocked until gather PASS)
+
+## Known tip (last repo-complete push before this manifest refresh)
+
+git_tip_at_manifest_authoring: 37a86a2cb67566299d597e98a1f09232924318c2 @ 2026-07-17T11:12:08Z
+
+## CI
+
+ci_green_example: https://github.com/Trareon-com/Trareon-Lab/actions/runs/29575583474
+
+## Gates
+
+O1 windows-sig.txt: NOT_STARTED (WINDOWS LAB QUEUE)
+O2 macos-notarization.json: NOT_STARTED
+O3 linux-sig.txt: NOT_STARTED
+O4 sbom.cdx.json: NOT_STARTED (cargo-metadata inventory exists in CI artifacts)
+O5 release-tag CI URL: NOT_STARTED
+O6 matrix freeze SHA: NOT_STARTED (Engineering Alpha honesty corrections landed)
+O7 Validated dossiers: NOT_STARTED (FR-DOC-002 blocks false Validated)
+O8 Indonesia sign-off: NOT_STARTED (template ready)
+O9 crypto review: NOT_RECEIVED (stub ready)
+O10 physical smoke: NOT_RUN (templates under o10/; Windows queued)
+O11 bookmark/transfer: code+tests present; Official evidence log NOT_STARTED
+O12 GitHub Official Release: NOT_STARTED
+
+## Operator packets
+
+docs/operator/PATH-C-PROCUREMENT.md
+docs/operator/PATH-D-REVIEWER-SEND.md
+docs/WINDOWS-LAB-QUEUE.md

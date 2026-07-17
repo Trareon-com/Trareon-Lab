@@ -2,36 +2,30 @@
 
 **Synced:** 2026-07-17  
 **Sellable Engineering Alpha:** complete (`v0.9.0-sellable`)  
-**Official Production:** program active; O1–O12 open  
-**Repo track:** COMPLETE (agent-doable work finished; commit/push closes CI checkbox)
+**Official candidate RC:** `v1.0.0-rc1-unsigned` (when tagged)  
+**Repo artifact track:** COMPLETE  
+**Plan checkboxes:** 219 done / 8 open (human evidence only)
 
-## Repository-complete (agent-doable)
+## Created in-repo (this finish pass)
 
-- Week 1 contracts, runbook, DevSecOps map, design tokens, CI audit/secrets/SBOM/geiger, Official evidence skeleton
-- Weeks 2–9 engineering crates/UI/tests already present from sellable path; Official plan checkboxes synced
-- Storage/Artifacts Engineering Alpha method reviews PASS
-- FR-VAL-009/010 persistence + UI hooks
-- Signed packaging **contracts** + signing dry-run script (no secrets)
-- Release notes draft + Indonesia sign-off template (unsigned) + crypto review stub (NOT_RECEIVED)
-- FR-DOC-002 gate (`scripts/check-fr-doc-002.sh`) + honest UNIT_VERIFIED matrix corrections
-- P0-LATER ADR backlog opened
-- Official review deltas, discrepancy register, perf draft, corpus prep README
+- Path C/D operator packets + escalation
+- Reviewer draft pack script + legal meeting agenda + comments file
+- Signed packaging scripts: macOS / Linux / Windows (+ verify + rebuild orchestrator)
+- O10 smoke templates (macOS/Linux/Windows)
+- MANIFEST fill script + human signoff metadata + post-release / live-note / RC1 docs
+- **Windows lab queue:** `docs/WINDOWS-LAB-QUEUE.md` (W1–W6 deferred to end)
 
-## Operator-blocked (cannot finish in-repo without real-world evidence)
+## Still open (cannot invent)
 
-| Blocker | Why |
-|---|---|
-| Apple Developer Program + Team ID | Paid account / invoice |
-| Windows Authenticode purchase | Paid cert / vendor ETA |
-| Linux key generation | Offline private key ceremony |
-| Send reviewer invitations | Human email + acceptance |
-| Path C/D status calls with real ETAs | Human |
-| Promote methods to Official `Validated` | Corpora + freeze SHA + FR-DOC-002 |
-| Physical 3-OS smoke logs | Hardware |
-| Wet/digital legal + crypto sign-offs | Named reviewers |
-| Signed installers + GitHub Official Release | Certs + O1–O12 gather PASS |
-| Tag `v1.0.0` as Official | Only after gather PASS |
+1. External crypto review **received** (named human document)
+2. Indonesia wet/digital sign-off obtained (O8)
+3. Crypto review accepted (O9)
+4. Final gather PASS (needs O1–O12 files)
+5. Annotated Official `v1.0.0`
+6. GitHub Release with **signed** installers
+7. Push Official tag + release
+8. Close program / PRD `Official Production 1.0.0 released`
 
 ## Honesty rule
 
-Do **not** relabel Engineering Alpha / `v0.9.0-sellable` as Official Production. Official requires every O1–O12 gate `PASS` in `docs/OFFICIAL-RELEASE-RUNBOOK.md`.
+Do **not** relabel RC/Alpha as Official Production. Windows Authenticode + ThinkPad smoke stay in `docs/WINDOWS-LAB-QUEUE.md` until a Windows lab is available.

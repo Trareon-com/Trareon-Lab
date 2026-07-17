@@ -1,0 +1,10 @@
+{
+  "gate": "O10",
+  "os": "macos",
+  "host": "MacBook reference (operator fills model)",
+  "status": "NOT_RUN",
+  "cold_start_ok": null,
+  "open_case_ok": null,
+  "import_smoke_ok": null,
+  "notes": "Fill after physical smoke; do not invent PASS"
+}
