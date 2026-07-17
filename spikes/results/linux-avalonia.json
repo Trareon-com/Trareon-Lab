@@ -1,0 +1,15 @@
+{
+  "candidate": "C-AVALONIA",
+  "os": "linux",
+  "cold_start_ms": 1032,
+  "idle_rss_mib": 2.76953125,
+  "peak_rss_mib": 262.58203125,
+  "table_display_ms": 465,
+  "filter_p50_ms": 14,
+  "filter_p95_ms": 18,
+  "cancel_ms": 48,
+  "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
+  "installer_size_mib": null,
+  "a11y_smoke": "PASS_keyboard_focus_controls_present",
+  "notes": "avalonia_shell=net6; rust_core_via_harness_cli; evidence_bytes_stay_in_rust_core=true; ui_init_ms=567; rows=1000000; filtered_page_total_check=1000000; hashed=1869; export=90140e612b797046f425b73c0624ea8cc0b2217ce804061b9351dd318f152406; idle_rss_from_harness_child_not_avalonia_process"
+}

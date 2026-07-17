@@ -85,7 +85,7 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 | C-SLINT | Linux | 512 | 239.48 | 361.44 | 459 | 13 | 16 | 55 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 9.707 | PASS_keyboard_focus_controls_present | `spikes/results/linux-slint.json` |
 | C-AVALONIA | macOS | | | | | | | | | | | needs .NET SDK |
 | C-AVALONIA | Windows | 3050 | | | 1343 | 17 | 29 | 230 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/windows-avalonia.json` |
-| C-AVALONIA | Linux | | | | | | | | | | | pending Kali |
+| C-AVALONIA | Linux | 1032 | 2.77* | 262.58 | 465 | 14 | 18 | 48 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/linux-avalonia.json` (*idle RSS from harness child) |
 
 Empty numeric cells mean measurement has not been recorded. Empty cells do not count as pass.
 
@@ -134,5 +134,5 @@ These are planning risks recorded before spike execution; they are not Gate A re
 - Desktop shell: no ACCEPTED selection.
 - Case database/index: no ACCEPTED selection.
 - C-TAURI measured on macOS, Windows, and Linux (crash/lock PASS on all three). Windows RSS null; installer size still unmeasured for C-TAURI.
-- C-AVALONIA measured on Windows (crash/lock PASS; RSS null). macOS + Linux pending (`spikes/COPY-PASTE-AVALONIA.md`).
-- Next action: finish C-AVALONIA on Kali + macOS; optionally record UI package sizes; then score mandatory gates and close Gate A per decision rule.
+- C-AVALONIA measured on Windows + Linux (crash/lock PASS). macOS pending. Linux idle RSS is from harness child process, not the Avalonia UI process.
+- Next action: finish C-AVALONIA on macOS; optionally record UI package sizes; then score mandatory gates and close Gate A per decision rule.
