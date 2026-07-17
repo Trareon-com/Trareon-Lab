@@ -1,0 +1,19 @@
+[package]
+name = "lab-spike-index"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "lab-spike-index"
+path = "src/main.rs"
+
+[dependencies]
+lab-spike-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+rusqlite = { version = "0.32", features = ["bundled"] }
+thiserror = { workspace = true }

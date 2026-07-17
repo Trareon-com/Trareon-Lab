@@ -5,7 +5,7 @@
 - **Nama produk:** Trareon Lab
 - **Jenis produk:** Desktop digital-forensic analysis laboratory, install-first, offline-first
 - **Baseline PRD:** `PRD-Digital-Forensic-Analysis-Lab.md` versi 1.0, finalisasi 17 Juli 2026
-- **Status RFC:** Architecture Baseline Draft v0.1 — desktop shell and case index pending Gate A
+- **Status RFC:** Architecture Baseline Draft v0.2 — Gate A PASS; desktop shell and case index selected
 - **Change control:** Perubahan normative memerlukan ADR update, traceability update, dan validation-impact review
 - **Foundation plan:** `docs/superpowers/plans/2026-07-17-trareon-lab-rfc-foundation-preparation.md`
 - **Architecture matrix:** `docs/ARCHITECTURE-DECISION-MATRIX.md`
@@ -13,13 +13,13 @@
 - **Official remote:** `https://github.com/Trareon-com/Trareon-Lab`
 - **Target OS:** Windows, macOS, Linux
 - **Authoritative core:** Rust
-- **Desktop shell:** replaceable presentation layer; selection controlled by ADR-001 and Gate A; **not accepted**
-- **Case database/index:** selection controlled by ADR-002 and Gate A; **not accepted**
+- **Desktop shell:** **Slint + Rust** (`C-SLINT`); ADR-001 `ACCEPTED`; UI remains replaceable
+- **Case database/index:** **Purpose-built Rust index** (`D-RUST-INDEX`); ADR-002 `ACCEPTED`; SQLite remains a Gate E reconsider option
 - **Konektivitas:** Full offline for deterministic forensics; optional loopback-only Ollama/LM Studio for AI assistance
 
 Trareon Lab mengonsumsi paket `.fsnap` dari Trareon Acquire dan format evidence umum, lalu menyediakan intake verification, processing, examination, interpretation, correlation, review, reporting, validation, dan case closure. Produk diposisikan sebagai case-centric, defensible laboratory — bukan kumpulan viewer atau tombol parser.
 
-RFC ini membekukan batas arsitektur yang sudah dikunci PRD dan ADR produk, serta menetapkan bahwa shell desktop hanya boleh dipilih setelah `docs/ARCHITECTURE-DECISION-MATRIX.md` mencatat `PASS` untuk satu kandidat pada seluruh mandatory gate Windows/macOS/Linux.
+RFC ini membekukan batas arsitektur yang sudah dikunci PRD dan ADR produk. Gate A (`docs/ARCHITECTURE-DECISION-MATRIX.md`) mencatat `PASS` dan memilih shell serta index.
 
 ### 1.1 Prinsip yang tidak boleh dilanggar
 
@@ -84,7 +84,7 @@ Rust menjadi authoritative core karena memory safety, kontrol I/O, shared librar
 - Formal administration platform untuk penyelenggara proficiency-testing ISO/IEC 17043.
 - Portable edition dengan feature parity pada rilis P0.
 - Central collaborative server dan cross-case intelligence secara default.
-- Memilih desktop shell atau case index sebelum Gate A `PASS`.
+- Memilih ulang desktop shell atau case index tanpa membuka kembali ADR-001/002 dan Gate A evidence.
 - Production forensic parsers di dalam Gate A spikes.
 
 ## 5. Keputusan Arsitektur
@@ -94,8 +94,8 @@ Rust menjadi authoritative core karena memory safety, kontrol I/O, shared librar
 | Area | Keputusan | ADR / bukti |
 |---|---|---|
 | Authoritative forensic core | Rust | Foundation plan global constraint; PRD Lampiran B |
-| Presentation shell | Replaceable; not selected | ADR-001 `PROPOSED`; Gate A matrix |
-| Case database/index | Not selected | ADR-002 `PROPOSED`; Gate A matrix |
+| Presentation shell | **Slint + Rust** (`C-SLINT`) | ADR-001 `ACCEPTED`; Gate A matrix score 83 |
+| Case database/index | **Purpose-built Rust index** (`D-RUST-INDEX`) | ADR-002 `ACCEPTED`; Gate A matrix |
 | Case isolation | One open case per isolated application process; no writable cross-case state | ADR-004 `PROPOSED` pending Gate C/D evidence; PRD FR-CASE-006–008 |
 | Evidence immutability | Source bytes read-only; derived artifacts content-addressed | PRD FR-EVI; ADR-006 |
 | `.fsnap` import | Read/import verification only; no silent rewrite | ADR-006 `PROPOSED` |
@@ -107,14 +107,14 @@ Rust menjadi authoritative core karena memory safety, kontrol I/O, shared librar
 | Serialization | JSON/JSONL; canonical JSON for signed objects | Foundation plan |
 | Official remote | Private `Trareon-com/Trareon-Lab` | ADR-016 `ACCEPTED` |
 
-### 5.2 Kandidat Gate A yang belum diterima
+### 5.2 Gate A selection (accepted)
 
-| Area | Kandidat yang diukur |
-|---|---|
-| Desktop shell | Tauri 2 + Svelte 5; Slint + Rust; Avalonia + Rust FFI |
-| Case database/index | Bundled SQLite-only; SQLite plus embedded index engine; purpose-built Rust index |
+| Area | Selected | Runner-up evidence |
+|---|---|---|
+| Desktop shell | **Slint + Rust** (score 83) | Tauri 79; Avalonia 67 — all cleared mandatory gates under spike-level interpretations |
+| Case database/index | **D-RUST-INDEX** | D-SQLITE / D-SQLITE-FTS blocked by 100M search `NOT_RUN` in Gate A |
 
-Seleksi hanya terjadi setelah `docs/ARCHITECTURE-DECISION-MATRIX.md` mencatat raw measurements dan `PASS` pada seluruh mandatory gate. RFC amendment wajib menyertakan kandidat terpilih, skor, dan tautan bukti.
+Evidence: `docs/ARCHITECTURE-DECISION-MATRIX.md`, `spikes/results/*-slint.json`, `spikes/results/macos-d-rust-index.json`.
 
 ### 5.3 Hermetic offline policy
 

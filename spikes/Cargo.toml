@@ -3,6 +3,7 @@ resolver = "2"
 members = [
   "lab-spike-core",
   "lab-spike-harness",
+  "lab-spike-index",
   "slint-app",
 ]
 exclude = ["tauri", "avalonia"]

@@ -1,0 +1,18 @@
+{
+  "candidate": "D-SQLITE",
+  "os": "macos",
+  "rows_indexed": 1000000,
+  "migration_forward_back": "PASS",
+  "crash_recovery": "PASS",
+  "deterministic_query": "PASS",
+  "disk_amplification_mib": 138.563,
+  "search_1m_p50_ms": 25,
+  "search_1m_p95_ms": 61,
+  "search_10m_p50_ms": 42,
+  "search_10m_p95_ms": 101,
+  "search_100m_p50_ms": null,
+  "search_100m_p95_ms": null,
+  "licensing": "SQLite public domain; redistribution OK offline",
+  "case_portability": "PASS",
+  "notes": "search_100m=NOT_RUN_insert_cost; search_10m_mode=lookup_sample_on_1m_index"
+}

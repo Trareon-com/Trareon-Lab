@@ -9,7 +9,7 @@
   "filter_p95_ms": 5,
   "cancel_ms": 60,
   "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
-  "installer_size_mib": null,
+  "installer_size_mib": 2.47,
   "a11y_smoke": "PASS_keyboard_focus_controls_present",
-  "notes": "webview_shell=tauri2_svelte5; evidence_bytes_stay_in_rust_core=true; ui_init_ms=1501; rows=1000000; filtered_page_total_check=1000000; hashed=2994; export=c0492eb9aa1ea7c6e8c8de2d04b7b7bdb2a3f1ba5723e92cc4da4c5ee801ec7c"
+  "notes": "webview_shell=tauri2_svelte5; evidence_bytes_stay_in_rust_core=true; ui_init_ms=1501; rows=1000000; filtered_page_total_check=1000000; hashed=2994; export=c0492eb9aa1ea7c6e8c8de2d04b7b7bdb2a3f1ba5723e92cc4da4c5ee801ec7c; package=macos-tauri-package.zip; package_bytes=2589764; no_language_runtime=true; os_webview_required=true; signing=unsigned_spike_artifact"
 }

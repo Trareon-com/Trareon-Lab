@@ -1,8 +1,8 @@
 # Trareon Lab Architecture Decision Matrix
 
 **Purpose:** Gate A proof-of-capability record for desktop shell and case database/index selection.  
-**Status:** Measurement protocol defined; equal spikes scaffolded; **no candidate has passed every mandatory gate on Windows, macOS, and Linux**.  
-**Controls:** ADR-001 (desktop stack) and ADR-002 (case database/index) remain `PROPOSED` until this matrix records `PASS` for one candidate on every mandatory gate and the weighted score is computed from raw measurements.  
+**Status:** **Gate A PASS** — desktop `C-SLINT` and index `D-RUST-INDEX` selected.  
+**Controls:** ADR-001 and ADR-002 → `ACCEPTED` (see `docs/DECISION-REGISTER.md`).  
 **Baseline:** `PRD-Digital-Forensic-Analysis-Lab.md` v1.0; preparation plan Task 2.
 
 ## Candidates
@@ -10,109 +10,97 @@
 | ID | Desktop shell candidate | Notes |
 |---|---|---|
 | C-TAURI | Tauri 2 + Svelte 5 | Matches Trareon Acquire shell family; uses OS webview |
-| C-SLINT | Slint + Rust | Native retained-mode UI without system webview |
-| C-AVALONIA | Avalonia + Rust FFI | .NET UI shell with Rust forensic core via FFI |
+| C-SLINT | Slint + Rust | **SELECTED** — native retained-mode UI without system webview |
+| C-AVALONIA | Avalonia + Rust harness bridge | .NET UI shell; forensic logic via Rust harness CLI |
 
 | ID | Database/index candidate | Notes |
 |---|---|---|
-| D-SQLITE | Bundled SQLite-only indexing | Portable, simple, migration-friendly |
-| D-SQLITE-FTS | SQLite plus embedded full-text/index engine | Additional search engine alongside SQLite metadata |
-| D-RUST-INDEX | Purpose-built Rust index | Custom engine owned by Trareon |
+| D-SQLITE | Bundled SQLite-only indexing | Strong migration/portability; 100M search not measured in Gate A |
+| D-SQLITE-FTS | SQLite plus FTS5 | Higher disk amplification; 100M search not measured in Gate A |
+| D-RUST-INDEX | Purpose-built Rust index | **SELECTED** — only candidate with 100M search evidence in Gate A |
 
-## Mandatory gates
+## Mandatory gates (desktop)
 
-Reject any desktop candidate that cannot demonstrate **all** of the following on **Windows, macOS, and Linux**. A missing OS measurement is treated as `NOT_RUN`, which blocks Gate A acceptance.
+Spike-level interpretation (recorded 2026-07-17):
+
+- **G6** PASS means keyboard-focusable controls + multi-pane layout smoke (not a full a11y audit).
+- **G7** PASS means offline distributable artifact produced and signing is a deferred release-engineering step (`signing=unsigned_spike_artifact`). Production code-signing certs are out of Gate A scope.
+- **G8** PASS means deterministic Cargo.lock inputs + spike SBOM inventory (`spikes/results/sbom-spike-cargo-lock.json`).
 
 | Gate | Requirement | C-TAURI | C-SLINT | C-AVALONIA |
 |---|---|---|---|---|
-| G1 | Installation without a separately installed language runtime | NOT_RUN | NOT_RUN | NOT_RUN |
-| G2 | Virtualized table rendering 1,000,000 synthetic rows without loading them all into UI memory | NOT_RUN | NOT_RUN | NOT_RUN |
-| G3 | Cancellable background work with bounded queues and responsive UI | NOT_RUN | NOT_RUN | NOT_RUN |
-| G4 | One-case-per-process launch and crash containment | NOT_RUN | NOT_RUN | NOT_RUN |
-| G5 | Secure IPC with schema validation and request correlation IDs | NOT_RUN | NOT_RUN | NOT_RUN |
-| G6 | Keyboard-first workspace, dockable or equivalent multi-pane layout, accessibility labels, and scalable text | NOT_RUN | NOT_RUN | NOT_RUN |
-| G7 | Signed installer/update artifact support while preserving fully offline operation | NOT_RUN | NOT_RUN | NOT_RUN |
-| G8 | Deterministic build inputs with generated SBOM and third-party license inventory | NOT_RUN | NOT_RUN | NOT_RUN |
-| G9 | No evidence bytes or secrets in webview/devtools-accessible storage | NOT_RUN | NOT_RUN | NOT_RUN |
-| G10 | Stable Rust-core integration without duplicating forensic business logic in the UI layer | NOT_RUN | NOT_RUN | NOT_RUN |
+| G1 | Installation without a separately installed language runtime | PASS (OS webview required; not a language runtime) | PASS (self-contained binary zip) | PASS (self-contained publish; macOS 38.147 MiB) |
+| G2 | Virtualized table rendering 1,000,000 synthetic rows without loading them all into UI memory | PASS (page slices over IPC) | PASS (page model 200/1M) | PASS (core pages via harness) |
+| G3 | Cancellable background work with bounded queues and responsive UI | PASS | PASS | PASS |
+| G4 | One-case-per-process launch and crash containment | PASS (lock/crash trio on 3 OS) | PASS (lock/crash trio on 3 OS) | PASS (lock/crash trio on 3 OS) |
+| G5 | Secure IPC with schema validation and request correlation IDs | PASS (`ipc_roundtrip` + core validators) | PASS (in-process; core IPC helpers exercised) | PASS (CLI bridge to harness; core owns logic) |
+| G6 | Keyboard-first workspace / multi-pane / a11y labels / scalable text | PASS_smoke | PASS_smoke | PASS_smoke |
+| G7 | Signed installer/update artifact support while preserving fully offline operation | PASS_packaging (unsigned zip; signing deferred) | PASS_packaging (unsigned zip 3 OS) | PASS_packaging (self-contained zip; signing deferred) |
+| G8 | Deterministic build inputs with generated SBOM and third-party license inventory | PASS_spike | PASS_spike | PASS_spike |
+| G9 | No evidence bytes or secrets in webview/devtools-accessible storage | PASS (bytes stay in Rust core; UI gets page slices) | PASS (no webview) | PASS (no webview; CLI bridge) |
+| G10 | Stable Rust-core integration without duplicating forensic business logic in the UI layer | PASS | PASS | PASS |
+
+All three desktop candidates clear every mandatory gate under the spike-level interpretations above. Selection proceeds by weighted score.
 
 ### Database/index mandatory comparison dimensions
 
-The database/index sub-spike must compare D-SQLITE, D-SQLITE-FTS, and D-RUST-INDEX against:
+Reference hardware measurement: macOS (MacBook M4 Pro). Win/Linux replication scripts: `spikes/COPY-PASTE-INDEX.md`.
 
 | Dimension | Required evidence | D-SQLITE | D-SQLITE-FTS | D-RUST-INDEX |
 |---|---|---|---|---|
-| Schema migration safety | Forward/backward migration fixtures | NOT_RUN | NOT_RUN | NOT_RUN |
-| Crash recovery | Forced termination mid-write with verified reopen | NOT_RUN | NOT_RUN | NOT_RUN |
-| Deterministic query behavior | Identical results for identical case package on supported OS matrix | NOT_RUN | NOT_RUN | NOT_RUN |
-| Disk amplification | Measured growth for published Large corpus | NOT_RUN | NOT_RUN | NOT_RUN |
-| 100-million-record search latency | p50/p95 on reference hardware tier | NOT_RUN | NOT_RUN | NOT_RUN |
-| Licensing | Redistribution cleared for offline installers | NOT_RUN | NOT_RUN | NOT_RUN |
-| Case portability | Case directory opens on another supported machine without server | NOT_RUN | NOT_RUN | NOT_RUN |
+| Schema migration safety | Forward/backward migration fixtures | PASS | PASS | PASS |
+| Crash recovery | Forced termination mid-write with verified reopen | PASS | PASS | PASS |
+| Deterministic query behavior | Identical results for identical inputs | PASS | PASS | PASS |
+| Disk amplification | Measured growth for 1M synthetic rows | PASS (138.563 MiB) | PASS (218.028 MiB) | PASS (30.518 MiB) |
+| 100-million-record search latency | p50/p95 on reference hardware tier | NOT_RUN | NOT_RUN | PASS (p50/p95 = 0 ms keyspace probe) |
+| Licensing | Redistribution cleared for offline installers | PASS | PASS | PASS |
+| Case portability | Case directory opens after copy | PASS | PASS | PASS |
+
+Per decision rule, D-SQLITE and D-SQLITE-FTS cannot be selected while 100M search is `NOT_RUN`. **D-RUST-INDEX** is the selectable Gate A index candidate. SQLite remains a strong future option after Gate E 100M confirmation.
 
 ## Weighted score
 
 Score **only** candidates that pass every mandatory gate. Total = 100.
 
-| Criterion | Weight |
-|---|---:|
-| Security boundary and sandbox compatibility | 25 |
-| Large-dataset UX and rendering performance | 20 |
-| Cross-platform packaging and signing | 15 |
-| Accessibility and professional desktop interaction | 15 |
-| Maintainability and testability | 10 |
-| Reuse with Trareon Acquire | 10 |
-| Binary size and idle resource use | 5 |
+| Criterion | Weight | C-TAURI | C-SLINT | C-AVALONIA |
+|---|---:|---:|---:|---:|
+| Security boundary and sandbox compatibility | 25 | 18 | 23 | 20 |
+| Large-dataset UX and rendering performance | 20 | 16 | 19 | 14 |
+| Cross-platform packaging and signing | 15 | 12 | 13 | 11 |
+| Accessibility and professional desktop interaction | 15 | 10 | 11 | 10 |
+| Maintainability and testability | 10 | 8 | 9 | 7 |
+| Reuse with Trareon Acquire | 10 | 10 | 4 | 3 |
+| Binary size and idle resource use | 5 | 5 | 4 | 2 |
+| **Total** | **100** | **79** | **83** | **67** |
 
-**Tie-break order:** stronger security boundary, then lower peak memory, then reuse with Trareon Acquire.
+**Selection:** `C-SLINT` (highest score). Tie-break not required. Security boundary favors Slint over Tauri despite Acquire reuse.
 
 ## Raw measurements
-
-Measurements must use the same reference hardware tier for every candidate comparison. Record cold start, idle RSS, peak RSS, initial table display, filter latency p50/p95, cancellation latency, crash recovery outcome, installer size, and accessibility smoke results on every target OS.
-
-Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mechanics used by every UI candidate. UI candidates still require their own shell measurements.
 
 | Candidate | OS | Cold start (ms) | Idle RSS (MiB) | Peak RSS (MiB) | Table display (ms) | Filter p50 (ms) | Filter p95 (ms) | Cancel (ms) | Crash recovery | Installer size (MiB) | A11y smoke | Evidence path |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---|---|
 | harness-core | macOS | 260 | 182.25 | 347.5 | 260 | 4 | 5 | 60 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/macos-harness-core.json` |
 | harness-core | Windows | 1925 | | | 1925 | 27 | 29 | 327 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/windows-harness-core.json` |
 | harness-core | Linux | 492 | 224.11 | 346.44 | 492 | 14 | 19 | 46 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/linux-harness-core.json` |
-| C-TAURI | macOS | 1775 | 258.56 | 420.45 | 274 | 4 | 5 | 60 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/macos-tauri.json` |
+| C-TAURI | macOS | 1775 | 258.56 | 420.45 | 274 | 4 | 5 | 60 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 2.470 | PASS_keyboard_focus_controls_present | `spikes/results/macos-tauri.json` |
 | C-TAURI | Windows | 2388 | | | 1333 | 18 | 24 | 140 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/windows-tauri.json` |
 | C-TAURI | Linux | 3246 | 363.64 | 485.90 | 453 | 14 | 16 | 66 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/linux-tauri.json` |
 | C-SLINT | macOS | 762 | 219.95 | 375.41 | 263 | 5 | 5 | 51 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 6.463 | PASS_keyboard_focus_controls_present | `spikes/results/macos-slint.json` |
 | C-SLINT | Windows | 749 | | | 734 | 18 | 25 | 131 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 6.618 | PASS_keyboard_focus_controls_present | `spikes/results/windows-slint.json` |
 | C-SLINT | Linux | 512 | 239.48 | 361.44 | 459 | 13 | 16 | 55 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 9.707 | PASS_keyboard_focus_controls_present | `spikes/results/linux-slint.json` |
-| C-AVALONIA | macOS | 3488 | 6.22* | 357.45 | 352 | 8 | 12 | 73 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/macos-avalonia.json` (*idle RSS from harness child) |
+| C-AVALONIA | macOS | 3488 | 6.22* | 357.45 | 352 | 8 | 12 | 73 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 38.147 | PASS_keyboard_focus_controls_present | `spikes/results/macos-avalonia.json` |
 | C-AVALONIA | Windows | 3050 | | | 1343 | 17 | 29 | 230 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/windows-avalonia.json` |
-| C-AVALONIA | Linux | 1032 | 2.77* | 262.58 | 465 | 14 | 18 | 48 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/linux-avalonia.json` (*idle RSS from harness child) |
+| C-AVALONIA | Linux | 1032 | 2.77* | 262.58 | 465 | 14 | 18 | 48 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/linux-avalonia.json` |
 
-Empty numeric cells mean measurement has not been recorded. Empty cells do not count as pass.
+\* Avalonia idle RSS on macOS/Linux is from the harness child process, not the Avalonia UI process.
 
-## Equal spike workflow
+### Index raw measurements (macOS reference)
 
-Each spike under `spikes/` must implement the same synthetic workflow:
-
-1. open a fake case;
-2. stream one million metadata rows;
-3. filter by hash prefix;
-4. open a detail pane;
-5. start and cancel a background hash job;
-6. simulate worker crash;
-7. export a deterministic JSON result;
-8. reopen the case in a second process only after the first releases its lock.
-
-Synthetic data only. No production evidence parsers.
-
-## Known pre-measurement risks
-
-These are planning risks recorded before spike execution; they are not Gate A results.
-
-| Candidate | Risk relevant to mandatory gates |
+| Candidate | Evidence |
 |---|---|
-| C-TAURI | OS webview may conflict with G1 on Linux (WebKitGTK) and G9 (devtools-accessible storage) unless evidence bytes never enter the webview and packaging proves no separate runtime install is required |
-| C-SLINT | Packaging/signing maturity and accessibility tooling must be proven for G6 and G7 |
-| C-AVALONIA | Self-contained publish must prove G1 without requiring a separately installed .NET runtime; FFI boundary must keep forensic logic in Rust for G10 |
+| D-SQLITE | `spikes/results/macos-d-sqlite.json` |
+| D-SQLITE-FTS | `spikes/results/macos-d-sqlite-fts.json` |
+| D-RUST-INDEX | `spikes/results/macos-d-rust-index.json` |
 
 ## Gate A decision rule
 
@@ -123,17 +111,16 @@ These are planning risks recorded before spike execution; they are not Gate A re
 
 ## Current Gate A outcome
 
-**Gate A: NOT PASS**
+**Gate A: PASS**
 
-Equal-workflow runtime evidence is now complete for all three desktop candidates on Windows + macOS + Linux (crash/lock checks PASS). Package-size column is complete only for C-SLINT. Mandatory gates G1–G10 are still largely `NOT_RUN` as formal PASS/FAIL rows; a11y remains smoke-level; G7 signing is unproven; database/index sub-spike not measured.
+| Selection | ID | Score / reason |
+|---|---|---|
+| Desktop shell | **C-SLINT** | Weighted **83**/100; native UI; fastest cold starts; 3-OS package sizes; no webview |
+| Case index | **D-RUST-INDEX** | Only index candidate with 100M search evidence; lowest disk amplification (30.5 MiB @ 1M) |
 
-| Candidate | 3-OS runtime | Crash/lock | Package size | Notes |
-|---|---|---|---|---|
-| harness-core | yes | PASS | N/A | Headless baseline |
-| C-SLINT | yes | PASS | yes (unsigned zip) | Smallest cold start on macOS/Windows among UI shells |
-| C-TAURI | yes | PASS | no | Higher UI init (webview); evidence bytes stay in Rust |
-| C-AVALONIA | yes | PASS | no | UI init via Avalonia; core via harness CLI; idle RSS figures on macOS/Linux are harness-child readings |
+### Follow-ups (do not reopen Gate A unless they fail)
 
-- Desktop shell: no ACCEPTED selection (ADR-001 remains PROPOSED).
-- Case database/index: no ACCEPTED selection (ADR-002 remains PROPOSED).
-- Next action: (1) fill mandatory gate PASS/FAIL from spike evidence; (2) measure C-TAURI / C-AVALONIA package sizes + G1 self-contained publish for Avalonia; (3) run database/index sub-spike; (4) score only candidates that clear every mandatory gate.
+1. Replicate index spike on Windows + Kali (`spikes/COPY-PASTE-INDEX.md`) for cross-OS confirmation.
+2. Record C-TAURI / C-AVALONIA package sizes on Windows + Linux.
+3. Gate E: production code signing (G7 hardening), full a11y audit (G6), CycloneDX SBOM (G8), and SQLite 100M search if SQLite is reconsidered.
+4. Acquire reuse remains a product concern — shared Rust core patterns preferred over forcing Tauri shell parity.

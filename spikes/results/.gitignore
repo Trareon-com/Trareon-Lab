@@ -3,8 +3,14 @@
 *-slint-case/
 *-tauri-case/
 *-avalonia-case/
+*-d-sqlite-case/
+*-d-sqlite-fts-case/
+*-d-rust-index-case/
 *-tauri-package.zip
 *-avalonia-package.zip
+*-slint-package.zip
+port-copy/
+crash/
 dist/
 *-slint-package.zip
 *-slint-package.tar.gz
