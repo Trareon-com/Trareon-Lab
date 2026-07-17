@@ -8,7 +8,7 @@ official_v1_tag: NOT_CREATED (blocked until gather PASS)
 
 ## Known tip (last repo-complete push before this manifest refresh)
 
-git_tip_at_manifest_authoring: 37a86a2cb67566299d597e98a1f09232924318c2 @ 2026-07-17T11:12:08Z
+git_tip_at_manifest_authoring: b324915d8732919e022ecdf4b2a9954072c2d36c @ 2026-07-17T11:12:15Z
 
 ## CI
 
