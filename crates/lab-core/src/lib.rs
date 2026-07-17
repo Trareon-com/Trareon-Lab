@@ -2,10 +2,12 @@
 
 pub mod error;
 pub mod export;
+pub mod progress;
 pub mod result;
 pub mod schema_validate;
 
 pub use error::LabError;
+pub use progress::{FnProgress, NullProgress, ProgressEvent, ProgressSink, SharedProgress};
 pub use result::LabResult;
 
 /// Workspace package version as a semver string (`MAJOR.MINOR.PATCH`).

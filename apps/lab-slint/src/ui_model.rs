@@ -62,7 +62,7 @@ pub struct FindingRow {
 }
 
 /// UI-facing case/evidence/coverage snapshot.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct UiSnapshot {
     pub case_title: String,
     pub case_state: CaseState,
@@ -87,6 +87,11 @@ pub struct UiSnapshot {
     pub about_disclosure: String,
     pub dark_mode: bool,
     pub locale: String,
+    pub progress_ratio: f64,
+    pub progress_stage: String,
+    pub progress_message: String,
+    pub progress_visible: bool,
+    pub progress_cancelled: bool,
 }
 
 impl Default for UiSnapshot {
@@ -115,6 +120,11 @@ impl Default for UiSnapshot {
             about_disclosure: "SBOM: release-evidence/sbom/; licenses: docs/DEPENDENCY-AND-LICENSE-POLICY.md; notes: docs/user/RELEASE-NOTES-1.0.0.md".into(),
             dark_mode: true,
             locale: "en".into(),
+            progress_ratio: 0.0,
+            progress_stage: String::new(),
+            progress_message: String::new(),
+            progress_visible: false,
+            progress_cancelled: false,
         }
     }
 }
@@ -245,5 +255,35 @@ impl UiSnapshot {
         } else {
             "en".into()
         };
+    }
+
+    /// Update import/analysis progress bar state.
+    pub fn set_progress(
+        &mut self,
+        stage: impl Into<String>,
+        done: u64,
+        total: Option<u64>,
+        message: impl Into<String>,
+    ) {
+        self.progress_visible = true;
+        self.progress_stage = stage.into();
+        self.progress_message = message.into();
+        self.progress_ratio = match total {
+            Some(t) if t > 0 => (done as f64 / t as f64).clamp(0.0, 1.0),
+            _ => 0.0,
+        };
+    }
+
+    pub fn clear_progress(&mut self) {
+        self.progress_visible = false;
+        self.progress_ratio = 0.0;
+        self.progress_stage.clear();
+        self.progress_message.clear();
+        self.progress_cancelled = false;
+    }
+
+    pub fn request_cancel_progress(&mut self) {
+        self.progress_cancelled = true;
+        self.progress_message = "cancelling…".into();
     }
 }

@@ -1,13 +1,12 @@
-//! Day 14: unsupported / E01 formats fail closed; capability remains Limited.
+//! Day 14+: format detection — E01 recognized; Ex01 still limited.
 
-use lab_storage::detect_image_kind;
+use lab_storage::{detect_image_kind, ImageKind};
 use std::path::Path;
 
 #[test]
-fn e01_extension_fails_closed_as_limited() {
-    let err = detect_image_kind(Path::new("disk.E01")).expect_err("e01");
-    let msg = format!("{err:?}");
-    assert!(msg.contains("E01") || msg.contains("Limited"), "{msg}");
+fn e01_extension_detected() {
+    let kind = detect_image_kind(Path::new("disk.E01")).expect("e01");
+    assert_eq!(kind, ImageKind::E01);
 }
 
 #[test]

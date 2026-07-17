@@ -1,0 +1,12 @@
+[package]
+name = "lab-yara"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "YARA scanning for Trareon Lab"
+
+[dependencies]
+lab-core = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"

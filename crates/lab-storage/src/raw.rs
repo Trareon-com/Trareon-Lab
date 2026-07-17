@@ -4,19 +4,23 @@ use std::fs::File;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 
-use lab_core::{LabError, LabResult};
+use lab_core::{LabError, LabResult, NullProgress, ProgressEvent, ProgressSink};
 use sha2::{Digest, Sha256};
 
-/// Supported image container kinds for R1 storage.
+use crate::image::{ImageReader, IntegrityReport};
+
+/// Supported image container kinds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ImageKind {
     RawDd,
+    E01,
 }
 
 impl ImageKind {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::RawDd => "raw_dd",
+            Self::E01 => "e01",
         }
     }
 }
@@ -72,6 +76,17 @@ impl RawImage {
 
     /// Compute SHA-256 over the full image (streaming).
     pub fn sha256_hex(&mut self) -> LabResult<String> {
+        self.sha256_hex_with_progress(&mut NullProgress)?
+            .ok_or_else(|| LabError::Internal {
+                detail: "hash cancelled".into(),
+            })
+    }
+
+    /// Hash with progress + cooperative cancel.
+    pub fn sha256_hex_with_progress(
+        &mut self,
+        progress: &mut dyn ProgressSink,
+    ) -> LabResult<Option<String>> {
         self.file
             .seek(SeekFrom::Start(0))
             .map_err(|e| LabError::Internal {
@@ -79,9 +94,13 @@ impl RawImage {
             })?;
         let mut hasher = Sha256::new();
         let mut buf = [0_u8; 64 * 1024];
-        let mut remaining = self.byte_length;
-        while remaining > 0 {
-            let want = std::cmp::min(remaining as usize, buf.len());
+        let mut done = 0_u64;
+        let total = self.byte_length;
+        while done < total {
+            if progress.is_cancelled() {
+                return Ok(None);
+            }
+            let want = std::cmp::min((total - done) as usize, buf.len());
             let n = self
                 .file
                 .read(&mut buf[..want])
@@ -94,9 +113,15 @@ impl RawImage {
                 });
             }
             hasher.update(&buf[..n]);
-            remaining -= n as u64;
+            done += n as u64;
+            progress.report(ProgressEvent::new(
+                "storage.hash",
+                done,
+                Some(total),
+                format!("hashing {}", self.path.display()),
+            ));
         }
-        Ok(hex::encode(hasher.finalize()))
+        Ok(Some(hex::encode(hasher.finalize())))
     }
 
     /// Hash with cooperative cancel check between chunks (Day 12).
@@ -135,7 +160,45 @@ impl RawImage {
     }
 }
 
-/// Detect supported image kind from path extension / magic (R1: raw/dd only).
+impl ImageReader for RawImage {
+    fn kind(&self) -> ImageKind {
+        self.kind
+    }
+
+    fn byte_length(&self) -> u64 {
+        self.byte_length
+    }
+
+    fn read_at(&mut self, offset: u64, buf: &mut [u8]) -> LabResult<usize> {
+        if offset >= self.byte_length {
+            return Ok(0);
+        }
+        let max = std::cmp::min(buf.len() as u64, self.byte_length - offset) as usize;
+        self.file
+            .seek(SeekFrom::Start(offset))
+            .map_err(|e| LabError::Internal {
+                detail: format!("seek raw image: {e}"),
+            })?;
+        self.file
+            .read(&mut buf[..max])
+            .map_err(|e| LabError::Internal {
+                detail: format!("read_at raw image: {e}"),
+            })
+    }
+
+    fn verify_integrity(&mut self, progress: &mut dyn ProgressSink) -> LabResult<IntegrityReport> {
+        // Raw images have no per-chunk CRC; a full read/hash proves readability.
+        let _ = self.sha256_hex_with_progress(progress)?;
+        Ok(IntegrityReport {
+            ok: true,
+            crc_errors: 0,
+            chunks_checked: 1,
+            message: "raw image readable".into(),
+        })
+    }
+}
+
+/// Detect supported image kind from path extension.
 pub fn detect_image_kind(path: &Path) -> LabResult<ImageKind> {
     let ext = path
         .extension()
@@ -144,8 +207,10 @@ pub fn detect_image_kind(path: &Path) -> LabResult<ImageKind> {
         .to_ascii_lowercase();
     match ext.as_str() {
         "dd" | "raw" | "img" | "" => Ok(ImageKind::RawDd),
-        "e01" | "ex01" => Err(lab_core::LabError::Internal {
-            detail: "E01/Ex01 not implemented yet; Limited until Day 14".into(),
+        // Part 1 will open E01; detection succeeds so callers can dispatch.
+        "e01" => Ok(ImageKind::E01),
+        "ex01" => Err(lab_core::LabError::Internal {
+            detail: "Ex01 not implemented yet".into(),
         }),
         other => Err(lab_core::LabError::Internal {
             detail: format!("unsupported image format extension: {other}"),

@@ -1,5 +1,6 @@
 import { Theme } from "theme.slint";
 import { Strings } from "strings.slint";
+import { ProgressIndicator } from "std-widgets.slint";
 import { NavItem } from "components/nav_item.slint";
 import { NavGroupLabel } from "components/nav_group_label.slint";
 import { StatusBadge } from "components/status_badge.slint";
@@ -115,11 +116,16 @@ export component AppWindow inherits Window {
     in-out property <[string]> finding-uuids: [];
     in-out property <string> report-state: "draft";
     in-out property <[string]> activity-lines: [];
+    in-out property <float> progress-ratio: 0.0;
+    in-out property <string> progress-stage: "";
+    in-out property <string> progress-message: "";
+    in-out property <bool> progress-visible: false;
 
     callback open-case-clicked();
     callback focus-open-case();
     callback navigate(string);
     callback import-evidence-clicked();
+    callback cancel-progress-clicked();
     callback theme-toggled(bool);
     callback locale-toggled(string);
     callback search-submitted();
@@ -427,11 +433,51 @@ export component AppWindow inherits Window {
         }
 
         Rectangle {
-            height: 29px;
+            height: root.progress-visible ? 57px : 29px;
             background: Theme.status-bar-bg;
             VerticalLayout {
                 spacing: 0px;
                 Rectangle { height: 1px; background: Theme.border; }
+                if root.progress-visible: HorizontalLayout {
+                    height: 28px;
+                    padding-left: 14px;
+                    padding-right: 14px;
+                    spacing: 12px;
+                    Text {
+                        text: root.progress-stage + " — " + root.progress-message;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                        overflow: elide;
+                        horizontal-stretch: 1;
+                    }
+                    ProgressIndicator {
+                        width: 140px;
+                        height: 6px;
+                        progress: root.progress-ratio;
+                        indeterminate: root.progress-ratio <= 0.0 && root.progress-stage != "";
+                    }
+                    Rectangle {
+                        height: 22px;
+                        min-width: 56px;
+                        border-radius: 4px;
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            Text {
+                                text: "Cancel";
+                                color: Theme.text-secondary;
+                                font-size: 11px;
+                                vertical-alignment: center;
+                            }
+                        }
+                        TouchArea {
+                            clicked => { root.cancel-progress-clicked(); }
+                        }
+                    }
+                }
                 HorizontalLayout {
                     height: 28px;
                     padding-left: 14px;

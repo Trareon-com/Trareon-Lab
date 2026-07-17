@@ -127,6 +127,10 @@ fn main() -> Result<(), slint::PlatformError> {
             .collect();
         ui.set_finding_claims(ModelRc::new(VecModel::from(claims)));
         ui.set_finding_uuids(ModelRc::new(VecModel::from(uuids)));
+        ui.set_progress_ratio(snap.progress_ratio as f32);
+        ui.set_progress_stage(snap.progress_stage.clone().into());
+        ui.set_progress_message(snap.progress_message.clone().into());
+        ui.set_progress_visible(snap.progress_visible);
     };
     apply(&ui, &snapshot.borrow());
 
@@ -165,6 +169,7 @@ fn main() -> Result<(), slint::PlatformError> {
     ui.on_import_evidence_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
             let mut snap = snap_import.borrow_mut();
+            snap.set_progress("import", 0, Some(1), "preparing import");
             snap.import_evidence_stub();
             let n = snap.evidence_count;
             snap.evidence_files.push(EvidenceFileRow {
@@ -173,6 +178,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 size: 4096,
                 deleted: false,
             });
+            snap.set_progress("import", 1, Some(1), "import complete");
             apply(&ui, &snap);
         }
     });
@@ -289,6 +295,16 @@ fn main() -> Result<(), slint::PlatformError> {
         if let Some(ui) = ui_weak.upgrade() {
             let mut snap = snap_hs.borrow_mut();
             snap.handle_shortcut("/");
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_cancel = Rc::clone(&snapshot);
+    ui.on_cancel_progress_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_cancel.borrow_mut();
+            snap.request_cancel_progress();
             apply(&ui, &snap);
         }
     });

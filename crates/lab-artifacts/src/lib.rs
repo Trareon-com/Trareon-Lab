@@ -1,7 +1,15 @@
-//! OS artifact parsers (synthetic corpora) — Days 26–32.
+//! OS artifact parsers for Trareon Lab.
+
+pub mod browser;
+pub mod evtx;
+pub mod registry;
 
 use lab_core::{LabError, LabResult};
 use serde::{Deserialize, Serialize};
+
+pub use browser::{BrowserCookie, BrowserHistory};
+pub use evtx::{write_minimal_evtx, EvtxEvent, EvtxFile, EvtxLevel};
+pub use registry::{write_minimal_hive, HiveFile, RegistryKey, RegistryValue};
 
 fn fail(d: impl Into<String>) -> LabError {
     LabError::Internal { detail: d.into() }
