@@ -83,7 +83,7 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 | C-SLINT | macOS | 762 | 219.95 | 375.41 | 263 | 5 | 5 | 51 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 6.463 | PASS_keyboard_focus_controls_present | `spikes/results/macos-slint.json` |
 | C-SLINT | Windows | 749 | | | 734 | 18 | 25 | 131 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 6.618 | PASS_keyboard_focus_controls_present | `spikes/results/windows-slint.json` |
 | C-SLINT | Linux | 512 | 239.48 | 361.44 | 459 | 13 | 16 | 55 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 9.707 | PASS_keyboard_focus_controls_present | `spikes/results/linux-slint.json` |
-| C-AVALONIA | macOS | | | | | | | | | | | needs .NET SDK |
+| C-AVALONIA | macOS | 3488 | 6.22* | 357.45 | 352 | 8 | 12 | 73 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/macos-avalonia.json` (*idle RSS from harness child) |
 | C-AVALONIA | Windows | 3050 | | | 1343 | 17 | 29 | 230 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/windows-avalonia.json` |
 | C-AVALONIA | Linux | 1032 | 2.77* | 262.58 | 465 | 14 | 18 | 48 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/linux-avalonia.json` (*idle RSS from harness child) |
 
@@ -125,14 +125,15 @@ These are planning risks recorded before spike execution; they are not Gate A re
 
 **Gate A: NOT PASS**
 
-- Shared headless harness measured on macOS, Windows (ThinkPad X270), and Linux (Kali) for 1,000,000 rows with lock/crash checks PASS on all three.
-- Windows RSS helpers are not yet implemented (`idle_rss_mib` / `peak_rss_mib` null); timing and lock/crash evidence are recorded.
-- C-SLINT runtime measured on macOS, Windows (ThinkPad), and Linux (Kali); crash/lock checks PASS on all three. Windows RSS null (not implemented).
-- C-SLINT offline package size complete on all three OS (unsigned zip, no separate language runtime): macOS **6.463 MiB**, Windows **6.618 MiB**, Linux **9.707 MiB**.
-- Package size is a matrix measurement only; G7 still requires signed installer/update evidence. G6 a11y remains smoke-level (`PASS_keyboard_focus_controls_present`), not full dockable/multi-pane proof.
-- Desktop UI candidates C-TAURI / C-AVALONIA have no three-OS evidence yet.
-- Desktop shell: no ACCEPTED selection.
-- Case database/index: no ACCEPTED selection.
-- C-TAURI measured on macOS, Windows, and Linux (crash/lock PASS on all three). Windows RSS null; installer size still unmeasured for C-TAURI.
-- C-AVALONIA measured on Windows + Linux (crash/lock PASS). macOS pending. Linux idle RSS is from harness child process, not the Avalonia UI process.
-- Next action: finish C-AVALONIA on macOS; optionally record UI package sizes; then score mandatory gates and close Gate A per decision rule.
+Equal-workflow runtime evidence is now complete for all three desktop candidates on Windows + macOS + Linux (crash/lock checks PASS). Package-size column is complete only for C-SLINT. Mandatory gates G1–G10 are still largely `NOT_RUN` as formal PASS/FAIL rows; a11y remains smoke-level; G7 signing is unproven; database/index sub-spike not measured.
+
+| Candidate | 3-OS runtime | Crash/lock | Package size | Notes |
+|---|---|---|---|---|
+| harness-core | yes | PASS | N/A | Headless baseline |
+| C-SLINT | yes | PASS | yes (unsigned zip) | Smallest cold start on macOS/Windows among UI shells |
+| C-TAURI | yes | PASS | no | Higher UI init (webview); evidence bytes stay in Rust |
+| C-AVALONIA | yes | PASS | no | UI init via Avalonia; core via harness CLI; idle RSS figures on macOS/Linux are harness-child readings |
+
+- Desktop shell: no ACCEPTED selection (ADR-001 remains PROPOSED).
+- Case database/index: no ACCEPTED selection (ADR-002 remains PROPOSED).
+- Next action: (1) fill mandatory gate PASS/FAIL from spike evidence; (2) measure C-TAURI / C-AVALONIA package sizes + G1 self-contained publish for Avalonia; (3) run database/index sub-spike; (4) score only candidates that clear every mandatory gate.
