@@ -2777,6 +2777,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "lab-index"
+version = "0.1.0"
+dependencies = [
+ "lab-core",
+ "rusqlite",
+ "tempfile",
+]
+
+[[package]]
 name = "lab-slint"
 version = "0.1.0"
 dependencies = [
