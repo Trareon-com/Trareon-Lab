@@ -2,6 +2,7 @@
 
 pub mod error;
 pub mod result;
+pub mod schema_validate;
 
 pub use error::LabError;
 pub use result::LabResult;
