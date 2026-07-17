@@ -69,7 +69,7 @@ internal static class MeasureRunner
             "--out", outPath,
             "--ui-init-ms", uiInitMs.ToString(),
             "--a11y-smoke", "PASS_keyboard_focus_controls_present",
-            "--notes-prefix", "avalonia_shell=net6; rust_core_via_harness_cli; evidence_bytes_stay_in_rust_core=true",
+            "--notes-prefix", $"avalonia_shell={System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription}; rust_core_via_harness_cli; evidence_bytes_stay_in_rust_core=true",
             "--build-identity", "lab-spike-avalonia/0.1.0",
         })
         {

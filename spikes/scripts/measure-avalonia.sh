@@ -35,9 +35,10 @@ echo "==> build harness"
 cd "$ROOT"
 cargo build -p lab-spike-harness --release
 
-echo "==> dotnet run Avalonia measure"
+TFM="$(bash "$ROOT/scripts/pick-avalonia-tfm.sh")"
+echo "==> dotnet run Avalonia measure (-f $TFM)"
 cd "$ROOT/avalonia"
-dotnet run -c Release -- --measure --os "$OS" --rows 1000000 --filter-prefix 0 \
+dotnet run -c Release -f "$TFM" -- --measure --os "$OS" --rows 1000000 --filter-prefix 0 \
   --case-dir "$ROOT/results/${OS}-avalonia-case" \
   --out "$ROOT/results/${OS}-avalonia.json"
 

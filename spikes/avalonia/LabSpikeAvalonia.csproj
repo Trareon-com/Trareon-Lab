@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <!-- net6.0 keeps Kali (dotnet 6) and Windows (.NET 8 SDK) on the same Gate A spike. -->
-    <TargetFramework>net6.0</TargetFramework>
+    <!-- net6.0 for Kali SDK 6; net8.0 for macOS/Windows SDK 8 installs. -->
+    <TargetFrameworks>net6.0;net8.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
