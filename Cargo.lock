@@ -2768,7 +2768,10 @@ dependencies = [
 name = "lab-fs"
 version = "0.1.0"
 dependencies = [
+ "hex",
  "lab-core",
+ "lab-store",
+ "sha2",
  "tempfile",
 ]
 
