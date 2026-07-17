@@ -4,6 +4,7 @@ members = [
   "crates/lab-core",
   "crates/lab-case",
   "crates/lab-store",
+  "crates/lab-crypto",
 ]
 
 [workspace.package]
@@ -15,3 +16,4 @@ version = "0.1.0"
 lab-core = { path = "crates/lab-core" }
 lab-case = { path = "crates/lab-case" }
 lab-store = { path = "crates/lab-store" }
+lab-crypto = { path = "crates/lab-crypto" }
