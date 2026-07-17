@@ -1,0 +1,9 @@
+[package]
+name = "lab-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Authoritative forensic core for Trareon Lab"
+
+[lib]
+path = "src/lib.rs"
