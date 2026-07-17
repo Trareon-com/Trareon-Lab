@@ -11,6 +11,7 @@ export component AppWindow inherits Window {
     in-out property <int> bookmark-count: 0;
     in-out property <bool> open-case-focused: true;
     in-out property <string> active-screen: "Case";
+    in-out property <string> about-line: "GPL-3.0-only · unsigned builds · see docs/SELLING-UNSIGNED.md";
 
     callback open-case-clicked();
     callback focus-open-case();
@@ -57,6 +58,11 @@ export component AppWindow inherits Window {
                 + "  |  Coverage: " + root.coverage-count
                 + "  |  Bookmarks: " + root.bookmark-count;
             font-size: 14px;
+        }
+
+        Text {
+            text: root.about-line;
+            font-size: 12px;
         }
 
         HorizontalBox {

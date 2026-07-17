@@ -10,6 +10,9 @@ members = [
   "crates/lab-index",
   "crates/lab-storage",
   "crates/lab-fs",
+  "crates/lab-artifacts",
+  "crates/lab-transfer",
+  "crates/lab-timeline",
   "apps/lab-slint",
 ]
 
@@ -28,3 +31,6 @@ lab-worker = { path = "crates/lab-worker" }
 lab-index = { path = "crates/lab-index" }
 lab-storage = { path = "crates/lab-storage" }
 lab-fs = { path = "crates/lab-fs" }
+lab-artifacts = { path = "crates/lab-artifacts" }
+lab-transfer = { path = "crates/lab-transfer" }
+lab-timeline = { path = "crates/lab-timeline" }

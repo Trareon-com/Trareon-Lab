@@ -25,6 +25,9 @@ pub fn load_docs_index() -> LabResult<String> {
         "Local AI",
         "Examination shell",
         "Disk images",
+        "Filesystems",
+        "Offline collaboration",
+        "Reporting",
     ] {
         if !body.contains(topic) {
             return Err(LabError::Internal {

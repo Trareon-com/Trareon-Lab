@@ -10,9 +10,9 @@ fn migrate_empty_case_dir_v0_to_current_and_reopen() {
 
     {
         let db = CaseDb::open_and_migrate(&path).expect("migrate");
-        assert_eq!(db.schema_version(), 3);
+        assert_eq!(db.schema_version(), 4);
     }
 
     let db = CaseDb::open_and_migrate(&path).expect("reopen");
-    assert_eq!(db.schema_version(), 3);
+    assert_eq!(db.schema_version(), 4);
 }

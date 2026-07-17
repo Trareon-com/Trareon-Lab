@@ -243,3 +243,70 @@ impl IndexDb {
         Ok(())
     }
 }
+
+/// Index filesystem enumeration metadata into the search DB (Day 19).
+pub fn index_fs_entries(
+    db: &mut IndexDb,
+    case_uuid: &str,
+    created_at_utc: &str,
+    entries: &[(String, String, String)],
+) -> LabResult<u64> {
+    // tuples: (entry_kind, target_ref, display_text)
+    let mut batch = Vec::with_capacity(entries.len());
+    for (i, (kind, target_ref, display_text)) in entries.iter().enumerate() {
+        batch.push(IndexEntry {
+            case_uuid: case_uuid.to_string(),
+            entry_kind: kind.clone(),
+            target_ref: target_ref.clone(),
+            display_text: display_text.clone(),
+            sort_key: format!("{i:08}"),
+            created_at_utc: created_at_utc.to_string(),
+        });
+    }
+    db.insert_entries_batch(&batch)?;
+    Ok(batch.len() as u64)
+}
+
+impl IndexDb {
+    /// Day 41: search by path/name substring (hash treated as target_ref match).
+    pub fn query_path_name_hash(
+        &self,
+        case_uuid: &str,
+        needle: &str,
+        limit: usize,
+    ) -> LabResult<Vec<IndexEntry>> {
+        let like = format!("%{needle}%");
+        let mut stmt = self
+            .conn
+            .prepare(
+                "SELECT case_uuid, entry_kind, target_ref, display_text, sort_key, created_at_utc
+                 FROM index_entry
+                 WHERE case_uuid=?1 AND (target_ref LIKE ?2 OR display_text LIKE ?2)
+                 ORDER BY sort_key LIMIT ?3",
+            )
+            .map_err(|e| LabError::Internal {
+                detail: format!("prepare query: {e}"),
+            })?;
+        let rows = stmt
+            .query_map(params![case_uuid, like, limit as i64], |row| {
+                Ok(IndexEntry {
+                    case_uuid: row.get(0)?,
+                    entry_kind: row.get(1)?,
+                    target_ref: row.get(2)?,
+                    display_text: row.get(3)?,
+                    sort_key: row.get(4)?,
+                    created_at_utc: row.get(5)?,
+                })
+            })
+            .map_err(|e| LabError::Internal {
+                detail: format!("query: {e}"),
+            })?;
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r.map_err(|e| LabError::Internal {
+                detail: format!("row: {e}"),
+            })?);
+        }
+        Ok(out)
+    }
+}

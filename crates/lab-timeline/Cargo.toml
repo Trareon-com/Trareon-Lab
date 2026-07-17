@@ -1,0 +1,12 @@
+[package]
+name = "lab-timeline"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Unified timeline merge for Trareon Lab"
+
+[dependencies]
+lab-core = { workspace = true }
+lab-artifacts = { path = "../lab-artifacts" }
+
+[dev-dependencies]

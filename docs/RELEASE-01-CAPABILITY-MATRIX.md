@@ -24,7 +24,7 @@ R1 delivers a **validated minimum vertical slice**: case isolation, `.fsnap` ver
 |---|---|---|---|
 | Package intake | Trareon Acquire `.fsnap` versions declared in FSNAP-READ-CONTRACT compatibility table; verify + import read-only | CORPUS_VALIDATED on synthetic + Acquire fixtures | No silent repair of corrupt packages |
 | Disk images | raw/dd; E01/Ex01 read (selected libewf-compatible subset) | CORPUS_VALIDATED | BitLocker unlock only with supplied key material; no acquisition |
-| Filesystems | NTFS, FAT32/exFAT, APFS (read), ext4 (read) | CORPUS_VALIDATED | HFS+/ReFS/Btrfs P0-LATER |
+| Filesystems | NTFS, FAT32/exFAT, APFS (read), ext4 (read) | UNIT_VERIFIED on synthetic corpora (progress toward CORPUS_VALIDATED) | **APFS:** primary validation path is macOS; Linux APFS claims remain **Limited**. Not full on-disk boot/$MFT/APFS container parsers yet. HFS+/ReFS/Btrfs P0-LATER |
 | Search | Metadata + content index via D-RUST-INDEX; hash/path/name filters; 1M-row UI navigation | UNIT_VERIFIED + CORPUS_VALIDATED | 100M SQLite reconsider is Gate E |
 | OS artifacts | Windows Prefetch, LNK, JumpLists (selected); macOS Unified Logs subset; Linux auth/syslog subset | CORPUS_VALIDATED | Browser/cloud artifacts P0-LATER |
 | Timeline | Unified normalized events from R1 parsers | CORPUS_VALIDATED | Correlation graphs beyond R1 edges are P0-LATER |

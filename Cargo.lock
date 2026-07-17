@@ -2733,6 +2733,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "lab-artifacts"
+version = "0.1.0"
+dependencies = [
+ "lab-core",
+ "serde",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "lab-case"
 version = "0.1.0"
 dependencies = [
@@ -2825,6 +2835,29 @@ version = "0.1.0"
 dependencies = [
  "hex",
  "lab-core",
+ "sha2",
+ "tempfile",
+]
+
+[[package]]
+name = "lab-timeline"
+version = "0.1.0"
+dependencies = [
+ "lab-artifacts",
+ "lab-core",
+]
+
+[[package]]
+name = "lab-transfer"
+version = "0.1.0"
+dependencies = [
+ "ed25519-dalek",
+ "hex",
+ "lab-core",
+ "lab-crypto",
+ "rand_core 0.6.4",
+ "serde",
+ "serde_json",
  "sha2",
  "tempfile",
 ]
