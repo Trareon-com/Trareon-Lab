@@ -727,7 +727,15 @@ The checklist must confirm:
 ```bash
 rg -n "Gate E.*PASS" docs/FOUNDATION-READINESS-CHECKLIST.md
 rg -n "OPEN.*(CRITICAL|HIGH)|(CRITICAL|HIGH).*OPEN" docs/reviews && exit 1 || true
-rg -n "TBD|TODO|supports all|and others" docs RFC-Digital-Forensic-Analysis-Lab.md && exit 1 || true
+if rg -n "TBD|TODO|supports all|and others" . \
+  --glob 'docs/**' \
+  --glob 'RFC-Digital-Forensic-Analysis-Lab.md' \
+  --glob '!docs/superpowers/plans/2026-07-17-trareon-lab-rfc-foundation-preparation.md'; then
+  exit 1
+else
+  forbidden_status=$?
+  test "$forbidden_status" -eq 1 || exit "$forbidden_status"
+fi
 git diff --check
 git status --short
 git add docs/reviews docs/FOUNDATION-READINESS-CHECKLIST.md docs/DECISION-REGISTER.md
