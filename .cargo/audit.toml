@@ -1,0 +1,14 @@
+# cargo-audit configuration (https://docs.rs/cargo-audit)
+#
+# Transitive GUI-only findings are ignored only when we cannot bump them yet
+# without forking Slint/Wayland. Revisit when wayland-scanner accepts
+# quick-xml >= 0.41 (Cargo ^0.39 cannot select 0.41.x under 0.x semver).
+
+[advisories]
+ignore = [
+  # quick-xml DoS via NsReader / duplicate-attr scan — pulled only by
+  # wayland-scanner (Slint Linux GUI). Lab does not parse untrusted XML with
+  # this crate; Wayland protocol XML is trusted local input.
+  "RUSTSEC-2026-0194",
+  "RUSTSEC-2026-0195",
+]

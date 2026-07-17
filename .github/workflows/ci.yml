@@ -53,6 +53,7 @@ jobs:
         run: cargo install cargo-audit --locked
       - name: Audit dependencies
         run: cargo audit
+        # Ignores: .cargo/audit.toml (documented in docs/DEPENDENCY-AUDIT.md)
 
   sbom:
     name: sbom-cargo-metadata

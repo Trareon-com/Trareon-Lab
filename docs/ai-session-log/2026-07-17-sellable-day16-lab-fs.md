@@ -35,5 +35,6 @@ Synthetic corpora model path/parent/deleted semantics for NTFS/FAT32/exFAT. They
 
 ## Handoff
 
-- **Next:** push `main` (or ask user) so CI re-runs with fontconfig deps; then Day 18 — read file contents → CAS.
+- **Next after CI green:** Day 18 — read file contents → CAS.
 - Do not re-do Days 1–17.
+- CI fix follow-up (this session): Clippy `needless_bool_assign` in `ui_model.rs`; documented `.cargo/audit.toml` ignores for transitive `quick-xml` via Wayland/Slint.

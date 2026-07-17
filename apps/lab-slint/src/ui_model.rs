@@ -79,11 +79,7 @@ impl UiSnapshot {
 
     pub fn navigate_to(&mut self, screen: NavScreen) {
         self.active_screen = screen;
-        if screen == NavScreen::CaseHome {
-            self.open_case_focused = true;
-        } else {
-            self.open_case_focused = false;
-        }
+        self.open_case_focused = screen == NavScreen::CaseHome;
     }
 
     pub fn set_bookmark_count(&mut self, count: i32) {
