@@ -46,3 +46,15 @@ This register records facts only. Missing commercial or reviewer details remain 
 ## Release decision
 
 The Release Manager may publish Official R1.0.0 only when every O1–O12 row is `PASS`, the evidence manifest points to immutable artifacts, and the tag SHA matches the tested build. If signing or either external review is incomplete, publish at most an Engineering Alpha/RC with accurate claims; do not relabel it Official.
+
+## Go-live scripts (fail-closed)
+
+After O1–O12 evidence exists (Windows via `docs/WINDOWS-LAB-QUEUE.md`):
+
+1. `bash scripts/generate-official-sbom.sh` — O4 artifact (prefer cyclonedx-cargo; fallback included)
+2. `bash release-evidence/OFFICIAL-1.0.0/gather.sh` — must exit 0
+3. `bash scripts/cut-official-v1.sh v1.0.0`
+4. `bash scripts/publish-official-release.sh v1.0.0`
+5. `bash scripts/close-official-program.sh v1.0.0`
+
+Operator map: `docs/operator/FINAL-8-GATES.md`. Sign-offs: `docs/operator/OBTAIN-SIGNOFFS.md`.

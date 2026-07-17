@@ -13,7 +13,12 @@ test -f "${ROOT}/docs/LINUX-PACKAGE-SIGNING-KEY-PLAN.md" || fail "linux key plan
 test -f "${ROOT}/docs/PACKAGING-UNSIGNED-BUILDS.md" || fail "unsigned packaging doc"
 test -f "${ROOT}/docs/WINDOWS-LAB-QUEUE.md" || fail "windows lab queue"
 test -f "${ROOT}/release-evidence/OFFICIAL-1.0.0/gather.sh" || fail "official gather"
+test -f "${ROOT}/scripts/cut-official-v1.sh" || fail "cut-official-v1.sh"
+test -f "${ROOT}/scripts/publish-official-release.sh" || fail "publish-official-release.sh"
+test -f "${ROOT}/scripts/close-official-program.sh" || fail "close-official-program.sh"
+test -f "${ROOT}/docs/operator/FINAL-8-GATES.md" || fail "FINAL-8-GATES.md"
 
 echo "signing dry-run tooling: PASS (scripts/docs present; no secrets; O1–O3 still NOT_STARTED)"
 echo "Windows lab items queued in docs/WINDOWS-LAB-QUEUE.md"
+echo "Go-live scripts ready (fail-closed until gather PASS) — see docs/operator/FINAL-8-GATES.md"
 echo "Next operator steps: Apple Team ID + Authenticode + Linux public key before signed pipelines."

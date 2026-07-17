@@ -439,7 +439,7 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 
 ### Wed 2026-09-30 — Hari 53
 - [x] Linux `.deb` + AppImage signed *(packaging/sign-linux.sh signs release tarball; .deb/AppImage packaging remains operator format choice)*
-- [ ] External crypto review document received → `docs/reviews/CRYPTO-EXTERNAL-REVIEW.md` *(file exists as NOT_RECEIVED)*
+- [ ] External crypto review document received → `docs/reviews/CRYPTO-EXTERNAL-REVIEW.md` *(file exists as NOT_RECEIVED; receipt template `CRYPTO-EXTERNAL-REVIEW-RECEIPT.md`; obtain via `docs/operator/OBTAIN-SIGNOFFS.md`)*
 - [x] Commit: `build: linux signed packages` + crypto review file *(key plan + CRYPTO-EXTERNAL-REVIEW.md NOT_RECEIVED)*
 
 ### Thu 2026-10-01 — Hari 54
@@ -479,8 +479,8 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Commit: `docs: indonesia signoff package`
 
 ### Fri 2026-10-09 — Hari 60
-- [ ] **Obtain Indonesia legal/quality wet/digital sign-off** (O8)
-- [ ] Confirm crypto review accepted (O9)
+- [ ] **Obtain Indonesia legal/quality wet/digital sign-off** (O8) *(packet ready — `docs/operator/OBTAIN-SIGNOFFS.md`; wet signature still required)*
+- [ ] Confirm crypto review accepted (O9) *(acceptance recorded in HUMAN-SIGNOFFS-METADATA after receipt)*
 - [x] Final unsigned→signed rebuild with freeze SHA *(packaging/rebuild-signed-from-freeze.sh — blocked without certs/Windows lab)*
 - [x] Commit: `docs: official human signoffs recorded` (metadata only) *(docs/operator/HUMAN-SIGNOFFS-METADATA.md)*
 
@@ -505,16 +505,16 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Soft tag `v1.0.0-rc1` if needed *(docs/operator/RC1-UNSIGNED.md — tag created as v1.0.0-rc1-unsigned)*
 
 ### Thu 2026-10-15 — Hari 64
-- [ ] Final gather PASS
-- [ ] Annotated tag `v1.0.0` as `yusufsaaas`
-- [ ] GitHub Release: attach signed installers + SBOM + matrix + known issues
-- [ ] Push tag + release
+- [ ] Final gather PASS *(fail-closed `gather.sh`; O4 SBOM script ready; blocked on O1–O3/O8–O12)*
+- [ ] Annotated tag `v1.0.0` as `yusufsaaas` *(script: `scripts/cut-official-v1.sh`)*
+- [ ] GitHub Release: attach signed installers + SBOM + matrix + known issues *(script: `scripts/publish-official-release.sh`)*
+- [ ] Push tag + release *(included in publish script)*
 
 ### Fri 2026-10-16 — Hari 65
 - [x] Post-release: monitor issues 24h checklist *(docs/operator/POST-RELEASE-24H.md template)*
 - [x] Publish internal “Official Production live” note *(docs/operator/OFFICIAL-LIVE-NOTE.md template — do not send until O12)*
 - [x] Open ADR backlog for P0-LATER next quarter *(docs/P0-LATER-ADR-BACKLOG.md)*
-- [ ] Close program; update PRD status: `Official Production 1.0.0 released`
+- [ ] Close program; update PRD status: `Official Production 1.0.0 released` *(script: `scripts/close-official-program.sh`)*
 
 ---
 
