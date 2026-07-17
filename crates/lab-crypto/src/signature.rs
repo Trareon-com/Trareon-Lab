@@ -3,7 +3,7 @@
 use ed25519_dalek::{Signature, Verifier, VerifyingKey};
 use lab_core::{LabError, LabResult};
 
-use crate::digest::{DigestAlg, digest_bytes};
+use crate::digest::{digest_bytes, DigestAlg};
 
 /// Exact trust states from the cryptographic profile / signature-envelope schema.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -44,20 +44,19 @@ pub fn verify_ed25519_envelope(
         return Ok(TrustState::Invalid);
     }
 
-    let verifying_key = VerifyingKey::from_bytes(
-        public_key_bytes
-            .try_into()
-            .map_err(|_| LabError::IntegrityFailed {
-                detail: "ed25519 public key must be 32 bytes".into(),
-            })?,
-    )
+    let verifying_key = VerifyingKey::from_bytes(public_key_bytes.try_into().map_err(|_| {
+        LabError::IntegrityFailed {
+            detail: "ed25519 public key must be 32 bytes".into(),
+        }
+    })?)
     .map_err(|e| LabError::IntegrityFailed {
         detail: format!("ed25519 public key: {e}"),
     })?;
 
-    let signature = Signature::from_slice(signature_bytes).map_err(|e| LabError::IntegrityFailed {
-        detail: format!("ed25519 signature: {e}"),
-    })?;
+    let signature =
+        Signature::from_slice(signature_bytes).map_err(|e| LabError::IntegrityFailed {
+            detail: format!("ed25519 signature: {e}"),
+        })?;
 
     match verifying_key.verify(computed.hex.as_bytes(), &signature) {
         Ok(()) => Ok(if key_trusted {

@@ -1,6 +1,6 @@
 //! F11: same case seal → identical export digest; draft labeled non-final.
 
-use lab_core::export::{ExportMode, export_case_skeleton};
+use lab_core::export::{export_case_skeleton, ExportMode};
 
 #[test]
 fn sealed_export_digest_is_deterministic() {

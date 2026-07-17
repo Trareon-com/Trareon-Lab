@@ -4,25 +4,20 @@ use std::fs;
 use std::path::Path;
 
 use lab_core::LabResult;
-use serde_json::{Value, json};
+use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 
-use crate::preflight::{PreflightLimits, preflight_package};
+use crate::preflight::{preflight_package, PreflightLimits};
 
 /// Import after successful preflight. `import_uuid` is caller-supplied for determinism in tests.
-pub fn import_package(
-    package_dir: &Path,
-    case_uuid: &str,
-    import_uuid: &str,
-) -> LabResult<Value> {
+pub fn import_package(package_dir: &Path, case_uuid: &str, import_uuid: &str) -> LabResult<Value> {
     let ok = preflight_package(package_dir, PreflightLimits::default())?;
     let mut member_results = Vec::new();
     for name in &ok.members {
-        let bytes = fs::read(package_dir.join(name)).map_err(|e| {
-            lab_core::LabError::FsNapRejected {
+        let bytes =
+            fs::read(package_dir.join(name)).map_err(|e| lab_core::LabError::FsNapRejected {
                 reason: format!("read_member:{name}:{e}"),
-            }
-        })?;
+            })?;
         let digest = hex::encode(Sha256::digest(&bytes));
         member_results.push(json!({
             "member": name,

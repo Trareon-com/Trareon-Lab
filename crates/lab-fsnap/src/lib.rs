@@ -5,4 +5,4 @@ pub mod import;
 pub mod preflight;
 
 pub use import::import_package;
-pub use preflight::{PreflightLimits, PreflightOk, preflight_package};
+pub use preflight::{preflight_package, PreflightLimits, PreflightOk};

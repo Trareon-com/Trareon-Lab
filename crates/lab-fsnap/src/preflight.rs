@@ -61,7 +61,8 @@ fn is_safe_member_path(name: &str) -> bool {
 /// Verify package layout without mutating the source package.
 pub fn preflight_package(package_dir: &Path, limits: PreflightLimits) -> LabResult<PreflightOk> {
     let manifest_path = package_dir.join("manifest.json");
-    let raw = fs::read_to_string(&manifest_path).map_err(|_| reject("missing_or_unreadable_manifest"))?;
+    let raw =
+        fs::read_to_string(&manifest_path).map_err(|_| reject("missing_or_unreadable_manifest"))?;
     let manifest: Manifest =
         serde_json::from_str(&raw).map_err(|_| reject("manifest_parse_failed"))?;
 
@@ -84,7 +85,8 @@ pub fn preflight_package(package_dir: &Path, limits: PreflightLimits) -> LabResu
         }
         let member_path = package_dir.join(name);
         // Ensure resolved path stays under package_dir.
-        let canonical_pkg = fs::canonicalize(package_dir).map_err(|_| reject("canonicalize_package"))?;
+        let canonical_pkg =
+            fs::canonicalize(package_dir).map_err(|_| reject("canonicalize_package"))?;
         if member_path.exists() {
             let canonical_member = fs::canonicalize(&member_path)
                 .map_err(|_| reject(format!("canonicalize_member:{name}")))?;

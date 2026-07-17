@@ -1,8 +1,8 @@
 //! F7: Ed25519 envelope trust states; legacy MD5 labeled non-authoritative.
 
 use ed25519_dalek::{Signer, SigningKey};
-use lab_crypto::digest::{DigestAlg, DigestLabel, digest_bytes};
-use lab_crypto::signature::{TrustState, verify_ed25519_envelope};
+use lab_crypto::digest::{digest_bytes, DigestAlg, DigestLabel};
+use lab_crypto::signature::{verify_ed25519_envelope, TrustState};
 use rand_core::OsRng;
 
 #[test]
@@ -49,7 +49,10 @@ fn ed25519_envelope_valid_trusted_vs_invalid() {
 #[test]
 fn legacy_md5_labeled_non_authoritative() {
     let labeled = digest_bytes(DigestAlg::Md5Legacy, b"legacy-correlation");
-    assert_eq!(labeled.label, DigestLabel::NonAuthoritativeLegacyCorrelation);
+    assert_eq!(
+        labeled.label,
+        DigestLabel::NonAuthoritativeLegacyCorrelation
+    );
     assert_eq!(labeled.algorithm, "md5");
     assert_eq!(labeled.hex.len(), 32);
 }

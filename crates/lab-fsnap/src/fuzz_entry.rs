@@ -1,6 +1,6 @@
 //! Fuzz harness entry for `.fsnap` preflight (cargo-fuzz compatible stub).
 
-use crate::preflight::{PreflightLimits, preflight_package};
+use crate::preflight::{preflight_package, PreflightLimits};
 use std::path::Path;
 
 /// Entry used by fuzzers / property tests: never panics on hostile bytes as paths.

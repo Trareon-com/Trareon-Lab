@@ -27,9 +27,7 @@ fn cancel_within_500ms_and_resume_without_duplicate_cas() {
 
     // Resume: enqueue same payload again — first put may or may not have completed;
     // CAS must not contain duplicates (single digest key).
-    let job2 = queue
-        .enqueue_put(b"derived-object-v1")
-        .unwrap();
+    let job2 = queue.enqueue_put(b"derived-object-v1").unwrap();
     let status2 = queue.wait(&job2, Duration::from_secs(2)).unwrap();
     assert!(matches!(
         status2,

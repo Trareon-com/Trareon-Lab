@@ -2,14 +2,18 @@
 
 use lab_core::LabError;
 use lab_fsnap::import::import_package;
-use lab_fsnap::preflight::{PreflightLimits, preflight_package};
+use lab_fsnap::preflight::{preflight_package, PreflightLimits};
 use serde_json::json;
 use std::fs;
 use tempfile::tempdir;
 
 fn write_pkg(root: &std::path::Path, manifest: serde_json::Value, files: &[(&str, &[u8])]) {
     fs::create_dir_all(root).unwrap();
-    fs::write(root.join("manifest.json"), serde_json::to_vec_pretty(&manifest).unwrap()).unwrap();
+    fs::write(
+        root.join("manifest.json"),
+        serde_json::to_vec_pretty(&manifest).unwrap(),
+    )
+    .unwrap();
     for (name, bytes) in files {
         let path = root.join(name);
         if let Some(parent) = path.parent() {

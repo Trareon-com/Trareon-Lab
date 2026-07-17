@@ -55,7 +55,9 @@ impl WorkerQueue {
             let wake_w = Arc::clone(&wake);
             let stop_w = Arc::clone(&stop);
             let store_w = Arc::clone(&store);
-            workers.push(thread::spawn(move || worker_loop(inner_w, wake_w, stop_w, store_w)));
+            workers.push(thread::spawn(move || {
+                worker_loop(inner_w, wake_w, stop_w, store_w)
+            }));
         }
         Self {
             inner,
@@ -97,9 +99,12 @@ impl WorkerQueue {
         let mut guard = self.inner.lock().map_err(|_| LabError::Internal {
             detail: "worker queue poisoned".into(),
         })?;
-        let job = guard.jobs.get_mut(job_id).ok_or_else(|| LabError::Internal {
-            detail: format!("unknown job {job_id}"),
-        })?;
+        let job = guard
+            .jobs
+            .get_mut(job_id)
+            .ok_or_else(|| LabError::Internal {
+                detail: format!("unknown job {job_id}"),
+            })?;
         job.cancel.store(true, Ordering::SeqCst);
         if matches!(job.status, JobStatus::Queued) {
             job.status = JobStatus::Cancelled;
@@ -172,9 +177,7 @@ fn worker_loop(
                     Arc::clone(&job.cancel),
                 ))
             } else {
-                let (_guard, _) = wake
-                    .wait_timeout(guard, Duration::from_millis(50))
-                    .unwrap();
+                let (_guard, _) = wake.wait_timeout(guard, Duration::from_millis(50)).unwrap();
                 None
             }
         };
