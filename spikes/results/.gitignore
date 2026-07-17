@@ -1,0 +1,9 @@
+# Local case dirs and package artifacts (keep JSON measurements tracked)
+*-case/
+*-slint-case/
+dist/
+*-slint-package.zip
+*-slint-package.tar.gz
+*-run.log
+*.log
+*.local.bak
