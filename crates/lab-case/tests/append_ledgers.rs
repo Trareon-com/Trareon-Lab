@@ -10,7 +10,7 @@ fn append_only_ledgers_persist_and_forbid_mutation() {
     let case_uuid = "11111111-1111-4111-8111-111111111111";
 
     let db = CaseDb::open_and_migrate(&path).expect("open");
-    assert_eq!(db.schema_version(), 4);
+    assert_eq!(db.schema_version(), 5);
 
     db.append_audit_event(&AuditEvent {
         event_uuid: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa".into(),

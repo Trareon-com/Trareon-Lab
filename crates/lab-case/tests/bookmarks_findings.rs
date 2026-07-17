@@ -14,7 +14,7 @@ pub struct Finding {
 fn bookmark_crud_and_finding_link() {
     let dir = tempdir().unwrap();
     let db = CaseDb::open_and_migrate(&dir.path().join("c.sqlite")).unwrap();
-    assert_eq!(db.schema_version(), 4);
+    assert_eq!(db.schema_version(), 5);
     let case = "11111111-1111-4111-8111-111111111111";
     db.upsert_bookmark(&BookmarkRecord {
         bookmark_uuid: "33333333-3333-4333-8333-333333333333".into(),
