@@ -13,19 +13,25 @@ All Official steps that require a Windows host or Windows Authenticode hardware 
 | W5 | Optional: MSI packaging if adopted | installer under `dist/1.0.0/` | operator choice |
 | W6 | Attach Windows signed artifact to GitHub Release | Release assets | after O1–O12 |
 
+## After Mac/Linux signing (optional order)
+
+Non-Windows Path C work: `docs/MACOS-LINUX-SIGNING-QUEUE.md`.
+
 ## After Windows lab (W1–W6)
 
 Then run go-live (macOS/Linux host is fine once `windows-sig.txt` exists):
 
 ```bash
 bash scripts/generate-official-sbom.sh   # O4 if missing
+# fill docs/reviews/SBOM-VULN-LICENSE-REVIEW.md acceptance
+# ensure o11-bookmark-transfer.log exists (from templates/)
 bash release-evidence/OFFICIAL-1.0.0/gather.sh
 bash scripts/cut-official-v1.sh v1.0.0
 bash scripts/publish-official-release.sh v1.0.0
 bash scripts/close-official-program.sh v1.0.0
 ```
 
-See `docs/operator/FINAL-8-GATES.md`.
+See `docs/operator/FINAL-8-GATES.md` and `docs/OFFICIAL-END-STATE.md`.
 
 ## Rule
 

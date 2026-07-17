@@ -1,0 +1,13 @@
+{
+  "_comment": "Copy to ../macos-notarization.json only after real Developer ID + notarization. This example is NOT gather PASS evidence.",
+  "gate": "O2",
+  "status": "EXAMPLE_ONLY",
+  "bundle_id": "com.trareon.lab",
+  "team_id": "REPLACE_TEAM_ID",
+  "notarization_id": "REPLACE",
+  "staple": false,
+  "artifact": "dist/1.0.0/macos-arm64/trareon-lab.zip",
+  "sha256": "REPLACE",
+  "verified_utc": null,
+  "operator": "REPLACE"
+}

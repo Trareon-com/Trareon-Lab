@@ -1,0 +1,19 @@
+# O11 Official bookmark + transfer evidence log
+
+**Status:** NOT_STARTED  
+**Related:** `docs/reviews/TRANSFER-SECURITY-REVIEW.md`, `scripts/e2e-smoke.sh`
+
+Fill on the freeze candidate (not Engineering Alpha alone).
+
+| Step | Result | Evidence path / note |
+|---|---|---|
+| Create case + bookmark | | |
+| Export signed transfer package | | |
+| Disclosure preview shown before import | | |
+| Import verify VALID_TRUSTED or documented VALID_UNTRUSTED | | |
+| Tamper rejected | | |
+| Freeze SHA | | |
+| Operator | | |
+| UTC | | |
+
+When complete, set `O11` in `MANIFEST.txt` and keep this file under `release-evidence/OFFICIAL-1.0.0/o11-bookmark-transfer.log` (copy or append).

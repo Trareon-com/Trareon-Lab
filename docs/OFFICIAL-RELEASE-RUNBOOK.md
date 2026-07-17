@@ -57,4 +57,6 @@ After O1–O12 evidence exists (Windows via `docs/WINDOWS-LAB-QUEUE.md`):
 4. `bash scripts/publish-official-release.sh v1.0.0`
 5. `bash scripts/close-official-program.sh v1.0.0`
 
-Operator map: `docs/operator/FINAL-8-GATES.md`. Sign-offs: `docs/operator/OBTAIN-SIGNOFFS.md`.
+Operator map: `docs/operator/FINAL-8-GATES.md`. Sign-offs: `docs/operator/OBTAIN-SIGNOFFS.md`.  
+Queues: `docs/MACOS-LINUX-SIGNING-QUEUE.md` then `docs/WINDOWS-LAB-QUEUE.md` (Windows last).  
+End-state: `docs/OFFICIAL-END-STATE.md`.

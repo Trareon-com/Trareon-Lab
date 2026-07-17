@@ -1,0 +1,16 @@
+# Example O3 Linux package signature evidence
+
+Copy to `../linux-sig.txt` only after a real detached signature on the freeze artifact.
+This example file is **not** gather PASS evidence.
+
+```
+artifact: dist/1.0.0/linux-x64/trareon-lab-linux-x64.tar.gz
+sha256: REPLACE
+signature: dist/1.0.0/linux-x64/trareon-lab-linux-x64.tar.gz.asc
+gpg_verify: PASS
+pubkey_fingerprint: REPLACE (must match ../linux-signing-pubkey.asc)
+signed_utc: REPLACE
+operator: REPLACE
+```
+
+Also place the **public** key only at `../linux-signing-pubkey.asc` per `docs/LINUX-PACKAGE-SIGNING-KEY-PLAN.md`.

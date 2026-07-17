@@ -1,0 +1,15 @@
+# Example O1 Windows Authenticode evidence
+
+Copy to `../windows-sig.txt` only after a real Authenticode signature on the freeze build.
+This example file is **not** gather PASS evidence.
+
+```
+subject: CN=EXAMPLE — replace with real Authenticode subject
+thumbprint: 0000000000000000000000000000000000000000
+file: dist/1.0.0/windows-x64/trareon-lab.exe
+sha256: REPLACE_WITH_FILE_SHA256
+signtool_verify: PASS
+timestamp: REPLACE_UTC
+operator: REPLACE
+host: ThinkPad reference (see docs/WINDOWS-LAB-QUEUE.md W3)
+```
