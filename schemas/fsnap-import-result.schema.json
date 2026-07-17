@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trareon.com/schemas/fsnap-import-result.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "import_uuid",
+    "case_uuid",
+    "package_version",
+    "result",
+    "member_results"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "fsnap-import-result-1"
+    },
+    "import_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "package_version": {
+      "type": "string"
+    },
+    "result": {
+      "enum": [
+        "accepted",
+        "rejected",
+        "partial"
+      ]
+    },
+    "member_results": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "additionalProperties": true
+}

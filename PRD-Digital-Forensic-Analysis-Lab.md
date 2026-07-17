@@ -9,7 +9,7 @@
 | Platform target | Windows, macOS, Linux |
 | Distribusi utama | Install-first, offline-first |
 | Versi dokumen | 1.0 |
-| Status | Product Baseline Finalized; Architecture Pending |
+| Status | Product Baseline Finalized; Architecture Accepted (Gates A–E PASS); Foundation Ready |
 | Tanggal baseline | 17 Juli 2026 |
 | Tanggal finalisasi | 17 Juli 2026 |
 | Pemilik produk | Trareon |
@@ -46,7 +46,7 @@ Keputusan produk yang menyimpang dari prioritas Research awal dikunci pada `docs
 - **Nama produk:** Trareon Lab
 - **Platform target:** Windows, macOS, Linux
 - **Versi dokumen:** 1.0
-- **Status:** Product Baseline Finalized; Architecture Pending
+- **Status:** Product Baseline Finalized; Architecture Accepted (Gates A–E PASS); Foundation Ready
 
 Trareon Lab adalah aplikasi desktop install-first dan offline-first untuk pemeriksaan serta analisis barang bukti digital dari media penyimpanan, filesystem, RAM, network capture, artefak sistem operasi, aplikasi, file, dokumen, gambar, video, dan audio. Produk mengonsumsi paket `.fsnap` dari Trareon Acquire dan format evidence umum, serta dapat menganalisis komputer tempat aplikasi dipasang melalui workflow live-host yang terkontrol.
 

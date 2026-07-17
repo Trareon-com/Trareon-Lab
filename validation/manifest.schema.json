@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trareon.com/schemas/validation-manifest.schema.json",
+  "type": "object",
+  "required": ["schema_version", "fixture_id", "corpus_class", "hashes", "expected_result_ref"],
+  "properties": {
+    "schema_version": {"const": "validation-manifest-1"},
+    "fixture_id": {"type": "string"},
+    "corpus_class": {"enum": ["public", "synthetic", "restricted"]},
+    "hashes": {"type": "array"},
+    "expected_result_ref": {"type": "string"}
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trareon.com/schemas/signature-envelope.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "algorithm",
+    "key_id",
+    "payload_digest",
+    "signature",
+    "trust_state"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "signature-envelope-1"
+    },
+    "algorithm": {
+      "enum": [
+        "Ed25519"
+      ]
+    },
+    "key_id": {
+      "type": "string"
+    },
+    "signing_time_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload_digest": {
+      "type": "string"
+    },
+    "signature": {
+      "type": "string"
+    },
+    "trust_state": {
+      "enum": [
+        "VALID_TRUSTED",
+        "VALID_UNTRUSTED",
+        "INVALID",
+        "EXPIRED_OR_REVOKED",
+        "NOT_SIGNED",
+        "NOT_CHECKED"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

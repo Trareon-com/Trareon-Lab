@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trareon.com/schemas/evidence-object.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "evidence_uuid",
+    "case_uuid",
+    "source_designation",
+    "evidence_class",
+    "byte_length",
+    "validation_state"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "evidence-object-1"
+    },
+    "evidence_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "source_designation": {
+      "enum": [
+        "original",
+        "forensic_copy",
+        "verified_working_copy",
+        "logical_view",
+        "derivative"
+      ]
+    },
+    "evidence_class": {
+      "type": "string"
+    },
+    "byte_length": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "validation_state": {
+      "enum": [
+        "VerifiedMatch",
+        "VerifiedMismatch",
+        "ComputedUnanchored",
+        "SignatureInvalid",
+        "IncompleteInput",
+        "Unsupported"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

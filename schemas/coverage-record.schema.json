@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trareon.com/schemas/coverage-record.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "coverage_uuid",
+    "case_uuid",
+    "evidence_uuid",
+    "unit_id",
+    "status"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "coverage-record-1"
+    },
+    "coverage_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "evidence_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "unit_id": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "succeeded",
+        "partial",
+        "unsupported",
+        "skipped",
+        "failed",
+        "not_applicable",
+        "cancelled",
+        "timeout"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

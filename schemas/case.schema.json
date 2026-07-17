@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trareon.com/schemas/case.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "case_uuid",
+    "state",
+    "created_at_utc",
+    "title"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "case-1"
+    },
+    "case_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state": {
+      "enum": [
+        "CREATED",
+        "OPEN",
+        "READ_ONLY",
+        "RECOVERY_REQUIRED",
+        "CLOSED",
+        "ARCHIVED"
+      ]
+    },
+    "created_at_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": true
+}

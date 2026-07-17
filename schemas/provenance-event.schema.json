@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trareon.com/schemas/provenance-event.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "event_uuid",
+    "case_uuid",
+    "actor_id",
+    "process_id",
+    "timestamp_utc",
+    "monotonic_seq",
+    "previous_event_digest",
+    "payload_digest",
+    "software_build_identity"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "provenance-event-1"
+    },
+    "event_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "case_uuid": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "actor_id": {
+      "type": "string"
+    },
+    "process_id": {
+      "type": "string"
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "monotonic_seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "previous_event_digest": {
+      "type": "string"
+    },
+    "payload_digest": {
+      "type": "string"
+    },
+    "software_build_identity": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

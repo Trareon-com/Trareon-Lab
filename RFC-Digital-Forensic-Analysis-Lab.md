@@ -5,21 +5,22 @@
 - **Nama produk:** Trareon Lab
 - **Jenis produk:** Desktop digital-forensic analysis laboratory, install-first, offline-first
 - **Baseline PRD:** `PRD-Digital-Forensic-Analysis-Lab.md` versi 1.0, finalisasi 17 Juli 2026
-- **Status RFC:** Architecture Baseline Draft v0.2 — Gate A PASS; desktop shell and case index selected
+- **Status RFC:** Architecture Baseline v1.0 — Gates A–E PASS; Foundation plan ready for execution
 - **Change control:** Perubahan normative memerlukan ADR update, traceability update, dan validation-impact review
-- **Foundation plan:** `docs/superpowers/plans/2026-07-17-trareon-lab-rfc-foundation-preparation.md`
-- **Architecture matrix:** `docs/ARCHITECTURE-DECISION-MATRIX.md`
-- **Decision register:** `docs/DECISION-REGISTER.md`
+- **Foundation plan:** `docs/superpowers/plans/2026-07-17-trareon-lab-foundation.md`
+- **Architecture matrix:** `docs/ARCHITECTURE-DECISION-MATRIX.md` (Gate A PASS)
+- **Release matrix:** `docs/RELEASE-01-CAPABILITY-MATRIX.md` (Gate B PASS)
+- **Decision register:** `docs/DECISION-REGISTER.md` (ADR-001–016)
 - **Official remote:** `https://github.com/Trareon-com/Trareon-Lab`
-- **Target OS:** Windows, macOS, Linux
+- **Target OS:** Exact matrix in `docs/SUPPORTED-PLATFORMS.md`
 - **Authoritative core:** Rust
-- **Desktop shell:** **Slint + Rust** (`C-SLINT`); ADR-001 `ACCEPTED`; UI remains replaceable
-- **Case database/index:** **Purpose-built Rust index** (`D-RUST-INDEX`); ADR-002 `ACCEPTED`; SQLite remains a Gate E reconsider option
+- **Desktop shell:** **Slint + Rust** (`C-SLINT`); ADR-001 `ACCEPTED`
+- **Case database/index:** **Purpose-built Rust index** (`D-RUST-INDEX`); ADR-002 `ACCEPTED`
 - **Konektivitas:** Full offline for deterministic forensics; optional loopback-only Ollama/LM Studio for AI assistance
 
 Trareon Lab mengonsumsi paket `.fsnap` dari Trareon Acquire dan format evidence umum, lalu menyediakan intake verification, processing, examination, interpretation, correlation, review, reporting, validation, dan case closure. Produk diposisikan sebagai case-centric, defensible laboratory — bukan kumpulan viewer atau tombol parser.
 
-RFC ini membekukan batas arsitektur yang sudah dikunci PRD dan ADR produk. Gate A (`docs/ARCHITECTURE-DECISION-MATRIX.md`) mencatat `PASS` dan memilih shell serta index.
+RFC ini membekukan batas arsitektur setelah Gates A–E `PASS`. Production application code may begin only by executing `docs/superpowers/plans/2026-07-17-trareon-lab-foundation.md`.
 
 ### 1.1 Prinsip yang tidak boleh dilanggar
 

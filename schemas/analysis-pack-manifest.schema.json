@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://trareon.com/schemas/analysis-pack-manifest.schema.json",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "pack_id",
+    "publisher",
+    "version",
+    "compatible_core_api",
+    "requested_capabilities",
+    "resource_limits",
+    "trust_state"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "analysis-pack-manifest-1"
+    },
+    "pack_id": {
+      "type": "string"
+    },
+    "publisher": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "compatible_core_api": {
+      "type": "string"
+    },
+    "requested_capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "resource_limits": {
+      "type": "object"
+    },
+    "trust_state": {
+      "enum": [
+        "BUNDLED_VALIDATED",
+        "SIGNED_TRUSTED",
+        "SIGNED_UNTRUSTED",
+        "UNSIGNED_BLOCKED",
+        "REVOKED",
+        "INCOMPATIBLE"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,8 @@
+{
+  "schema_version": "evidence-object-1",
+  "evidence_uuid": "22222222-2222-4222-8222-222222222222",
+  "source_designation": "forensic_copy",
+  "evidence_class": "fsnap_package",
+  "byte_length": 10,
+  "validation_state": "ComputedUnanchored"
+}
