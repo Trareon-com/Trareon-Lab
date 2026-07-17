@@ -1,6 +1,7 @@
 //! Authoritative forensic core for Trareon Lab (Foundation).
 
 pub mod error;
+pub mod export;
 pub mod result;
 pub mod schema_validate;
 
