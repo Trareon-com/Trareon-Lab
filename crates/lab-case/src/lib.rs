@@ -7,4 +7,3 @@ pub mod lock;
 pub use db::CaseDb;
 pub use lifecycle::CaseState;
 pub use lock::CaseLock;
-

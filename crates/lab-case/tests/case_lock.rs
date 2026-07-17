@@ -9,8 +9,8 @@ fn second_open_blocked_while_lock_held() {
     let dir = tempdir().expect("tempdir");
     let case_dir = dir.path();
 
-    let lock = CaseLock::acquire(case_dir, "11111111-1111-1111-1111-111111111111")
-        .expect("first acquire");
+    let lock =
+        CaseLock::acquire(case_dir, "11111111-1111-1111-1111-111111111111").expect("first acquire");
     assert!(matches!(lock, CaseLock::Held(_)));
 
     let second = CaseLock::acquire(case_dir, "11111111-1111-1111-1111-111111111111")
@@ -24,11 +24,15 @@ fn stale_dead_pid_lock_recovers_to_recovery_required() {
     let case_dir = dir.path();
 
     // Write a lock claiming a PID that cannot be alive on this host.
-    CaseLock::write_stale_for_test(case_dir, "11111111-1111-1111-1111-111111111111", 999_999_999)
-        .expect("stale lock");
+    CaseLock::write_stale_for_test(
+        case_dir,
+        "11111111-1111-1111-1111-111111111111",
+        999_999_999,
+    )
+    .expect("stale lock");
 
-    let outcome = CaseLock::acquire(case_dir, "11111111-1111-1111-1111-111111111111")
-        .expect("recover");
+    let outcome =
+        CaseLock::acquire(case_dir, "11111111-1111-1111-1111-111111111111").expect("recover");
     match outcome {
         CaseLock::Recovered { state, .. } => {
             assert_eq!(state, CaseState::RecoveryRequired);

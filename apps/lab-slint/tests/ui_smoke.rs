@@ -17,5 +17,8 @@ fn ui_smoke_opens_case_shows_coverage_and_focus() {
 
     snap.open_case_focused = false;
     snap.focus_open_case();
-    assert!(snap.open_case_focused, "primary Open Case action must take focus");
+    assert!(
+        snap.open_case_focused,
+        "primary Open Case action must take focus"
+    );
 }

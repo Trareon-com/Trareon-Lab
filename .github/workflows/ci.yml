@@ -29,3 +29,54 @@ jobs:
           cargo clippy -p lab-slint --all-targets --features gui -- -D warnings
       - name: Format check
         run: cargo fmt --all -- --check
+
+  audit:
+    name: cargo-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.95.0"
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: Audit dependencies
+        run: cargo audit
+
+  sbom:
+    name: sbom-cargo-metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.95.0"
+      - name: Generate SBOM from cargo metadata
+        run: |
+          mkdir -p release-evidence/sbom
+          cargo metadata --format-version 1 --all-features > release-evidence/sbom/sbom-cargo-metadata.json
+          test -s release-evidence/sbom/sbom-cargo-metadata.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          raw = Path("release-evidence/sbom/sbom-cargo-metadata.json").read_text()
+          data = json.loads(raw)
+          packages = sorted(
+              {
+                  f"{p.get('name')}@{p.get('version')}"
+                  for p in data.get("packages", [])
+                  if p.get("name") and p.get("version")
+              }
+          )
+          Path("release-evidence/sbom/package-inventory.txt").write_text(
+              "\n".join(packages) + ("\n" if packages else "")
+          )
+          print(f"packages={len(packages)}")
+          PY
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cargo-metadata
+          path: |
+            release-evidence/sbom/sbom-cargo-metadata.json
+            release-evidence/sbom/package-inventory.txt
