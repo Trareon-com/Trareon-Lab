@@ -2,16 +2,19 @@ import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
 
 export component AppWindow inherits Window {
     title: "Trareon Lab";
-    preferred-width: 720px;
-    preferred-height: 420px;
+    preferred-width: 880px;
+    preferred-height: 520px;
 
     in-out property <string> case-title: "(no case)";
     in-out property <int> evidence-count: 0;
     in-out property <int> coverage-count: 0;
+    in-out property <int> bookmark-count: 0;
     in-out property <bool> open-case-focused: true;
+    in-out property <string> active-screen: "Case";
 
     callback open-case-clicked();
     callback focus-open-case();
+    callback navigate(string);
 
     focus-open-case => {
         open-case-focused = true;
@@ -28,13 +31,30 @@ export component AppWindow inherits Window {
             font-weight: 700;
         }
 
+        HorizontalBox {
+            spacing: 6px;
+            Button { text: "Case"; clicked => { root.navigate("Case"); } }
+            Button { text: "Evidence"; clicked => { root.navigate("Evidence"); } }
+            Button { text: "Search"; clicked => { root.navigate("Search"); } }
+            Button { text: "Timeline"; clicked => { root.navigate("Timeline"); } }
+            Button { text: "Bookmarks"; clicked => { root.navigate("Bookmarks"); } }
+            Button { text: "Report"; clicked => { root.navigate("Report"); } }
+        }
+
+        Text {
+            text: "Screen: " + root.active-screen;
+            font-size: 14px;
+        }
+
         Text {
             text: "Case: " + root.case-title;
             font-size: 16px;
         }
 
         Text {
-            text: "Evidence: " + root.evidence-count + "  |  Coverage: " + root.coverage-count;
+            text: "Evidence: " + root.evidence-count
+                + "  |  Coverage: " + root.coverage-count
+                + "  |  Bookmarks: " + root.bookmark-count;
             font-size: 14px;
         }
 
