@@ -9,12 +9,17 @@ use std::time::{Duration, Instant};
 
 slint::include_modules!();
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.iter().any(|a| a == "--measure") {
-        return run_measure(&args);
+    let result = if args.iter().any(|a| a == "--measure") {
+        run_measure(&args)
+    } else {
+        run_interactive()
+    };
+    if let Err(err) = result {
+        eprintln!("lab-spike-slint error: {err}");
+        std::process::exit(1);
     }
-    run_interactive()
 }
 
 fn run_measure(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
@@ -23,19 +28,40 @@ fn run_measure(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(ROW_COUNT);
     let filter_prefix = arg_value(args, "--filter-prefix").unwrap_or_else(|| "0".into());
-    let out_path = arg_value(args, "--out").map(PathBuf::from);
+    let out_path = arg_value(args, "--out").map(PathBuf::from).unwrap_or_else(|| {
+        PathBuf::from("results").join(format!("{}-slint.json", os))
+    });
     let case_dir = arg_value(args, "--case-dir")
         .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            std::env::temp_dir().join(format!("trareon-lab-slint-measure-{}", std::process::id()))
-        });
+        .unwrap_or_else(|| PathBuf::from("results").join(format!("{}-slint-case", os)));
+
+    eprintln!("measure: creating case_dir {}", case_dir.display());
     let _ = std::fs::remove_dir_all(&case_dir);
     std::fs::create_dir_all(&case_dir)?;
+    if let Some(parent) = out_path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
 
     let cold = Instant::now();
+    eprintln!("measure: creating Slint window");
     let ui = AppWindow::new()?;
     let cold_ui_ms = cold.elapsed().as_millis() as u64;
 
+    // Showing the window is best-effort. Some Windows sessions fail if no event loop is running.
+    let mut ui_shown = false;
+    let mut ui_show_note = String::from("ui_show_skipped_or_ok");
+    match ui.window().show() {
+        Ok(()) => {
+            ui_shown = true;
+            ui_show_note = "ui_show_ok".into();
+        }
+        Err(e) => {
+            ui_show_note = format!("ui_show_failed:{e}");
+            eprintln!("measure: window show failed (continuing): {e}");
+        }
+    }
+
+    eprintln!("measure: opening synthetic case rows={rows}");
     let open_started = Instant::now();
     let (mut case, table_d) = OpenCase::open(&case_dir, rows)?;
     let table_display_ms = table_d.as_millis() as u64;
@@ -59,9 +85,8 @@ fn run_measure(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         )));
     }
     ui.set_status_text(SharedString::from(format!(
-        "measure mode: showing 200/{total}; UI+open cold_start≈{cold_start_ms} ms"
+        "measure mode: showing 200/{total}; cold_start≈{cold_start_ms} ms"
     )));
-    ui.window().show()?;
     let idle_rss = rss_mib();
 
     let mut filter_samples = Vec::new();
@@ -81,11 +106,7 @@ fn run_measure(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         ui.set_status_text(SharedString::from(format!(
             "filter {filter_prefix}: {total} matches"
         )));
-        // Pump a few events so the UI remains responsive during measure.
-        slint::platform::duration_until_next_timer_update();
-        let _ = slint::platform::duration_until_next_timer_update();
         filter_samples.push(started.elapsed().as_millis() as u64);
-        let _ = total;
     }
     filter_samples.sort_unstable();
 
@@ -115,8 +136,9 @@ fn run_measure(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         Err(_) => "FAIL_reopen",
     };
 
-    ui.set_status_text(SharedString::from("measure complete; closing"));
-    ui.window().hide()?;
+    if ui_shown {
+        let _ = ui.window().hide();
+    }
 
     let sample = MeasurementSample {
         candidate: "C-SLINT".into(),
@@ -132,18 +154,15 @@ fn run_measure(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
         installer_size_mib: None,
         a11y_smoke: "PASS_keyboard_focus_controls_present".into(),
         notes: format!(
-            "slint_ui_init_ms={cold_ui_ms}; rows={}; filtered_page_total_check={}; hashed={}; export={}",
+            "slint_ui_init_ms={cold_ui_ms}; {ui_show_note}; rows={}; filtered_page_total_check={}; hashed={}; export={}",
             pkg.row_count, pkg.filtered_count, pkg.hashed_count, pkg.export_sha256
         ),
     };
+
     let json = serde_json::to_string_pretty(&sample)?;
+    std::fs::write(&out_path, json.as_bytes())?;
+    eprintln!("measure: wrote {}", out_path.display());
     println!("{json}");
-    if let Some(path) = out_path {
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        std::fs::write(path, json.as_bytes())?;
-    }
     Ok(())
 }
 
