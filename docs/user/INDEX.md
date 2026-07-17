@@ -9,10 +9,12 @@ Foundation topics available offline:
 5. Export draft vs sealed
 6. Local AI boundary (suggestion-only, loopback)
 7. Examination shell (Case / Evidence / Search / Timeline / Bookmarks / Report)
+8. Disk images (raw/dd supported; E01 Limited)
 
 See also:
 
 - `docs/user/case-lifecycle.md`
 - `docs/user/examination.md`
+- `docs/user/disk-images.md`
 - `docs/SELLING-UNSIGNED.md`
 - `docs/PACKAGING-UNSIGNED-BUILDS.md`
