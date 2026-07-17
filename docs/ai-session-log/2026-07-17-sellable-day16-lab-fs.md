@@ -17,6 +17,7 @@ Smallest safe next step: **Day 16** — crate `lab-fs`, enumerate synthetic NTFS
 - Tests: demo enumeration, bad magic, missing parent (fail-closed).
 - Checklist: `docs/CHECKLIST-DAY-16.md`.
 - Session log directory created (this file).
+- **Also completed Day 17 in same continuation:** FAT32 + exFAT synthetic enumerate + recipes + tests.
 
 ## Verification
 
@@ -27,10 +28,10 @@ cargo clippy -p lab-fs --all-targets -- -D warnings
 
 ## Explicit non-claims
 
-Synthetic corpus models NTFS path/parent/deleted semantics. It is **not** a full on-disk `$MFT` / boot-sector parser.
+Synthetic corpora model path/parent/deleted semantics for NTFS/FAT32/exFAT. They are **not** full on-disk boot/FAT/$MFT parsers.
 
 ## Handoff
 
-- **Next:** Day 17 — FAT32 + exFAT enumeration (same crate, sibling synthetic formats or shared `FsEntry` API).
-- `main` still local-ahead of `origin` (push not requested).
-- Do not re-do Days 1–16.
+- **Next:** Day 18 — read file contents → CAS; byte-match test (`lab-store` CAS + `lab-fs` content read API).
+- `main` local-ahead of `origin` (push not requested).
+- Do not re-do Days 1–17.
