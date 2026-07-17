@@ -52,7 +52,7 @@ R1 delivers a **validated minimum vertical slice**: case isolation, `.fsnap` ver
 | FR-ART-003 | R1 | `docs/RELEASE-01-CAPABILITY-MATRIX.md` | Required for validated Foundation-to-Artifacts vertical slice |
 | FR-ART-004 | R1 | `docs/RELEASE-01-CAPABILITY-MATRIX.md` | Required for validated Foundation-to-Artifacts vertical slice |
 | FR-ART-005 | P0-LATER | `docs/RELEASE-01-CAPABILITY-MATRIX.md` | P0 obligation deferred past R1 with named milestone ownership |
-| FR-ART-006 | P0-LATER | `docs/RELEASE-01-CAPABILITY-MATRIX.md` | P0 obligation deferred past R1 with named milestone ownership |
+| FR-ART-006 | R1 | `docs/contracts/BOOKMARK.md`; `docs/contracts/TRANSFER-PACKAGE.md` | Bookmark + offline signed transfer elevated to R1 for sellable collaboration without central server |
 | FR-ART-007 | P0-LATER | `docs/RELEASE-01-CAPABILITY-MATRIX.md` | P0 obligation deferred past R1 with named milestone ownership |
 | FR-ART-008 | P0-LATER | `docs/RELEASE-01-CAPABILITY-MATRIX.md` | P0 obligation deferred past R1 with named milestone ownership |
 | FR-CASE-001 | R1 | `docs/contracts/CASE-LIFECYCLE.md` | Required for validated Foundation-to-Artifacts vertical slice |
