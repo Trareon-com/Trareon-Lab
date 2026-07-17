@@ -1,0 +1,31 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="LabSpikeAvalonia.MainWindow"
+        Title="Trareon Lab Gate A Spike — Avalonia"
+        Width="960" Height="720">
+  <DockPanel Margin="16">
+    <StackPanel DockPanel.Dock="Top" Spacing="8">
+      <TextBlock FontSize="20" FontWeight="Bold" Text="Trareon Lab Gate A — C-AVALONIA" />
+      <TextBlock Text="Avalonia UI shell · Rust core via lab-spike-harness CLI · evidence bytes stay in Rust" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Name="OpenBtn" Content="Open case (via harness note)" />
+        <TextBox Name="FilterBox" Width="120" Text="0" Watermark="filter prefix" />
+        <Button Name="FilterBtn" Content="Apply filter" />
+        <Button Name="HashBtn" Content="Start hash" />
+        <Button Name="CancelBtn" Content="Cancel hash" />
+        <Button Name="CrashBtn" Content="Crash worker" />
+        <Button Name="ExportBtn" Content="Export" />
+      </StackPanel>
+      <TextBlock Name="Status" Text="Ready. Interactive actions document the shell; --measure runs equal workflow via Rust harness." TextWrapping="Wrap" />
+    </StackPanel>
+    <Grid ColumnDefinitions="2*,*" Margin="0,12,0,0">
+      <ListBox Name="Rows" Grid.Column="0" />
+      <Border Grid.Column="1" Margin="12,0,0,0" Padding="12" BorderBrush="#9bb3a4" BorderThickness="1">
+        <StackPanel>
+          <TextBlock FontWeight="Bold" Text="Detail" />
+          <TextBlock Name="Detail" Text="Select a row" TextWrapping="Wrap" Margin="0,8,0,0" />
+        </StackPanel>
+      </Border>
+    </Grid>
+  </DockPanel>
+</Window>

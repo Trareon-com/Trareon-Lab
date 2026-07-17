@@ -1,6 +1,10 @@
 # Local case dirs and package artifacts (keep JSON measurements tracked)
 *-case/
 *-slint-case/
+*-tauri-case/
+*-avalonia-case/
+*-tauri-package.zip
+*-avalonia-package.zip
 dist/
 *-slint-package.zip
 *-slint-package.tar.gz

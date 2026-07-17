@@ -1,23 +1,42 @@
-# Spike: Avalonia + Rust FFI
+# Spike: Avalonia + Rust harness bridge
 
 Gate A candidate `C-AVALONIA`.
 
 ## Intent
 
-Prove self-contained Avalonia packaging without a separately installed .NET runtime for end users, while forensic spike logic remains in `lab-spike-core` via FFI/CLI bridge.
+Prove self-contained Avalonia packaging without a separately installed .NET runtime for end users, while forensic spike logic remains in `lab-spike-core` via the `lab-spike-harness` CLI bridge (no forensic business logic in C#).
 
-## Status
+## Prereq
 
-Scaffold. Requires .NET 8 SDK to build. Prefer measuring this candidate first on the ThinkPad X270 (Windows), then Kali, then macOS if SDK is installed.
+- .NET 8 SDK
+- Release harness: `cd spikes && cargo build -p lab-spike-harness --release`
 
-## Build (when SDK present)
+## Interactive
 
 ```bash
-# From spikes/avalonia after project is generated:
-dotnet build -c Release
-dotnet publish -c Release -r win-x64 --self-contained true
-dotnet publish -c Release -r linux-x64 --self-contained true
-dotnet publish -c Release -r osx-arm64 --self-contained true
+cd spikes/avalonia
+dotnet run -c Release
 ```
 
-Gate G1 passes only if the published self-contained artifact runs without requiring a separately installed .NET runtime on a clean machine.
+## Measure
+
+```bash
+# build harness first
+cd spikes && cargo build -p lab-spike-harness --release
+cd avalonia
+dotnet run -c Release -- --measure --os windows --rows 1000000 --filter-prefix 0 \
+  --case-dir ../results/windows-avalonia-case \
+  --out ../results/windows-avalonia.json
+```
+
+Or use `spikes/scripts/measure-avalonia-windows.ps1` / `measure-avalonia.sh`.
+
+## Self-contained package (G1)
+
+```bash
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+dotnet publish -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
+dotnet publish -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true
+```
+
+Gate G1 passes only if the published artifact runs without a separately installed .NET runtime.

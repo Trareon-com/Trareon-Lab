@@ -77,9 +77,9 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 | harness-core | macOS | 260 | 182.25 | 347.5 | 260 | 4 | 5 | 60 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/macos-harness-core.json` |
 | harness-core | Windows | 1925 | | | 1925 | 27 | 29 | 327 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/windows-harness-core.json` |
 | harness-core | Linux | 492 | 224.11 | 346.44 | 492 | 14 | 19 | 46 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/linux-harness-core.json` |
-| C-TAURI | macOS | | | | | | | | | | | |
-| C-TAURI | Windows | | | | | | | | | | | |
-| C-TAURI | Linux | | | | | | | | | | | |
+| C-TAURI | macOS | 1775 | 258.56 | 420.45 | 274 | 4 | 5 | 60 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/macos-tauri.json` |
+| C-TAURI | Windows | | | | | | | | | | | pending ThinkPad |
+| C-TAURI | Linux | | | | | | | | | | | pending Kali |
 | C-SLINT | macOS | 762 | 219.95 | 375.41 | 263 | 5 | 5 | 51 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 6.463 | PASS_keyboard_focus_controls_present | `spikes/results/macos-slint.json` |
 | C-SLINT | Windows | 749 | | | 734 | 18 | 25 | 131 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 6.618 | PASS_keyboard_focus_controls_present | `spikes/results/windows-slint.json` |
 | C-SLINT | Linux | 512 | 239.48 | 361.44 | 459 | 13 | 16 | 55 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 9.707 | PASS_keyboard_focus_controls_present | `spikes/results/linux-slint.json` |
@@ -133,4 +133,6 @@ These are planning risks recorded before spike execution; they are not Gate A re
 - Desktop UI candidates C-TAURI / C-AVALONIA have no three-OS evidence yet.
 - Desktop shell: no ACCEPTED selection.
 - Case database/index: no ACCEPTED selection.
-- Next action: run C-TAURI and C-AVALONIA equal spikes on the same three OSes; then close Gate A per decision rule.
+- C-TAURI measured on macOS (webview init ~1501 ms; crash/lock PASS). Windows + Linux pending (`spikes/COPY-PASTE-TAURI.md`).
+- C-AVALONIA scaffold ready; needs .NET 8 SDK — prefer ThinkPad first (`spikes/COPY-PASTE-AVALONIA.md`).
+- Next action: finish C-TAURI on Windows + Kali, then C-AVALONIA on three OSes; then close Gate A per decision rule.

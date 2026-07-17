@@ -364,6 +364,122 @@ pub fn percentile(sorted_ms: &[u64], p: f64) -> Option<u64> {
     sorted_ms.get(idx).copied()
 }
 
+/// Shared equal-workflow measurement used by UI candidates after their shell init.
+pub struct EqualMeasureInput {
+    pub candidate: String,
+    pub os: String,
+    pub rows: usize,
+    pub filter_prefix: String,
+    pub case_dir: PathBuf,
+    pub build_identity: String,
+    pub a11y_smoke: String,
+    pub ui_init_ms: u64,
+    pub notes_prefix: String,
+    pub idle_rss_mib: Option<f64>,
+    pub peak_rss_mib: Option<f64>,
+}
+
+pub fn run_equal_measure(input: EqualMeasureInput) -> Result<MeasurementSample, SpikeError> {
+    let _ = fs::remove_dir_all(&input.case_dir);
+    fs::create_dir_all(&input.case_dir)?;
+
+    let open_started = Instant::now();
+    let (mut case, table_d) = OpenCase::open(&input.case_dir, input.rows)?;
+    let table_display_ms = table_d.as_millis() as u64;
+    let open_ms = open_started.elapsed().as_millis() as u64;
+    let cold_start_ms = open_ms.saturating_add(input.ui_init_ms);
+
+    let idle_rss = input.idle_rss_mib.or_else(probe_rss_mib);
+    let (_page, _total) = case.page(0, 200, "");
+    let _ = case.detail(0);
+
+    let mut filter_samples = Vec::new();
+    for _ in 0..21 {
+        let started = Instant::now();
+        let (_page, _total) = case.page(0, 200, &input.filter_prefix);
+        filter_samples.push(started.elapsed().as_millis() as u64);
+    }
+    filter_samples.sort_unstable();
+
+    case.start_hash_job(64)?;
+    thread::sleep(Duration::from_millis(200));
+    let cancel_ms = case.cancel_hash_job()?.as_millis() as u64;
+
+    case.start_hash_job(64)?;
+    thread::sleep(Duration::from_millis(50));
+    case.simulate_worker_crash()?;
+
+    let crash_lock = if input.case_dir.join("case.lock").exists() {
+        "PASS_lock_retained"
+    } else {
+        "FAIL_lock_missing"
+    };
+    let second_open = match try_reopen_after_release(&input.case_dir) {
+        Err(_) => "PASS_second_open_blocked",
+        Ok(_) => "FAIL_second_open_allowed",
+    };
+
+    let peak_rss = input.peak_rss_mib.or_else(probe_rss_mib);
+    let (_path, pkg, _) =
+        case.export_deterministic(&input.filter_prefix, Some(0), &input.build_identity)?;
+    case.release_lock()?;
+    let reopen = match try_reopen_after_release(&input.case_dir) {
+        Ok(_) => "PASS_reopen_after_release",
+        Err(_) => "FAIL_reopen",
+    };
+
+    Ok(MeasurementSample {
+        candidate: input.candidate,
+        os: input.os,
+        cold_start_ms: Some(cold_start_ms),
+        idle_rss_mib: idle_rss,
+        peak_rss_mib: peak_rss,
+        table_display_ms: Some(table_display_ms),
+        filter_p50_ms: percentile(&filter_samples, 50.0),
+        filter_p95_ms: percentile(&filter_samples, 95.0),
+        cancel_ms: Some(cancel_ms),
+        crash_recovery: format!("{crash_lock};{second_open};{reopen}"),
+        installer_size_mib: None,
+        a11y_smoke: input.a11y_smoke,
+        notes: format!(
+            "{}; ui_init_ms={}; rows={}; filtered_page_total_check={}; hashed={}; export={}",
+            input.notes_prefix,
+            input.ui_init_ms,
+            pkg.row_count,
+            pkg.filtered_count,
+            pkg.hashed_count,
+            pkg.export_sha256
+        ),
+    })
+}
+
+pub fn probe_rss_mib() -> Option<f64> {
+    #[cfg(target_os = "linux")]
+    {
+        return current_rss_mib();
+    }
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        let pid = std::process::id().to_string();
+        let out = Command::new("ps")
+            .args(["-o", "rss=", "-p", &pid])
+            .output()
+            .ok()?;
+        let s = String::from_utf8_lossy(&out.stdout);
+        let kb: f64 = s.trim().parse().ok()?;
+        return Some(kb / 1024.0);
+    }
+    #[cfg(windows)]
+    {
+        None
+    }
+    #[cfg(not(any(target_os = "linux", target_os = "macos", windows)))]
+    {
+        None
+    }
+}
+
 fn generate_rows(count: usize) -> Vec<SyntheticRow> {
     // Deterministic synthetic hashes (not cryptographic claims). Full SHA-256 is exercised in the hash job.
     let mut rows = Vec::with_capacity(count);

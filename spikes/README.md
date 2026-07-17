@@ -6,10 +6,17 @@ Equal proof-of-capability spikes for desktop shell selection. Synthetic data onl
 
 | Directory | Candidate | Implementation status |
 |---|---|---|
-| `lab-spike-core/` + `lab-spike-harness/` | Shared Rust core + headless harness | Runnable on macOS/Windows/Linux |
-| `slint-app/` | Slint + Rust (`C-SLINT`) | Builds on macOS |
-| `tauri/` | Tauri 2 + Svelte 5 (`C-TAURI`) | Scaffold / pending install |
-| `avalonia/` | Avalonia + Rust FFI (`C-AVALONIA`) | Scaffold; needs .NET 8 SDK |
+| `lab-spike-core/` + `lab-spike-harness/` | Shared Rust core + headless harness | Measured on macOS / Windows / Linux |
+| `slint-app/` | Slint + Rust (`C-SLINT`) | Measured on 3 OS + package size |
+| `tauri/` | Tauri 2 + Svelte 5 (`C-TAURI`) | Measured on macOS; Win/Linux pending |
+| `avalonia/` | Avalonia + Rust harness bridge (`C-AVALONIA`) | Scaffold; needs .NET 8 SDK |
+
+## Copy-paste runbooks
+
+- Slint runtime: [`COPY-PASTE-SLINT.md`](COPY-PASTE-SLINT.md)
+- Slint package size: [`COPY-PASTE-SLINT-PACKAGE.md`](COPY-PASTE-SLINT-PACKAGE.md)
+- Tauri: [`COPY-PASTE-TAURI.md`](COPY-PASTE-TAURI.md)
+- Avalonia: [`COPY-PASTE-AVALONIA.md`](COPY-PASTE-AVALONIA.md)
 
 ## Required equal workflow
 
@@ -31,10 +38,6 @@ Follow [`MEASUREMENT-RUNBOOK.md`](MEASUREMENT-RUNBOOK.md).
 
 Record results into `docs/ARCHITECTURE-DECISION-MATRIX.md` and store raw JSON under `spikes/results/`.
 
-## Current macOS harness result (MacBook)
-
-See `results/macos-harness-core.json` (1,000,000 rows). Crash/lock checks: `PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release`.
-
 ## Status
 
-Gate A remains `NOT PASS` until Tauri/Slint/Avalonia UI measurements and Windows + Linux harness/UI results are recorded for every mandatory gate.
+Gate A remains `NOT PASS` until every mandatory gate has evidence for a selected desktop candidate on Windows + macOS + Linux, and a database/index candidate also passes.
