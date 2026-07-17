@@ -725,8 +725,35 @@ The checklist must confirm:
 **Step 4: Verify, mark Gate E, and commit**
 
 ```bash
-rg -n "Gate E.*PASS" docs/FOUNDATION-READINESS-CHECKLIST.md
-rg -n "OPEN.*(CRITICAL|HIGH)|(CRITICAL|HIGH).*OPEN" docs/reviews && exit 1 || true
+required_gate_e_files=(
+  docs/FOUNDATION-READINESS-CHECKLIST.md
+  docs/reviews/PRODUCT-READINESS-REVIEW.md
+  docs/reviews/SECURITY-ARCHITECTURE-REVIEW.md
+  docs/reviews/FORENSIC-METHOD-REVIEW.md
+  docs/reviews/INDONESIA-LEGAL-AND-STANDARDS-REVIEW.md
+  docs/reviews/ACCESSIBILITY-AND-UX-REVIEW.md
+)
+for required_file in "${required_gate_e_files[@]}"; do
+  test -f "$required_file" || {
+    printf 'Missing mandatory Gate E artifact: %s\n' "$required_file" >&2
+    exit 1
+  }
+done
+
+if rg -n "Gate E.*PASS" docs/FOUNDATION-READINESS-CHECKLIST.md; then
+  :
+else
+  gate_e_status=$?
+  exit "$gate_e_status"
+fi
+
+if rg -n "OPEN.*(CRITICAL|HIGH)|(CRITICAL|HIGH).*OPEN" docs/reviews; then
+  exit 1
+else
+  review_status=$?
+  test "$review_status" -eq 1 || exit "$review_status"
+fi
+
 if rg -n "TBD|TODO|supports all|and others" . \
   --glob 'docs/**' \
   --glob 'RFC-Digital-Forensic-Analysis-Lab.md' \
