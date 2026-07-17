@@ -114,7 +114,7 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] `deny.toml` / audit allowlist policy documented *(chose `cargo audit` + `.cargo/audit.toml` / `docs/DEPENDENCY-AUDIT.md` instead of cargo-deny)*
 - [x] Fail CI on HIGH vuln baru
 - [x] Commit: `ci: official-grade audit secret scan and sbom`
-- [ ] Push; pastikan Actions hijau di PR
+- [x] Push; pastikan Actions hijau di PR *(https://github.com/Trareon-com/Trareon-Lab/actions/runs/29575583474 success on `86454c4`)*
 
 **Verify:** Actions run hijau; SBOM artifact terunduh.
 
@@ -147,7 +147,7 @@ Jika Path C atau D terlambat, **jangan** longgarkan O1–O3/O8–O9. Geser tangg
 - [x] Week 1 integration doc review (self)
 - [x] Update PRD status line: `Official R1.0.0 program active`
 - [x] Commit: `docs: week1 official kickoff complete`
-- [ ] Tag interim `program/official-w1` (optional)
+- [x] Tag interim `program/official-w1` (optional) *(points at `86454c4`)*
 
 ---
 
