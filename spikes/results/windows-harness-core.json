@@ -1,0 +1,15 @@
+{
+  "candidate": "harness-core",
+  "os": "windows",
+  "cold_start_ms": 1925,
+  "idle_rss_mib": null,
+  "peak_rss_mib": null,
+  "table_display_ms": 1925,
+  "filter_p50_ms": 27,
+  "filter_p95_ms": 29,
+  "cancel_ms": 327,
+  "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
+  "installer_size_mib": null,
+  "a11y_smoke": "N/A_headless",
+  "notes": "rows=1000000; filtered=1000000; hashed=402; export=accc3e43e7bbfde82356361ead9f4b974a7595abb5756aa385b06a6702fe3662"
+}

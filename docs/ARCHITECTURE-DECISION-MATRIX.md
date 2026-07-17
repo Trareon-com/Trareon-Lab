@@ -75,7 +75,7 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 | Candidate | OS | Cold start (ms) | Idle RSS (MiB) | Peak RSS (MiB) | Table display (ms) | Filter p50 (ms) | Filter p95 (ms) | Cancel (ms) | Crash recovery | Installer size (MiB) | A11y smoke | Evidence path |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---|---|
 | harness-core | macOS | 260 | 182.25 | 347.5 | 260 | 4 | 5 | 60 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/macos-harness-core.json` |
-| harness-core | Windows | | | | | | | | | | | pending ThinkPad X270 |
+| harness-core | Windows | 1925 | | | 1925 | 27 | 29 | 327 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/windows-harness-core.json` |
 | harness-core | Linux | 492 | 224.11 | 346.44 | 492 | 14 | 19 | 46 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/linux-harness-core.json` |
 | C-TAURI | macOS | | | | | | | | | | | |
 | C-TAURI | Windows | | | | | | | | | | | |
@@ -125,9 +125,9 @@ These are planning risks recorded before spike execution; they are not Gate A re
 
 **Gate A: NOT PASS**
 
-- Shared headless harness measured on macOS and Linux (Kali) for 1,000,000 rows with lock/crash checks PASS.
-- Windows (ThinkPad X270) harness run is still required.
+- Shared headless harness measured on macOS, Windows (ThinkPad X270), and Linux (Kali) for 1,000,000 rows with lock/crash checks PASS on all three.
+- Windows RSS helpers are not yet implemented (`idle_rss_mib` / `peak_rss_mib` null); timing and lock/crash evidence are recorded.
 - Desktop UI candidates C-TAURI / C-SLINT / C-AVALONIA do not yet have complete three-OS mandatory-gate evidence.
 - Desktop shell: no ACCEPTED selection.
 - Case database/index: no ACCEPTED selection.
-- Next action: run `spikes/MEASUREMENT-RUNBOOK.md` on ThinkPad X270 and Kali, then complete UI candidate measurements.
+- Next action: complete UI candidate spikes (Tauri, Slint, Avalonia) on the three machines, then fill mandatory gates and select ADR-001/002.
