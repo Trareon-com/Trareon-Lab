@@ -9,6 +9,7 @@ export component ReportScreen inherits Rectangle {
     in-out property <string> report-state;
     in-out property <[string]> finding-claims;
     in-out property <[string]> finding-uuids;
+    in-out property <string> about-line;
 
     background: transparent;
     property <bool> empty: finding-claims.length == 0;
@@ -34,7 +35,6 @@ export component ReportScreen inherits Rectangle {
             LabButton {
                 primary: false;
                 label: Strings.export-soon;
-                // Honest stub: no file IO
                 clicked => { }
             }
         }
@@ -78,6 +78,17 @@ export component ReportScreen inherits Rectangle {
                         }
                     }
                 }
+            }
+        }
+
+        SectionCard {
+            title: Strings.about-prefix;
+            vertical-stretch: 0;
+            Text {
+                text: root.about-line;
+                color: Theme.text-secondary;
+                font-size: 11px;
+                wrap: word-wrap;
             }
         }
     }

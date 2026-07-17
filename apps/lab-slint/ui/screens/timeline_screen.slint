@@ -3,9 +3,12 @@ import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
 import { SectionCard } from "../components/section_card.slint";
 import { EmptyState } from "../components/empty_state.slint";
+import { LabButton } from "../components/lab_button.slint";
 
 export component TimelineScreen inherits Rectangle {
     in-out property <[string]> timeline-labels;
+    callback jump-evidence-clicked();
+    callback bookmark-hit-clicked();
 
     background: transparent;
     property <bool> empty: timeline-labels.length == 0;
@@ -15,10 +18,21 @@ export component TimelineScreen inherits Rectangle {
         spacing: 12px;
 
         HorizontalLayout {
+            spacing: 8px;
             LineEdit {
                 placeholder-text: Strings.filter-stub;
                 enabled: false;
                 horizontal-stretch: 1;
+            }
+            if !empty: LabButton {
+                primary: false;
+                label: Strings.jump-evidence;
+                clicked => { root.jump-evidence-clicked(); }
+            }
+            if !empty: LabButton {
+                primary: false;
+                label: Strings.add-bookmark;
+                clicked => { root.bookmark-hit-clicked(); }
             }
         }
 

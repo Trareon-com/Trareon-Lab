@@ -51,11 +51,15 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.set_locale(snap.locale.clone().into());
         ui.set_report_state(snap.report_state.clone().into());
         ui.set_search_query(snap.search_query.clone().into());
-        ui.set_selected_file_index(
-            snap.selected_file_index
-                .map(|i| i as i32)
-                .unwrap_or(-1),
-        );
+        ui.set_selected_file_index(snap.selected_file_index.map(|i| i as i32).unwrap_or(-1));
+
+        let activity = vec![
+            SharedString::from(format!("case open · {}", snap.case_title)),
+            SharedString::from(format!("{} evidence object(s)", snap.evidence_count)),
+            SharedString::from(format!("coverage count · {}", snap.coverage_count)),
+            SharedString::from(format!("{} bookmark(s)", snap.bookmark_count)),
+        ];
+        ui.set_activity_lines(ModelRc::new(VecModel::from(activity)));
 
         let names: Vec<SharedString> = snap
             .evidence_files
@@ -230,6 +234,61 @@ fn main() -> Result<(), slint::PlatformError> {
             if index >= 0 {
                 snap.select_file(index as usize);
             }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_bm = Rc::clone(&snapshot);
+    ui.on_bookmark_selection_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_bm.borrow_mut();
+            let claim = if let Some(idx) = snap.selected_file_index {
+                snap.evidence_files
+                    .get(idx)
+                    .map(|f| format!("Bookmarked file {}", f.name))
+                    .unwrap_or_else(|| "Bookmarked selection".into())
+            } else if let Some(hit) = snap.artifact_hits.first() {
+                format!("Bookmarked {}", hit.summary)
+            } else {
+                "Bookmarked examination hit".into()
+            };
+            snap.bookmark_count += 1;
+            let n = snap.bookmark_count;
+            snap.findings.push(FindingRow {
+                claim,
+                bookmark_uuid: format!("bm-{n:03}"),
+            });
+            snap.navigate_to(NavScreen::Bookmarks);
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_rel = Rc::clone(&snapshot);
+    ui.on_find_related_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_rel.borrow_mut();
+            let q = snap
+                .selected_file_index
+                .and_then(|i| snap.evidence_files.get(i).map(|f| f.name.clone()))
+                .unwrap_or_else(|| "related".into());
+            snap.set_search(q.clone(), vec![format!("related to '{q}'")]);
+            snap.set_artifact_hits(vec![ArtifactHitRow {
+                kind: "Related".into(),
+                summary: format!("Artifacts linked to {q}"),
+                provenance_ref: "art://related#1".into(),
+            }]);
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_hs = Rc::clone(&snapshot);
+    ui.on_header_search_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_hs.borrow_mut();
+            snap.handle_shortcut("/");
             apply(&ui, &snap);
         }
     });

@@ -1,0 +1,11 @@
+import { Theme } from "../theme.slint";
+
+export component NavGroupLabel inherits Text {
+    in-out property <string> label;
+    text: root.label;
+    color: Theme.text-secondary;
+    font-size: 10px;
+    font-weight: 700;
+    height: 22px;
+    vertical-alignment: center;
+}

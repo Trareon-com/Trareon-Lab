@@ -3,11 +3,13 @@ import { Strings } from "../strings.slint";
 import { SectionCard } from "../components/section_card.slint";
 import { EmptyState } from "../components/empty_state.slint";
 import { MetricTile } from "../components/metric_tile.slint";
+import { LabButton } from "../components/lab_button.slint";
 
 export component BookmarksScreen inherits Rectangle {
     in-out property <[string]> finding-claims;
     in-out property <[string]> finding-uuids;
     in-out property <int> bookmark-count;
+    callback navigate-report();
 
     background: transparent;
     property <bool> empty: finding-claims.length == 0 && bookmark-count == 0;
@@ -16,10 +18,29 @@ export component BookmarksScreen inherits Rectangle {
         padding: 12px;
         spacing: 12px;
 
-        MetricTile {
-            label: Strings.status-bookmarks;
-            value: root.bookmark-count;
-            min-height: 64px;
+        HorizontalLayout {
+            spacing: 12px;
+            MetricTile {
+                label: Strings.status-bookmarks;
+                value: root.bookmark-count;
+                min-height: 64px;
+                horizontal-stretch: 1;
+            }
+            VerticalLayout {
+                spacing: 8px;
+                alignment: center;
+                Text {
+                    text: Strings.work-product-hint;
+                    color: Theme.text-secondary;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                if !empty: LabButton {
+                    primary: true;
+                    label: Strings.go-report;
+                    clicked => { root.navigate-report(); }
+                }
+            }
         }
 
         if empty: EmptyState {
@@ -29,7 +50,7 @@ export component BookmarksScreen inherits Rectangle {
         }
 
         if !empty: SectionCard {
-            title: Strings.col-claim;
+            title: Strings.queue-for-report;
             vertical-stretch: 1;
             Flickable {
                 vertical-stretch: 1;
