@@ -1,0 +1,87 @@
+import { LineEdit } from "std-widgets.slint";
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+
+/// Raycast-style command palette overlay.
+export component CommandPalette inherits Rectangle {
+    in-out property <string> filter: "";
+    in-out property <[string]> commands: [];
+    in-out property <int> selected-index: 0;
+    callback filter-changed(string);
+    callback command-activated(string);
+    callback dismissed();
+
+    background: #00000088;
+
+    TouchArea {
+        clicked => { root.dismissed(); }
+    }
+
+    plate := Rectangle {
+        x: (parent.width - self.width) / 2;
+        y: parent.height * 0.18;
+        width: min(520px, parent.width - 48px);
+        height: min(360px, parent.height * 0.55);
+        background: Theme.surface-raised;
+        border-width: 1px;
+        border-color: Theme.border;
+        border-radius: 6px;
+
+        VerticalLayout {
+            padding: 8px;
+            spacing: 6px;
+
+            Text {
+                text: Strings.command-palette;
+                color: Theme.text-secondary;
+                font-size: 11px;
+                font-weight: 700;
+            }
+
+            LineEdit {
+                text <=> root.filter;
+                placeholder-text: Strings.command-placeholder;
+                edited => { root.filter-changed(self.text); }
+                accepted => {
+                    if root.commands.length > 0 {
+                        root.command-activated(root.commands[root.selected-index]);
+                    }
+                }
+            }
+
+            Flickable {
+                vertical-stretch: 1;
+                viewport-width: parent.width - 16px;
+                VerticalLayout {
+                    spacing: 2px;
+                    width: parent.width - 16px;
+                    for cmd[index] in root.commands: Rectangle {
+                        height: 28px;
+                        border-radius: 4px;
+                        background: index == root.selected-index ? Theme.row-hover : transparent;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            Text {
+                                text: cmd;
+                                color: Theme.text-primary;
+                                font-size: 12px;
+                                vertical-alignment: center;
+                                overflow: elide;
+                            }
+                        }
+                        TouchArea {
+                            clicked => { root.command-activated(cmd); }
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: Strings.command-hint;
+                color: Theme.text-secondary;
+                font-size: 11px;
+            }
+        }
+    }
+}

@@ -1,54 +1,8 @@
 import { Button } from "std-widgets.slint";
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
-import { SectionCard } from "../components/section_card.slint";
-import { MetricTile } from "../components/metric_tile.slint";
 import { LabButton } from "../components/lab_button.slint";
 import { StatusBadge } from "../components/status_badge.slint";
-
-export component PlaceTile inherits Rectangle {
-    in-out property <string> label;
-    in-out property <bool> enabled: true;
-    callback clicked();
-
-    height: 40px;
-    border-radius: 5px;
-    border-width: 1px;
-    border-color: Theme.border;
-    background: Theme.surface;
-    opacity: enabled ? 1.0 : 0.4;
-
-    HorizontalLayout {
-        padding-left: 12px;
-        padding-right: 12px;
-        spacing: 8px;
-        Text {
-            text: root.label;
-            color: root.enabled ? Theme.text-primary : Theme.text-secondary;
-            font-size: 13px;
-            vertical-alignment: center;
-            horizontal-stretch: 1;
-            overflow: elide;
-        }
-        Text {
-            text: "›";
-            color: Theme.text-secondary;
-            font-size: 16px;
-            vertical-alignment: center;
-        }
-    }
-
-    ta := TouchArea {
-        enabled: root.enabled;
-        clicked => { root.clicked(); }
-    }
-    states [
-        hover when ta.has-hover && root.enabled: {
-            background: Theme.row-hover;
-            border-color: Theme.accent-muted;
-        }
-    ]
-}
 
 export component CaseScreen inherits Rectangle {
     in-out property <string> case-title;
@@ -90,67 +44,57 @@ export component CaseScreen inherits Rectangle {
         open-btn.focus();
     }
 
-    // Empty: one composition — brand, line, CTA. No empty-card dashboard.
     if !has-case: Rectangle {
         width: 100%;
         height: 100%;
         background: Theme.canvas;
-
         welcome-plate := Rectangle {
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2;
-            width: min(520px, max(320px, parent.width - 80px));
-            height: 340px;
+            width: min(480px, max(300px, parent.width - 64px));
+            height: 300px;
             background: Theme.surface;
             border-width: 1px;
             border-color: Theme.border;
-            border-radius: 8px;
-
+            border-radius: 6px;
             VerticalLayout {
-                padding: 36px;
+                padding: 28px;
                 spacing: 0px;
-
                 HorizontalLayout {
                     alignment: center;
-                    spacing: 12px;
+                    spacing: 10px;
                     Rectangle {
-                        width: 12px;
-                        height: 12px;
+                        width: 10px;
+                        height: 10px;
                         border-radius: 2px;
                         background: Theme.accent;
                     }
                     Text {
                         text: Strings.brand;
                         color: Theme.text-primary;
-                        font-size: 26px;
+                        font-size: 22px;
                         font-weight: 700;
                         vertical-alignment: center;
                     }
                 }
-
-                Rectangle { height: 20px; }
-
+                Rectangle { height: 14px; }
                 Text {
                     text: Strings.welcome-headline;
                     color: Theme.text-primary;
-                    font-size: 17px;
+                    font-size: 14px;
                     font-weight: 600;
                     horizontal-alignment: center;
                     wrap: word-wrap;
                 }
-
-                Rectangle { height: 12px; }
-
+                Rectangle { height: 8px; }
                 Text {
                     text: Strings.welcome-body;
                     color: Theme.text-secondary;
-                    font-size: 13px;
+                    font-size: 12px;
                     horizontal-alignment: center;
                     wrap: word-wrap;
                 }
-
-                Rectangle { height: 28px; }
-
+                Rectangle { height: 20px; }
                 HorizontalLayout {
                     alignment: center;
                     LabButton {
@@ -159,75 +103,55 @@ export component CaseScreen inherits Rectangle {
                         clicked => { root.open-case-clicked(); }
                     }
                 }
-
-                Rectangle { height: 22px; }
-
-                Rectangle {
-                    height: 1px;
-                    background: Theme.border;
-                }
-
                 Rectangle { height: 16px; }
-
                 Text {
                     text: Strings.welcome-meta;
                     color: Theme.mono-fg;
                     font-family: "monospace";
                     font-size: 11px;
                     horizontal-alignment: center;
-                    wrap: word-wrap;
                 }
             }
         }
     }
 
-    // Case open: dense workstation funnel.
+    // Dense strip — tool, not dashboard.
     if has-case: VerticalLayout {
-        padding: 16px;
-        spacing: 14px;
+        padding: 8px;
+        spacing: 8px;
 
         Rectangle {
             background: Theme.surface;
             border-width: 1px;
             border-color: Theme.border;
-            border-radius: 6px;
+            border-radius: 4px;
             VerticalLayout {
-                padding: 16px;
-                spacing: 12px;
+                padding: 10px;
+                spacing: 8px;
                 HorizontalLayout {
-                    spacing: 12px;
-                    VerticalLayout {
-                        spacing: 6px;
+                    spacing: 8px;
+                    Text {
+                        text: root.next-body;
+                        color: Theme.text-primary;
+                        font-size: 13px;
+                        font-weight: 600;
+                        wrap: word-wrap;
                         horizontal-stretch: 1;
-                        Text {
-                            text: Strings.next-action;
-                            color: Theme.text-secondary;
-                            font-size: 11px;
-                            font-weight: 700;
-                        }
-                        Text {
-                            text: root.next-body;
-                            color: Theme.text-primary;
-                            font-size: 15px;
-                            font-weight: 600;
-                            wrap: word-wrap;
-                        }
-                        Text {
-                            text: root.case-title;
-                            color: Theme.mono-fg;
-                            font-family: "monospace";
-                            font-size: 12px;
-                            wrap: word-wrap;
-                        }
+                        vertical-alignment: center;
                     }
                     StatusBadge {
                         label: root.case-state-label;
                         kind: "ok";
                     }
                 }
+                Text {
+                    text: root.case-title;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                }
                 HorizontalLayout {
-                    spacing: 8px;
-                    alignment: start;
+                    spacing: 6px;
                     LabButton {
                         primary: true;
                         label: root.next-cta;
@@ -241,117 +165,68 @@ export component CaseScreen inherits Rectangle {
                             }
                         }
                     }
-                    if root.stage == 1: LabButton {
+                    LabButton {
                         primary: false;
-                        label: Strings.open-case;
-                        clicked => { root.open-case-clicked(); }
+                        label: Strings.import-evidence;
+                        clicked => { root.import-evidence-clicked(); }
                     }
-                    if root.stage >= 2: LabButton {
+                    LabButton {
                         primary: false;
                         label: Strings.go-search;
                         clicked => { root.navigate("Search"); }
                     }
-                    if root.stage >= 2: LabButton {
+                    LabButton {
                         primary: false;
-                        label: Strings.go-timeline;
-                        clicked => { root.navigate("Timeline"); }
+                        label: Strings.go-bookmarks;
+                        clicked => { root.navigate("Bookmarks"); }
+                    }
+                }
+                HorizontalLayout {
+                    spacing: 12px;
+                    Text {
+                        text: Strings.status-evidence + ": \{root.evidence-count}";
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                    }
+                    Text {
+                        text: Strings.status-coverage + ": \{root.coverage-count}";
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                    }
+                    Text {
+                        text: Strings.status-bookmarks + ": \{root.bookmark-count}";
+                        color: Theme.text-secondary;
+                        font-size: 11px;
                     }
                 }
             }
         }
 
-        HorizontalLayout {
-            spacing: 12px;
+        Text {
+            text: Strings.activity;
+            color: Theme.text-secondary;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        if root.activity-lines.length == 0: Text {
+            text: Strings.activity-empty;
+            color: Theme.text-secondary;
+            font-size: 12px;
+        }
+
+        if root.activity-lines.length > 0: Flickable {
             vertical-stretch: 1;
-
-            SectionCard {
-                title: Strings.evidence-overview;
-                horizontal-stretch: 1;
-                VerticalLayout {
-                    spacing: 8px;
-                    MetricTile {
-                        label: Strings.status-evidence;
-                        value: root.evidence-count;
-                    }
-                    MetricTile {
-                        label: Strings.status-coverage;
-                        value: root.coverage-count;
-                    }
-                    MetricTile {
-                        label: Strings.status-bookmarks;
-                        value: root.bookmark-count;
-                    }
-                    Rectangle { height: 4px; }
-                    HorizontalLayout {
-                        alignment: start;
-                        LabButton {
-                            primary: root.evidence-count == 0;
-                            label: Strings.import-evidence;
-                            clicked => { root.import-evidence-clicked(); }
-                        }
-                    }
-                }
-            }
-
-            SectionCard {
-                title: Strings.examine-now;
-                horizontal-stretch: 1;
-                VerticalLayout {
-                    spacing: 8px;
-                    PlaceTile {
-                        label: Strings.go-evidence;
-                        enabled: root.evidence-count > 0;
-                        clicked => { root.navigate("Evidence"); }
-                    }
-                    PlaceTile {
-                        label: Strings.go-search;
-                        clicked => { root.navigate("Search"); }
-                    }
-                    PlaceTile {
-                        label: Strings.go-timeline;
-                        clicked => { root.navigate("Timeline"); }
-                    }
-                    PlaceTile {
-                        label: Strings.go-bookmarks;
-                        enabled: root.bookmark-count > 0;
-                        clicked => { root.navigate("Bookmarks"); }
-                    }
-                    PlaceTile {
-                        label: Strings.go-report;
-                        clicked => { root.navigate("Report"); }
-                    }
-                }
-            }
-
-            SectionCard {
-                title: Strings.activity;
-                horizontal-stretch: 1;
-                if root.activity-lines.length == 0: Text {
-                    text: Strings.activity-empty;
-                    color: Theme.text-secondary;
-                    font-size: 12px;
-                    wrap: word-wrap;
-                }
-                if root.activity-lines.length > 0: VerticalLayout {
-                    spacing: 8px;
-                    for line[idx] in root.activity-lines: HorizontalLayout {
-                        spacing: 8px;
-                        Rectangle {
-                            width: 6px;
-                            height: 6px;
-                            y: 5px;
-                            border-radius: 1px;
-                            background: idx == 0 ? Theme.accent : Theme.border;
-                        }
-                        Text {
-                            text: line;
-                            color: idx == 0 ? Theme.text-primary : Theme.mono-fg;
-                            font-family: "monospace";
-                            font-size: 11px;
-                            wrap: word-wrap;
-                            horizontal-stretch: 1;
-                        }
-                    }
+            viewport-width: parent.width - 16px;
+            VerticalLayout {
+                spacing: 4px;
+                width: parent.width - 16px;
+                for line in root.activity-lines: Text {
+                    text: "·  " + line;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                    overflow: elide;
                 }
             }
         }

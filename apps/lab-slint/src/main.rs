@@ -7,6 +7,23 @@ fn main() -> Result<(), slint::PlatformError> {
 
     type ApplyFn = dyn Fn(&AppWindow, &UiSnapshot);
 
+    const PALETTE_ALL: &[&str] = &[
+        "Open Case",
+        "Import Evidence",
+        "Go: Home",
+        "Go: Evidence",
+        "Go: Search",
+        "Go: Timeline",
+        "Go: Bookmarks",
+        "Go: Report",
+        "Bookmark selection",
+        "Toggle nav",
+        "Toggle inspector",
+        "Toggle log",
+        "Toggle theme",
+        "Toggle locale",
+    ];
+
     let ui = AppWindow::new()?;
     let snapshot = Rc::new(RefCell::new(UiSnapshot {
         about_disclosure: sellable_disclosure(),
@@ -16,9 +33,32 @@ fn main() -> Result<(), slint::PlatformError> {
     let status = Rc::new(RefCell::new(String::from(
         "Open or create a case folder to begin.",
     )));
+    let palette_filter = Rc::new(RefCell::new(String::new()));
+
+    let push_status: Rc<dyn Fn(String)> = Rc::new({
+        let status = Rc::clone(&status);
+        let snapshot = Rc::clone(&snapshot);
+        move |msg: String| {
+            *status.borrow_mut() = msg.clone();
+            snapshot.borrow_mut().push_log(msg);
+        }
+    });
+
+    let filtered_commands: Rc<dyn Fn() -> Vec<SharedString>> = Rc::new({
+        let palette_filter = Rc::clone(&palette_filter);
+        move || -> Vec<SharedString> {
+            let q = palette_filter.borrow().to_lowercase();
+            PALETTE_ALL
+                .iter()
+                .filter(|c| q.is_empty() || c.to_lowercase().contains(&q))
+                .map(|c| SharedString::from(*c))
+                .collect()
+        }
+    });
 
     let apply: Rc<ApplyFn> = Rc::new({
         let status = Rc::clone(&status);
+        let filtered_commands = filtered_commands.clone();
         move |ui: &AppWindow, snap: &UiSnapshot| {
             ui.set_case_title(snap.case_title.clone().into());
             ui.set_case_state_label(snap.case_state.as_str().into());
@@ -34,6 +74,40 @@ fn main() -> Result<(), slint::PlatformError> {
             ui.set_search_query(snap.search_query.clone().into());
             ui.set_selected_file_index(snap.selected_file_index.map(|i| i as i32).unwrap_or(-1));
             ui.set_status_message(status.borrow().clone().into());
+            ui.set_nav_collapsed(snap.nav_collapsed);
+            ui.set_inspector_open(snap.inspector_open);
+            ui.set_log_open(snap.log_open);
+            ui.set_palette_open(snap.palette_open);
+
+            let (insp_title, insp_path, insp_size, insp_del, insp_has) =
+                if let Some(idx) = snap.selected_file_index {
+                    if let Some(f) = snap.evidence_files.get(idx) {
+                        (
+                            f.name.clone(),
+                            f.path.clone(),
+                            f.size.to_string(),
+                            f.deleted,
+                            true,
+                        )
+                    } else {
+                        (String::new(), String::new(), String::new(), false, false)
+                    }
+                } else if let Some(hit) = snap.artifact_hits.first() {
+                    (
+                        hit.summary.clone(),
+                        hit.provenance_ref.clone(),
+                        hit.kind.clone(),
+                        false,
+                        true,
+                    )
+                } else {
+                    (String::new(), String::new(), String::new(), false, false)
+                };
+            ui.set_inspector_title(insp_title.into());
+            ui.set_inspector_path(insp_path.into());
+            ui.set_inspector_size(insp_size.into());
+            ui.set_inspector_deleted(insp_del);
+            ui.set_inspector_has_selection(insp_has);
 
             let activity: Vec<SharedString> =
                 if snap.case_title.is_empty() || snap.case_title == "(no case)" {
@@ -46,12 +120,6 @@ fn main() -> Result<(), slint::PlatformError> {
                             snap.evidence_count
                         )));
                     }
-                    if snap.coverage_count > 0 {
-                        lines.push(SharedString::from(format!(
-                            "coverage records · {}",
-                            snap.coverage_count
-                        )));
-                    }
                     if snap.bookmark_count > 0 {
                         lines.push(SharedString::from(format!(
                             "bookmarks · {}",
@@ -61,6 +129,10 @@ fn main() -> Result<(), slint::PlatformError> {
                     lines
                 };
             ui.set_activity_lines(ModelRc::new(VecModel::from(activity)));
+
+            let logs: Vec<SharedString> = snap.log_lines.iter().map(|s| s.clone().into()).collect();
+            ui.set_log_lines(ModelRc::new(VecModel::from(logs)));
+            ui.set_palette_commands(ModelRc::new(VecModel::from(filtered_commands())));
 
             let names: Vec<SharedString> = snap
                 .evidence_files
@@ -132,18 +204,67 @@ fn main() -> Result<(), slint::PlatformError> {
     });
     apply(&ui, &snapshot.borrow());
 
+    let do_import: Rc<dyn Fn(&AppWindow)> = Rc::new({
+        let snapshot = Rc::clone(&snapshot);
+        let session = Rc::clone(&session);
+        let apply = apply.clone();
+        let push_status = Rc::clone(&push_status);
+        move |ui: &AppWindow| {
+            if session.borrow().is_none() {
+                push_status("Open a case folder before importing evidence.".into());
+                apply(ui, &snapshot.borrow());
+                return;
+            }
+            let Some(path) = rfd::FileDialog::new()
+                .set_title("Import raw/dd disk image")
+                .add_filter("Raw disk image", &["raw", "dd", "img", "bin"])
+                .pick_file()
+            else {
+                push_status("Import cancelled.".into());
+                apply(ui, &snapshot.borrow());
+                return;
+            };
+            push_status(format!("Hashing {}…", path.display()));
+            apply(ui, &snapshot.borrow());
+            let mut sess = session.borrow_mut();
+            let Some(lab) = sess.as_mut() else {
+                return;
+            };
+            match lab.import_raw_path(&path) {
+                Ok(name) => {
+                    let mut snap = snapshot.borrow_mut();
+                    if let Err(e) = lab.reload_evidence_into(&mut snap) {
+                        drop(snap);
+                        push_status(format!("Imported {name}, refresh failed: {e}"));
+                    } else {
+                        snap.inspector_open = true;
+                        drop(snap);
+                        push_status(format!(
+                            "Imported {name} · hashed and registered with provenance"
+                        ));
+                    }
+                    apply(ui, &snapshot.borrow());
+                }
+                Err(e) => {
+                    push_status(format!("Import failed: {e}"));
+                    apply(ui, &snapshot.borrow());
+                }
+            }
+        }
+    });
+
     let ui_weak = ui.as_weak();
     let snap_open = Rc::clone(&snapshot);
     let sess_open = Rc::clone(&session);
-    let status_open = Rc::clone(&status);
     let apply_open = apply.clone();
+    let push_open = Rc::clone(&push_status);
     ui.on_open_case_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
             let Some(folder) = rfd::FileDialog::new()
                 .set_title("Open or create case folder")
                 .pick_folder()
             else {
-                *status_open.borrow_mut() = "Open case cancelled.".into();
+                push_open("Open case cancelled.".into());
                 apply_open(&ui, &snap_open.borrow());
                 return;
             };
@@ -152,17 +273,19 @@ fn main() -> Result<(), slint::PlatformError> {
                     let mut snap = snap_open.borrow_mut();
                     match lab.refresh_snapshot(&mut snap) {
                         Ok(()) => {
-                            *status_open.borrow_mut() = format!("Case open · {}", folder.display());
                             *sess_open.borrow_mut() = Some(lab);
+                            drop(snap);
+                            push_open(format!("Case open · {}", folder.display()));
                         }
                         Err(e) => {
-                            *status_open.borrow_mut() = format!("Failed to refresh case: {e}");
+                            drop(snap);
+                            push_open(format!("Failed to refresh case: {e}"));
                         }
                     }
-                    apply_open(&ui, &snap);
+                    apply_open(&ui, &snap_open.borrow());
                 }
                 Err(e) => {
-                    *status_open.borrow_mut() = format!("Failed to open case: {e}");
+                    push_open(format!("Failed to open case: {e}"));
                     apply_open(&ui, &snap_open.borrow());
                 }
             }
@@ -189,48 +312,17 @@ fn main() -> Result<(), slint::PlatformError> {
     });
 
     let ui_weak = ui.as_weak();
-    let snap_import = Rc::clone(&snapshot);
-    let sess_import = Rc::clone(&session);
-    let status_import = Rc::clone(&status);
-    let apply_import = apply.clone();
+    let do_import_cb = Rc::clone(&do_import);
     ui.on_import_evidence_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
-            if sess_import.borrow().is_none() {
-                *status_import.borrow_mut() =
-                    "Open a case folder before importing evidence.".into();
-                apply_import(&ui, &snap_import.borrow());
-                return;
-            }
-            let Some(path) = rfd::FileDialog::new()
-                .set_title("Import raw/dd disk image")
-                .add_filter("Raw disk image", &["raw", "dd", "img", "bin"])
-                .pick_file()
-            else {
-                *status_import.borrow_mut() = "Import cancelled.".into();
-                apply_import(&ui, &snap_import.borrow());
-                return;
-            };
-            let mut sess = sess_import.borrow_mut();
-            let Some(lab) = sess.as_mut() else {
-                return;
-            };
-            match lab.import_raw_path(&path) {
-                Ok(name) => {
-                    let mut snap = snap_import.borrow_mut();
-                    if let Err(e) = lab.reload_evidence_into(&mut snap) {
-                        *status_import.borrow_mut() =
-                            format!("Imported {name}, refresh failed: {e}");
-                    } else {
-                        *status_import.borrow_mut() =
-                            format!("Imported {name} · hashed and registered with provenance");
-                    }
-                    apply_import(&ui, &snap);
-                }
-                Err(e) => {
-                    *status_import.borrow_mut() = format!("Import failed: {e}");
-                    apply_import(&ui, &snap_import.borrow());
-                }
-            }
+            do_import_cb(&ui);
+        }
+    });
+    let ui_weak = ui.as_weak();
+    let do_import_drop = Rc::clone(&do_import);
+    ui.on_drop_import_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            do_import_drop(&ui);
         }
     });
 
@@ -259,14 +351,14 @@ fn main() -> Result<(), slint::PlatformError> {
     let ui_weak = ui.as_weak();
     let snap_search = Rc::clone(&snapshot);
     let sess_search = Rc::clone(&session);
-    let status_search = Rc::clone(&status);
     let apply_search = apply.clone();
+    let push_search = Rc::clone(&push_status);
     ui.on_search_submitted(move || {
         if let Some(ui) = ui_weak.upgrade() {
             let q = ui.get_search_query().to_string();
             let sess = sess_search.borrow();
             let Some(lab) = sess.as_ref() else {
-                *status_search.borrow_mut() = "Open a case before searching.".into();
+                push_search("Open a case before searching.".into());
                 apply_search(&ui, &snap_search.borrow());
                 return;
             };
@@ -275,12 +367,13 @@ fn main() -> Result<(), slint::PlatformError> {
                     let mut snap = snap_search.borrow_mut();
                     snap.set_search(q.clone(), results);
                     snap.artifact_hits = artifacts;
-                    *status_search.borrow_mut() =
-                        format!("Search “{q}” · {} hit(s)", snap.artifact_hits.len());
-                    apply_search(&ui, &snap);
+                    let n = snap.artifact_hits.len();
+                    drop(snap);
+                    push_search(format!("Search “{q}” · {n} hit(s)"));
+                    apply_search(&ui, &snap_search.borrow());
                 }
                 Err(e) => {
-                    *status_search.borrow_mut() = format!("Search failed: {e}");
+                    push_search(format!("Search failed: {e}"));
                     apply_search(&ui, &snap_search.borrow());
                 }
             }
@@ -295,6 +388,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let mut snap = snap_sel.borrow_mut();
             if index >= 0 {
                 snap.select_file(index as usize);
+                snap.inspector_open = true;
             }
             apply_sel(&ui, &snap);
         }
@@ -303,13 +397,13 @@ fn main() -> Result<(), slint::PlatformError> {
     let ui_weak = ui.as_weak();
     let snap_bm = Rc::clone(&snapshot);
     let sess_bm = Rc::clone(&session);
-    let status_bm = Rc::clone(&status);
     let apply_bm = apply.clone();
+    let push_bm = Rc::clone(&push_status);
     ui.on_bookmark_selection_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
             let sess = sess_bm.borrow();
             let Some(lab) = sess.as_ref() else {
-                *status_bm.borrow_mut() = "Open a case before bookmarking.".into();
+                push_bm("Open a case before bookmarking.".into());
                 apply_bm(&ui, &snap_bm.borrow());
                 return;
             };
@@ -327,23 +421,24 @@ fn main() -> Result<(), slint::PlatformError> {
                 }
             };
             if let Err(e) = lab.bookmark_selection(&snap_bm.borrow(), citation) {
-                *status_bm.borrow_mut() = format!("Bookmark failed: {e}");
+                push_bm(format!("Bookmark failed: {e}"));
                 apply_bm(&ui, &snap_bm.borrow());
                 return;
             }
             let mut snap = snap_bm.borrow_mut();
             let _ = lab.reload_bookmarks_into(&mut snap);
             snap.navigate_to(NavScreen::Bookmarks);
-            *status_bm.borrow_mut() = "Bookmark saved to case DB.".into();
-            apply_bm(&ui, &snap);
+            drop(snap);
+            push_bm("Bookmark saved to case DB.".into());
+            apply_bm(&ui, &snap_bm.borrow());
         }
     });
 
     let ui_weak = ui.as_weak();
     let snap_rel = Rc::clone(&snapshot);
     let sess_rel = Rc::clone(&session);
-    let status_rel = Rc::clone(&status);
     let apply_rel = apply.clone();
+    let push_rel = Rc::clone(&push_status);
     ui.on_find_related_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
             let needle = {
@@ -353,7 +448,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     .unwrap_or_default()
             };
             if needle.is_empty() {
-                *status_rel.borrow_mut() = "Select an evidence row first.".into();
+                push_rel("Select an evidence row first.".into());
                 apply_rel(&ui, &snap_rel.borrow());
                 return;
             }
@@ -363,8 +458,9 @@ fn main() -> Result<(), slint::PlatformError> {
                 let mut snap = snap_rel.borrow_mut();
                 snap.navigate_to(NavScreen::Search);
                 snap.search_query = needle;
-                *status_rel.borrow_mut() = "Open a case before searching.".into();
-                apply_rel(&ui, &snap);
+                drop(snap);
+                push_rel("Open a case before searching.".into());
+                apply_rel(&ui, &snap_rel.borrow());
                 return;
             };
             match lab.search(&needle) {
@@ -372,14 +468,13 @@ fn main() -> Result<(), slint::PlatformError> {
                     let mut snap = snap_rel.borrow_mut();
                     snap.set_search(needle.clone(), results);
                     snap.artifact_hits = artifacts;
-                    *status_rel.borrow_mut() = format!(
-                        "Related index hits for “{needle}” · {}",
-                        snap.artifact_hits.len()
-                    );
-                    apply_rel(&ui, &snap);
+                    let n = snap.artifact_hits.len();
+                    drop(snap);
+                    push_rel(format!("Related index hits for “{needle}” · {n}"));
+                    apply_rel(&ui, &snap_rel.borrow());
                 }
                 Err(e) => {
-                    *status_rel.borrow_mut() = format!("Find related failed: {e}");
+                    push_rel(format!("Find related failed: {e}"));
                     apply_rel(&ui, &snap_rel.borrow());
                 }
             }
@@ -389,11 +484,106 @@ fn main() -> Result<(), slint::PlatformError> {
     let ui_weak = ui.as_weak();
     let snap_hs = Rc::clone(&snapshot);
     let apply_hs = apply.clone();
+    let pf = Rc::clone(&palette_filter);
     ui.on_header_search_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
+            pf.borrow_mut().clear();
             let mut snap = snap_hs.borrow_mut();
             snap.handle_shortcut("/");
             apply_hs(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_sc = Rc::clone(&snapshot);
+    let apply_sc = apply.clone();
+    ui.on_shortcut_triggered(move |key| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_sc.borrow_mut();
+            snap.handle_shortcut(key.as_str());
+            apply_sc(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_tn = Rc::clone(&snapshot);
+    let apply_tn = apply.clone();
+    ui.on_toggle_nav_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_tn.borrow_mut();
+            snap.handle_shortcut("nav");
+            apply_tn(&ui, &snap);
+        }
+    });
+    let ui_weak = ui.as_weak();
+    let snap_ti = Rc::clone(&snapshot);
+    let apply_ti = apply.clone();
+    ui.on_toggle_inspector_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_ti.borrow_mut();
+            snap.handle_shortcut("inspector");
+            apply_ti(&ui, &snap);
+        }
+    });
+    let ui_weak = ui.as_weak();
+    let snap_tl = Rc::clone(&snapshot);
+    let apply_tl = apply.clone();
+    ui.on_toggle_log_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_tl.borrow_mut();
+            snap.handle_shortcut("log");
+            apply_tl(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let pf2 = Rc::clone(&palette_filter);
+    let apply_pf = apply.clone();
+    let snap_pf = Rc::clone(&snapshot);
+    ui.on_palette_filter_changed(move |t| {
+        if let Some(ui) = ui_weak.upgrade() {
+            *pf2.borrow_mut() = t.to_string();
+            apply_pf(&ui, &snap_pf.borrow());
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_cmd = Rc::clone(&snapshot);
+    let apply_cmd = apply.clone();
+    let do_import_cmd = Rc::clone(&do_import);
+    ui.on_command_activated(move |cmd| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let c = cmd.to_string();
+            {
+                let mut snap = snap_cmd.borrow_mut();
+                snap.palette_open = false;
+            }
+            match c.as_str() {
+                "Open Case" => ui.invoke_open_case_clicked(),
+                "Import Evidence" => do_import_cmd(&ui),
+                "Go: Home" => snap_cmd.borrow_mut().navigate_to(NavScreen::CaseHome),
+                "Go: Evidence" => snap_cmd.borrow_mut().navigate_to(NavScreen::Evidence),
+                "Go: Search" => snap_cmd.borrow_mut().navigate_to(NavScreen::Search),
+                "Go: Timeline" => snap_cmd.borrow_mut().navigate_to(NavScreen::Timeline),
+                "Go: Bookmarks" => snap_cmd.borrow_mut().navigate_to(NavScreen::Bookmarks),
+                "Go: Report" => snap_cmd.borrow_mut().navigate_to(NavScreen::Report),
+                "Bookmark selection" => ui.invoke_bookmark_selection_clicked(),
+                "Toggle nav" => snap_cmd.borrow_mut().handle_shortcut("nav"),
+                "Toggle inspector" => snap_cmd.borrow_mut().handle_shortcut("inspector"),
+                "Toggle log" => snap_cmd.borrow_mut().handle_shortcut("log"),
+                "Toggle theme" => {
+                    let mut s = snap_cmd.borrow_mut();
+                    let next = !s.dark_mode;
+                    s.set_dark_mode(next);
+                }
+                "Toggle locale" => {
+                    let mut s = snap_cmd.borrow_mut();
+                    let next = if s.locale == "en" { "id" } else { "en" };
+                    s.set_locale(next);
+                }
+                _ => {}
+            }
+            apply_cmd(&ui, &snap_cmd.borrow());
         }
     });
 

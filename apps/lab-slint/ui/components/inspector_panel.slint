@@ -1,0 +1,113 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { LabButton } from "lab_button.slint";
+import { StatusBadge } from "status_badge.slint";
+
+/// Chrome-level inspector — selection detail survives screen changes.
+export component InspectorPanel inherits Rectangle {
+    in-out property <string> title: "";
+    in-out property <string> path: "";
+    in-out property <string> size-label: "";
+    in-out property <bool> deleted: false;
+    in-out property <bool> has-selection: false;
+    callback bookmark-clicked();
+    callback find-related-clicked();
+    callback close-clicked();
+
+    background: Theme.surface;
+    HorizontalLayout {
+        spacing: 0px;
+        Rectangle { width: 1px; background: Theme.border; }
+        VerticalLayout {
+            padding: 8px;
+            spacing: 8px;
+            HorizontalLayout {
+                spacing: 8px;
+                Text {
+                    text: Strings.detail-title;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                }
+                TouchArea {
+                    width: 24px;
+                    height: 24px;
+                    clicked => { root.close-clicked(); }
+                    Text {
+                        text: "×";
+                        color: Theme.text-secondary;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            if !root.has-selection: Text {
+                text: Strings.empty-no-selection;
+                color: Theme.text-secondary;
+                font-size: 12px;
+                wrap: word-wrap;
+            }
+
+            if root.has-selection: VerticalLayout {
+                spacing: 6px;
+                Text {
+                    text: Strings.col-name;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                }
+                Text {
+                    text: root.title;
+                    color: Theme.text-primary;
+                    font-size: 12px;
+                    font-weight: 600;
+                    wrap: word-wrap;
+                }
+                Text {
+                    text: Strings.col-path;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                }
+                Text {
+                    text: root.path;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                    wrap: word-wrap;
+                }
+                Text {
+                    text: Strings.col-size;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                }
+                Text {
+                    text: root.size-label;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                }
+                if root.deleted: StatusBadge {
+                    label: Strings.deleted;
+                    kind: "warn";
+                }
+                HorizontalLayout {
+                    spacing: 6px;
+                    LabButton {
+                        primary: true;
+                        label: Strings.add-bookmark;
+                        clicked => { root.bookmark-clicked(); }
+                    }
+                }
+                LabButton {
+                    primary: false;
+                    label: Strings.find-related;
+                    clicked => { root.find-related-clicked(); }
+                }
+            }
+
+            Rectangle { vertical-stretch: 1; }
+        }
+    }
+}
