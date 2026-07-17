@@ -8,6 +8,7 @@ description = "Case lifecycle, lock, and metadata database for Trareon Lab"
 [dependencies]
 lab-core = { workspace = true }
 rusqlite = { version = "0.32", features = ["bundled"] }
+libc = "0.2"
 
 [dev-dependencies]
 tempfile = "3"
