@@ -2797,6 +2797,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "lab-storage"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "lab-case",
+ "lab-core",
+ "serde_json",
+ "sha2",
+ "tempfile",
+]
+
+[[package]]
 name = "lab-store"
 version = "0.1.0"
 dependencies = [

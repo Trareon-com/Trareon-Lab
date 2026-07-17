@@ -8,6 +8,7 @@ members = [
   "crates/lab-fsnap",
   "crates/lab-worker",
   "crates/lab-index",
+  "crates/lab-storage",
   "apps/lab-slint",
 ]
 
@@ -24,3 +25,4 @@ lab-crypto = { path = "crates/lab-crypto" }
 lab-fsnap = { path = "crates/lab-fsnap" }
 lab-worker = { path = "crates/lab-worker" }
 lab-index = { path = "crates/lab-index" }
+lab-storage = { path = "crates/lab-storage" }
