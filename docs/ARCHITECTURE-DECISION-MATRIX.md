@@ -76,7 +76,7 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 |---|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---|---|
 | harness-core | macOS | 260 | 182.25 | 347.5 | 260 | 4 | 5 | 60 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/macos-harness-core.json` |
 | harness-core | Windows | | | | | | | | | | | pending ThinkPad X270 |
-| harness-core | Linux | | | | | | | | | | | pending Kali |
+| harness-core | Linux | 492 | 224.11 | 346.44 | 492 | 14 | 19 | 46 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | N/A_headless | `spikes/results/linux-harness-core.json` |
 | C-TAURI | macOS | | | | | | | | | | | |
 | C-TAURI | Windows | | | | | | | | | | | |
 | C-TAURI | Linux | | | | | | | | | | | |
@@ -125,8 +125,8 @@ These are planning risks recorded before spike execution; they are not Gate A re
 
 **Gate A: NOT PASS**
 
-- Shared headless harness measured on macOS (1,000,000 rows) with lock/crash checks PASS.
-- Windows (ThinkPad X270) and Linux (Kali) harness runs are still required.
+- Shared headless harness measured on macOS and Linux (Kali) for 1,000,000 rows with lock/crash checks PASS.
+- Windows (ThinkPad X270) harness run is still required.
 - Desktop UI candidates C-TAURI / C-SLINT / C-AVALONIA do not yet have complete three-OS mandatory-gate evidence.
 - Desktop shell: no ACCEPTED selection.
 - Case database/index: no ACCEPTED selection.

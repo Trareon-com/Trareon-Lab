@@ -1,0 +1,15 @@
+{
+  "candidate": "harness-core",
+  "os": "linux",
+  "cold_start_ms": 492,
+  "idle_rss_mib": 224.10546875,
+  "peak_rss_mib": 346.4375,
+  "table_display_ms": 492,
+  "filter_p50_ms": 14,
+  "filter_p95_ms": 19,
+  "cancel_ms": 46,
+  "crash_recovery": "PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release",
+  "installer_size_mib": null,
+  "a11y_smoke": "N/A_headless",
+  "notes": "rows=1000000; filtered=1000000; hashed=1922; export=ad4b9b0ee46181e696b58d15db87cf76ec71939d46b70821525b205d5aba094b"
+}

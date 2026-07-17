@@ -4,7 +4,6 @@ use lab_spike_core::{
 };
 use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
 use std::time::Instant;
 
 #[derive(Parser)]
@@ -143,6 +142,7 @@ fn ensure_lock_still_held(case_dir: &std::path::Path) -> Result<(), String> {
 fn rss_mib() -> Option<f64> {
     #[cfg(target_os = "macos")]
     {
+        use std::process::Command;
         let pid = std::process::id().to_string();
         let out = Command::new("ps")
             .args(["-o", "rss=", "-p", &pid])
