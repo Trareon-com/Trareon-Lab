@@ -1,5 +1,7 @@
 # Menjual / memasang Trareon Lab tanpa code signing berbayar
 
+**Binary delivery:** Lynk.id / Gumroad only — see `docs/DISTRIBUTION-STOREFRONT.md`. Do not publish installers on GitHub.
+
 Build distribusi Trareon Lab **unsigned** (tidak memakai Apple Developer ID, Authenticode, atau notarization). Ini legal untuk distribusi sendiri; OS akan memperingatkan. Ikuti langkah di bawah.
 
 ## macOS (Gatekeeper)

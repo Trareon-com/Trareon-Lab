@@ -1,7 +1,8 @@
-# macOS / Linux signing queue (Path C — not Windows)
+# macOS / Linux signing queue (Path C — optional hardening)
 
-Windows Authenticode + ThinkPad smoke stay in `docs/WINDOWS-LAB-QUEUE.md` and run **last**.
-These rows can proceed on Mac/Linux hosts whenever Apple Team ID / Linux signing key exist.
+**Not required** to sell full binaries on Lynk.id / Gumroad. Use after storefront sell if you want fewer OS trust warnings.
+
+Windows Authenticode + ThinkPad smoke stay in `docs/WINDOWS-LAB-QUEUE.md` and run **last** among signing tasks.
 
 | # | Task | Artifact | Script / doc |
 |---|---|---|---|

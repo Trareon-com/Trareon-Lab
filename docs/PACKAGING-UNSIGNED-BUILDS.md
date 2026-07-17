@@ -53,10 +53,11 @@ Get-FileHash .\target\release\lab-slint.exe -Algorithm SHA256 |
 
 ## Distributor checklist
 
-1. Publish binary + matching `SHA256SUMS` line.
-2. Link `docs/SELLING-UNSIGNED.md` in release notes.
-3. Do **not** claim Apple notarization, Authenticode, or ISO/court readiness.
-4. Prefer CI artifact SBOM (`sbom-cargo-metadata`) attached to the same tag.
+1. Publish binary + matching `SHA256SUMS` via **Lynk.id / Gumroad** (`docs/DISTRIBUTION-STOREFRONT.md`).
+2. Link `docs/SELLING-UNSIGNED.md` on the product page.
+3. Do **not** claim Apple notarization, Authenticode, or ISO/court readiness unless true.
+4. Do **not** attach product installers to GitHub Releases.
+5. Optional: CI SBOM artifact (`sbom-cargo-metadata`) for the freeze tip — not a substitute for the product zip.
 
 ## CI SBOM
 

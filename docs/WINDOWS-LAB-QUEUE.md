@@ -1,6 +1,8 @@
 # Windows lab work queue (run at the end)
 
-All Official steps that require a Windows host or Windows Authenticode hardware are collected here so macOS/Linux/repo work is not blocked.
+**Role:** optional post-sell hardening (Authenticode / ThinkPad smoke). **Not required** to sell full binaries on Lynk.id / Gumroad.
+
+All Official **signing** steps that require a Windows host or Windows Authenticode hardware are collected here so macOS/Linux/repo work is not blocked.
 
 ## Queue (execute on ThinkPad / Windows reference machine)
 

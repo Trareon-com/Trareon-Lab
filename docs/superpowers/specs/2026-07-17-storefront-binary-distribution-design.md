@@ -1,7 +1,7 @@
 # Design: Storefront binary distribution (source public, binary private)
 
 **Date:** 2026-07-17  
-**Status:** DRAFT — awaiting user review of this file  
+**Status:** ACCEPTED (user approved 2026-07-17)  
 **Decision:** Option 1 + Approach A with light B  
 **Related:** `docs/SELLING-PAGE.md`, `docs/COMMERCIAL-TERMS.md`, `docs/PACKAGING-UNSIGNED-BUILDS.md`, Official plan O12
 
