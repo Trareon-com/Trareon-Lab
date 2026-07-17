@@ -82,7 +82,7 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 | C-TAURI | Linux | | | | | | | | | | | |
 | C-SLINT | macOS | 762 | 219.95 | 375.41 | 263 | 5 | 5 | 51 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/macos-slint.json` |
 | C-SLINT | Windows | 749 | | | 734 | 18 | 25 | 131 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/windows-slint.json` |
-| C-SLINT | Linux | | | | | | | | | | | pending Kali |
+| C-SLINT | Linux | 512 | 239.48 | 361.44 | 459 | 13 | 16 | 55 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/linux-slint.json` |
 | C-AVALONIA | macOS | | | | | | | | | | | needs .NET SDK |
 | C-AVALONIA | Windows | | | | | | | | | | | |
 | C-AVALONIA | Linux | | | | | | | | | | | |
@@ -127,8 +127,8 @@ These are planning risks recorded before spike execution; they are not Gate A re
 
 - Shared headless harness measured on macOS, Windows (ThinkPad X270), and Linux (Kali) for 1,000,000 rows with lock/crash checks PASS on all three.
 - Windows RSS helpers are not yet implemented (`idle_rss_mib` / `peak_rss_mib` null); timing and lock/crash evidence are recorded.
-- C-SLINT measured on macOS + Windows (ThinkPad); Linux (Kali) still pending. Crash/lock checks PASS on measured OSes. Windows RSS null (not implemented).
-- Desktop UI candidates C-TAURI / C-AVALONIA have no three-OS evidence yet; C-SLINT missing Linux only.
+- C-SLINT measured on macOS, Windows (ThinkPad), and Linux (Kali); crash/lock checks PASS on all three. Windows RSS null (not implemented). Installer size (G6) still unmeasured for all UI candidates.
+- Desktop UI candidates C-TAURI / C-AVALONIA have no three-OS evidence yet — Gate A still blocked until at least one candidate has full mandatory-gate coverage (or others are formally FAIL/withdrawn).
 - Desktop shell: no ACCEPTED selection.
 - Case database/index: no ACCEPTED selection.
-- Next action: finish C-SLINT on Kali (`bash spikes/scripts/measure-slint-linux.sh`), then Tauri/Avalonia candidates.
+- Next action: run C-TAURI and C-AVALONIA spikes on the same three OSes; then close Gate A per decision rule.

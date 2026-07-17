@@ -49,17 +49,16 @@ fn run_measure(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
 
     // Showing the window is best-effort. Some Windows sessions fail if no event loop is running.
     let mut ui_shown = false;
-    let mut ui_show_note = String::from("ui_show_skipped_or_ok");
-    match ui.window().show() {
+    let ui_show_note = match ui.window().show() {
         Ok(()) => {
             ui_shown = true;
-            ui_show_note = "ui_show_ok".into();
+            String::from("ui_show_ok")
         }
         Err(e) => {
-            ui_show_note = format!("ui_show_failed:{e}");
             eprintln!("measure: window show failed (continuing): {e}");
+            format!("ui_show_failed:{e}")
         }
-    }
+    };
 
     eprintln!("measure: opening synthetic case rows={rows}");
     let open_started = Instant::now();
