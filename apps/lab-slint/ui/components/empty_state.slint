@@ -14,13 +14,32 @@ export component EmptyState inherits Rectangle {
 
     VerticalLayout {
         alignment: center;
-        spacing: 8px;
-        padding: 24px;
+        spacing: 10px;
+        padding: 40px;
+
+        Rectangle {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border-width: 1px;
+            border-color: Theme.border;
+            background: Theme.surface;
+            HorizontalLayout {
+                alignment: center;
+                Text {
+                    text: "◇";
+                    color: Theme.accent;
+                    font-size: 16px;
+                    vertical-alignment: center;
+                    horizontal-alignment: center;
+                }
+            }
+        }
 
         Text {
             text: root.title;
             color: Theme.text-primary;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             horizontal-alignment: center;
             wrap: word-wrap;
@@ -29,14 +48,14 @@ export component EmptyState inherits Rectangle {
         Text {
             text: root.body;
             color: Theme.text-secondary;
-            font-size: 12px;
+            font-size: 13px;
             horizontal-alignment: center;
             wrap: word-wrap;
         }
 
         if root.show-cta: HorizontalLayout {
             alignment: center;
-            padding-top: 8px;
+            padding-top: 10px;
             LabButton {
                 primary: true;
                 label: root.cta-label;

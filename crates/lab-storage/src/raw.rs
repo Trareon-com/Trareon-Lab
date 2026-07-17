@@ -143,7 +143,7 @@ pub fn detect_image_kind(path: &Path) -> LabResult<ImageKind> {
         .unwrap_or("")
         .to_ascii_lowercase();
     match ext.as_str() {
-        "dd" | "raw" | "img" | "" => Ok(ImageKind::RawDd),
+        "dd" | "raw" | "img" | "bin" | "" => Ok(ImageKind::RawDd),
         "e01" | "ex01" => Err(lab_core::LabError::Internal {
             detail: "E01/Ex01 not implemented yet; Limited until Day 14".into(),
         }),

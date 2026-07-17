@@ -92,6 +92,7 @@ export component AppWindow inherits Window {
     in-out property <bool> open-case-focused: true;
     in-out property <string> active-screen: "Case";
     in-out property <string> about-line: "";
+    in-out property <string> status-message: "";
     in-out property <bool> dark-mode: true;
     in-out property <string> locale: "en";
     in-out property <bool> prefs-open: false;
@@ -158,18 +159,34 @@ export component AppWindow inherits Window {
                     padding-right: 14px;
                     spacing: 12px;
 
-                    Text {
-                        text: Strings.brand;
-                        color: Theme.text-primary;
-                        font-size: 16px;
-                        font-weight: 700;
-                        vertical-alignment: center;
+                    HorizontalLayout {
+                        spacing: 10px;
+                        alignment: center;
+                        Rectangle {
+                            width: 8px;
+                            height: 8px;
+                            border-radius: 2px;
+                            background: Theme.accent;
+                        }
+                        Text {
+                            text: Strings.brand;
+                            color: Theme.text-primary;
+                            font-size: 15px;
+                            font-weight: 700;
+                            vertical-alignment: center;
+                        }
                     }
 
-                    Rectangle { width: 1px; height: 20px; background: Theme.border; }
+                    Rectangle {
+                        width: 1px;
+                        height: 18px;
+                        background: Theme.border;
+                    }
 
                     Text {
-                        text: root.case-title;
+                        text: root.case-title == "(no case)" || root.case-title == ""
+                            ? Strings.empty-no-case
+                            : root.case-title;
                         color: Theme.mono-fg;
                         font-family: "monospace";
                         font-size: 12px;
@@ -179,8 +196,12 @@ export component AppWindow inherits Window {
                     }
 
                     StatusBadge {
-                        label: root.case-state-label;
-                        kind: "info";
+                        label: root.case-title == "(no case)" || root.case-title == ""
+                            ? Strings.idle-state
+                            : root.case-state-label;
+                        kind: root.case-title == "(no case)" || root.case-title == ""
+                            ? "neutral"
+                            : "ok";
                     }
 
                     HeaderSearchChip {
@@ -297,7 +318,7 @@ export component AppWindow inherits Window {
 
                         NavGroupLabel { label: Strings.nav-group-case; }
                         NavItem {
-                            glyph: "▣";
+                            glyph: "⌂";
                             label: Strings.nav-case;
                             active: root.active-screen == "Case";
                             clicked => { root.navigate("Case"); }
@@ -305,7 +326,7 @@ export component AppWindow inherits Window {
 
                         NavGroupLabel { label: Strings.nav-group-examine; }
                         NavItem {
-                            glyph: "▤";
+                            glyph: "▣";
                             label: Strings.nav-evidence;
                             active: root.active-screen == "Evidence";
                             clicked => { root.navigate("Evidence"); }
@@ -317,7 +338,7 @@ export component AppWindow inherits Window {
                             clicked => { root.navigate("Search"); }
                         }
                         NavItem {
-                            glyph: "⏱";
+                            glyph: "◷";
                             label: Strings.nav-timeline;
                             active: root.active-screen == "Timeline";
                             clicked => { root.navigate("Timeline"); }
@@ -331,7 +352,7 @@ export component AppWindow inherits Window {
                             clicked => { root.navigate("Bookmarks"); }
                         }
                         NavItem {
-                            glyph: "☰";
+                            glyph: "▤";
                             label: Strings.nav-report;
                             active: root.active-screen == "Report";
                             clicked => { root.navigate("Report"); }
@@ -456,11 +477,18 @@ export component AppWindow inherits Window {
                         vertical-alignment: center;
                     }
                     Text {
-                        text: Strings.shortcuts-hint;
+                        text: root.status-message;
                         color: Theme.text-secondary;
                         font-size: 11px;
                         vertical-alignment: center;
                         horizontal-stretch: 1;
+                        overflow: elide;
+                    }
+                    Text {
+                        text: Strings.shortcuts-hint;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        vertical-alignment: center;
                         overflow: elide;
                         horizontal-alignment: right;
                     }

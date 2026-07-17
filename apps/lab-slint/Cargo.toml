@@ -13,12 +13,16 @@ required-features = ["gui"]
 
 [features]
 default = ["gui"]
-gui = ["dep:slint", "dep:slint-build"]
+gui = ["dep:slint", "dep:slint-build", "dep:rfd"]
 
 [dependencies]
 lab-core = { workspace = true }
 lab-case = { workspace = true }
+lab-storage = { workspace = true }
+lab-index = { workspace = true }
+uuid = { version = "1", features = ["v4"] }
 slint = { version = "1.9", optional = true }
+rfd = { version = "0.15", optional = true }
 
 [build-dependencies]
 slint-build = { version = "1.9", optional = true }

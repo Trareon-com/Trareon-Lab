@@ -5,6 +5,14 @@ export global Strings {
     out property <bool> is-id: locale == "id";
 
     out property <string> brand: "Trareon Lab";
+    out property <string> welcome-headline: is-id ? "Laboratorium forensik offline" : "Offline forensic workstation";
+    out property <string> welcome-body: is-id
+        ? "Buka folder kasus untuk membuat basis data lokal, mengimpor citra mentah, mencari path/hash, dan menandai temuan."
+        : "Open a case folder to create a local database, import raw images, search paths/hashes, and bookmark findings.";
+    out property <string> welcome-meta: is-id
+        ? "case.sqlite · index.sqlite · offline · local-first"
+        : "case.sqlite · index.sqlite · offline · local-first";
+    out property <string> idle-state: is-id ? "siaga" : "idle";
     out property <string> nav-group-case: is-id ? "KASUS" : "CASE";
     out property <string> nav-group-examine: is-id ? "PERIKSA" : "EXAMINE";
     out property <string> nav-group-work: is-id ? "HASIL KERJA" : "WORK PRODUCT";
@@ -37,7 +45,7 @@ export global Strings {
     out property <string> status-coverage: is-id ? "Cakupan" : "Coverage";
     out property <string> status-bookmarks: is-id ? "Markah" : "Bookmarks";
     out property <string> shortcuts-hint: is-id ? "/ cari · b markah · Esc batal" : "/ search · b bookmark · Esc clear";
-    out property <string> header-search-hint: is-id ? "Cari artefak  (/)" : "Search artifacts  (/)";
+    out property <string> header-search-hint: is-id ? "Cari path / hash  (/)" : "Search path / hash  (/)";
     out property <string> empty-no-case: is-id ? "Belum ada kasus" : "No case open";
     out property <string> empty-no-evidence: is-id ? "Belum ada bukti" : "No evidence imported";
     out property <string> empty-no-selection: is-id ? "Pilih berkas di daftar" : "Select a file from the list";
@@ -47,14 +55,14 @@ export global Strings {
     out property <string> empty-no-findings: is-id ? "Belum ada temuan" : "No findings yet";
     out property <string> empty-hint-case: is-id ? "Buka kasus untuk memulai pemeriksaan." : "Open a case to begin examination.";
     out property <string> empty-hint-evidence: is-id ? "Impor bukti untuk mengisi daftar berkas." : "Import evidence to populate the file list.";
-    out property <string> empty-hint-search: is-id ? "Jalankan pencarian untuk melihat artefak." : "Run a search to see artifact hits.";
-    out property <string> empty-hint-timeline: is-id ? "Peristiwa linimasa akan muncul di sini." : "Timeline events will appear here.";
+    out property <string> empty-hint-search: is-id ? "Cari path, nama, atau hash yang sudah terindeks dari bukti yang diimpor." : "Search indexed paths, names, or hashes from imported evidence.";
+    out property <string> empty-hint-timeline: is-id ? "Linimasa artefak penuh belum di v1 — gunakan Cari untuk path/hash yang terindeks." : "Full artifact timeline is not in v1 — use Search for indexed paths/hashes.";
     out property <string> empty-hint-bookmarks: is-id ? "Tandai temuan penting saat meninjau bukti." : "Bookmark important findings while reviewing evidence.";
-    out property <string> empty-hint-report: is-id ? "Temuan terikat dari markah akan muncul di sini." : "Bound findings from bookmarks will appear here.";
-    out property <string> search-placeholder: is-id ? "Cari artefak…" : "Search artifacts…";
+    out property <string> empty-hint-report: is-id ? "Temuan terikat dari markah akan muncul di sini. Ekspor PDF belum di v1." : "Bound findings from bookmarks will appear here. PDF export is not in v1.";
+    out property <string> search-placeholder: is-id ? "Cari path / nama / hash…" : "Search path / name / hash…";
     out property <string> search-action: is-id ? "Cari" : "Search";
     out property <string> hits: is-id ? "hasil" : "hits";
-    out property <string> export-soon: is-id ? "Ekspor — segera hadir" : "Export — coming soon";
+    out property <string> export-soon: is-id ? "Ekspor PDF — belum di v1" : "PDF export — not in v1";
     out property <string> report-state: is-id ? "Status laporan" : "Report state";
     out property <string> col-name: is-id ? "Nama" : "Name";
     out property <string> col-size: is-id ? "Ukuran" : "Size";
@@ -69,7 +77,7 @@ export global Strings {
     out property <string> filter-placeholder: is-id ? "Filter nama / jalur…" : "Filter name / path…";
     out property <string> filter-stub: is-id ? "Filter rentang (segera)" : "Range filter (soon)";
     out property <string> go-evidence: is-id ? "Jelajahi bukti" : "Browse evidence";
-    out property <string> go-search: is-id ? "Cari artefak" : "Search artifacts";
+    out property <string> go-search: is-id ? "Cari path / hash" : "Search path / hash";
     out property <string> go-timeline: is-id ? "Buka linimasa" : "Open timeline";
     out property <string> go-bookmarks: is-id ? "Lihat markah" : "View bookmarks";
     out property <string> go-report: is-id ? "Siapkan laporan" : "Prepare report";

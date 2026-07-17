@@ -156,6 +156,43 @@ impl CaseDb {
         self.count_table("evidence_object", case_uuid)
     }
 
+    /// List evidence objects for a case (newest first).
+    pub fn list_evidence_objects(&self, case_uuid: &str) -> LabResult<Vec<EvidenceObject>> {
+        let mut stmt = self
+            .connection()
+            .prepare(
+                "SELECT evidence_uuid, case_uuid, created_at_utc, display_name,
+                        evidence_class, validation_state
+                 FROM evidence_object
+                 WHERE case_uuid = ?1
+                 ORDER BY created_at_utc DESC",
+            )
+            .map_err(|e| LabError::Internal {
+                detail: format!("prepare list evidence_object: {e}"),
+            })?;
+        let rows = stmt
+            .query_map([case_uuid], |row| {
+                Ok(EvidenceObject {
+                    evidence_uuid: row.get(0)?,
+                    case_uuid: row.get(1)?,
+                    created_at_utc: row.get(2)?,
+                    display_name: row.get(3)?,
+                    evidence_class: row.get(4)?,
+                    validation_state: row.get(5)?,
+                })
+            })
+            .map_err(|e| LabError::Internal {
+                detail: format!("query evidence_object: {e}"),
+            })?;
+        let mut out = Vec::new();
+        for row in rows {
+            out.push(row.map_err(|e| LabError::Internal {
+                detail: format!("row evidence_object: {e}"),
+            })?);
+        }
+        Ok(out)
+    }
+
     /// Reject mutation helpers — append-only surface has no update/delete API.
     pub fn try_update_audit_event_forbidden(&self, _event_uuid: &str) -> LabResult<()> {
         Err(LabError::Internal {

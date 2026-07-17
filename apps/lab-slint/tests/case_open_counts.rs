@@ -51,4 +51,8 @@ fn open_case_reads_evidence_and_coverage_counts_from_db() {
     assert_eq!(snap.case_title, "CASE-FROM-DB");
     assert_eq!(snap.evidence_count, 2);
     assert_eq!(snap.coverage_count, 1);
+
+    let listed = db.list_evidence_objects(case_uuid).expect("list");
+    assert_eq!(listed.len(), 2);
+    assert_eq!(listed[0].display_name, "logical.zip");
 }

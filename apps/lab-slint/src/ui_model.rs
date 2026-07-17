@@ -112,7 +112,7 @@ impl Default for UiSnapshot {
             transfer_status: String::new(),
             second_method_count: 0,
             blind_pt_status: "none".into(),
-            about_disclosure: "SBOM: release-evidence/sbom/; licenses: docs/DEPENDENCY-AND-LICENSE-POLICY.md; notes: docs/user/RELEASE-NOTES-1.0.0.md".into(),
+            about_disclosure: "Trareon Lab v1 · offline case DB · raw/dd import + hash/provenance · path/name/hash search · bookmarks · unsigned builds — see docs/SELLING-UNSIGNED.md · NOT court-ready / NOT ISO-accredited".into(),
             dark_mode: true,
             locale: "en".into(),
         }
