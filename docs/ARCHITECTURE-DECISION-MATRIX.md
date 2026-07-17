@@ -84,8 +84,8 @@ Shared headless harness (`spikes/lab-spike-harness`) validates core workflow mec
 | C-SLINT | Windows | 749 | | | 734 | 18 | 25 | 131 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 6.618 | PASS_keyboard_focus_controls_present | `spikes/results/windows-slint.json` |
 | C-SLINT | Linux | 512 | 239.48 | 361.44 | 459 | 13 | 16 | 55 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | 9.707 | PASS_keyboard_focus_controls_present | `spikes/results/linux-slint.json` |
 | C-AVALONIA | macOS | | | | | | | | | | | needs .NET SDK |
-| C-AVALONIA | Windows | | | | | | | | | | | |
-| C-AVALONIA | Linux | | | | | | | | | | | |
+| C-AVALONIA | Windows | 3050 | | | 1343 | 17 | 29 | 230 | PASS_lock_retained;PASS_second_open_blocked;PASS_reopen_after_release | | PASS_keyboard_focus_controls_present | `spikes/results/windows-avalonia.json` |
+| C-AVALONIA | Linux | | | | | | | | | | | pending Kali |
 
 Empty numeric cells mean measurement has not been recorded. Empty cells do not count as pass.
 
@@ -133,6 +133,6 @@ These are planning risks recorded before spike execution; they are not Gate A re
 - Desktop UI candidates C-TAURI / C-AVALONIA have no three-OS evidence yet.
 - Desktop shell: no ACCEPTED selection.
 - Case database/index: no ACCEPTED selection.
-- C-TAURI measured on macOS + Linux (crash/lock PASS). Windows still pending (`spikes/COPY-PASTE-TAURI.md`).
-- C-AVALONIA scaffold ready; needs .NET 8 SDK — prefer ThinkPad first (`spikes/COPY-PASTE-AVALONIA.md`).
-- Next action: finish C-TAURI on Windows + Kali, then C-AVALONIA on three OSes; then close Gate A per decision rule.
+- C-TAURI measured on macOS, Windows, and Linux (crash/lock PASS on all three). Windows RSS null; installer size still unmeasured for C-TAURI.
+- C-AVALONIA measured on Windows (crash/lock PASS; RSS null). macOS + Linux pending (`spikes/COPY-PASTE-AVALONIA.md`).
+- Next action: finish C-AVALONIA on Kali + macOS; optionally record UI package sizes; then score mandatory gates and close Gate A per decision rule.
