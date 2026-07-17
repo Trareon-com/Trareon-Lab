@@ -17,9 +17,15 @@ jobs:
           components: rustfmt, clippy
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
-      - name: Test workspace
-        run: cargo test --workspace
+      - name: Test workspace (core crates)
+        run: cargo test --workspace --exclude lab-slint
+      - name: UI model smoke (no display)
+        run: cargo test -p lab-slint --no-default-features --test ui_smoke
+      - name: Slint GUI compile + tests
+        run: cargo test -p lab-slint --features gui
       - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: |
+          cargo clippy --workspace --all-targets --exclude lab-slint -- -D warnings
+          cargo clippy -p lab-slint --all-targets --features gui -- -D warnings
       - name: Format check
         run: cargo fmt --all -- --check

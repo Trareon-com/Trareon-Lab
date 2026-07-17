@@ -1,0 +1,53 @@
+import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    title: "Trareon Lab";
+    preferred-width: 720px;
+    preferred-height: 420px;
+
+    in-out property <string> case-title: "(no case)";
+    in-out property <int> evidence-count: 0;
+    in-out property <int> coverage-count: 0;
+    in-out property <bool> open-case-focused: true;
+
+    callback open-case-clicked();
+    callback focus-open-case();
+
+    focus-open-case => {
+        open-case-focused = true;
+        open-btn.focus();
+    }
+
+    VerticalBox {
+        padding: 16px;
+        spacing: 12px;
+
+        Text {
+            text: "Trareon Lab";
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        Text {
+            text: "Case: " + root.case-title;
+            font-size: 16px;
+        }
+
+        Text {
+            text: "Evidence: " + root.evidence-count + "  |  Coverage: " + root.coverage-count;
+            font-size: 14px;
+        }
+
+        HorizontalBox {
+            spacing: 8px;
+            open-btn := Button {
+                text: "Open Case";
+                primary: true;
+                clicked => { root.open-case-clicked(); }
+            }
+            Button {
+                text: "Import Evidence";
+            }
+        }
+    }
+}
