@@ -1,0 +1,20 @@
+import { Theme } from "../theme.slint";
+
+/// Acquire-style white work panel (soft elevation).
+export component PanelCard inherits Rectangle {
+    background: Theme.surface;
+    border-width: 1px;
+    border-color: Theme.border;
+    border-radius: Theme.panel-radius;
+    drop-shadow-blur: 10px;
+    drop-shadow-color: Theme.shadow;
+    drop-shadow-offset-y: 2px;
+    clip: true;
+    horizontal-stretch: 1;
+    vertical-stretch: 1;
+
+    VerticalLayout {
+        padding: 0px;
+        @children
+    }
+}

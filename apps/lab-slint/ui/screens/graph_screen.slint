@@ -1,0 +1,45 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { EmptyState } from "../components/empty_state.slint";
+import { SectionCard } from "../components/section_card.slint";
+
+export component GraphScreen inherits Rectangle {
+    in-out property <[string]> graph-edges: [];
+
+    background: transparent;
+    property <bool> has-edges: graph-edges.length > 0;
+
+    if !has-edges: EmptyState {
+        title: Strings.nav-graph;
+        body: "No correlation edges yet. Edges appear when the session records them (Find Related).";
+        show-cta: false;
+    }
+
+    if has-edges: VerticalLayout {
+        padding: Theme.main-pad;
+        spacing: 8px;
+        Text {
+            text: Strings.nav-graph + " · " + graph-edges.length + " edge(s)";
+            color: Theme.text-primary;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        SectionCard {
+            show-title: false;
+            vertical-stretch: 1;
+            Flickable {
+                viewport-width: parent.width;
+                VerticalLayout {
+                    spacing: 2px;
+                    for edge in graph-edges: Text {
+                        text: edge;
+                        color: Theme.mono-fg;
+                        font-family: "monospace";
+                        font-size: 11px;
+                        overflow: elide;
+                    }
+                }
+            }
+        }
+    }
+}

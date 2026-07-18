@@ -1,9 +1,9 @@
 import { LineEdit } from "std-widgets.slint";
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
-import { SectionCard } from "../components/section_card.slint";
 import { EmptyState } from "../components/empty_state.slint";
 import { LabButton } from "../components/lab_button.slint";
+import { PanelCard } from "../components/panel_card.slint";
 
 export component SearchScreen inherits Rectangle {
     in-out property <string> search-query;
@@ -25,90 +25,102 @@ export component SearchScreen inherits Rectangle {
     property <int> hit-count: use-artifacts ? artifact-kinds.length : search-results.length;
     property <bool> show-empty: search-attempted && hit-count == 0;
 
-    VerticalLayout {
+    HorizontalLayout {
         padding: 12px;
         spacing: 12px;
 
-        HorizontalLayout {
-            spacing: 8px;
-            LineEdit {
-                text <=> root.search-query;
-                placeholder-text: Strings.search-placeholder;
-                horizontal-stretch: 1;
-                edited => { root.query-changed(self.text); }
-                accepted => {
-                    root.search-attempted = true;
-                    root.search-submitted();
-                }
-            }
-            LabButton {
-                primary: true;
-                label: Strings.search-action;
-                clicked => {
-                    root.search-attempted = true;
-                    root.search-submitted();
-                }
-            }
-        }
-
-        if root.search-coverage-label != "": Rectangle {
-            height: 28px;
-            border-radius: 4px;
-            background: Theme.surface-raised;
-            border-width: 1px;
-            border-color: Theme.border;
-            HorizontalLayout {
-                padding-left: 10px;
-                padding-right: 10px;
+        PanelCard {
+            horizontal-stretch: 0.9;
+            VerticalLayout {
+                padding: 14px;
+                spacing: 10px;
                 Text {
+                    text: Strings.search-action;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
+                }
+                LineEdit {
+                    text <=> root.search-query;
+                    placeholder-text: Strings.search-placeholder;
+                    edited => { root.query-changed(self.text); }
+                    accepted => {
+                        root.search-attempted = true;
+                        root.search-submitted();
+                    }
+                }
+                LabButton {
+                    primary: true;
+                    prominent: true;
+                    label: Strings.search-action;
+                    clicked => {
+                        root.search-attempted = true;
+                        root.search-submitted();
+                    }
+                }
+                if root.search-coverage-label != "": Text {
                     text: Strings.search-coverage + ": " + root.search-coverage-label;
                     color: Theme.text-secondary;
                     font-size: 11px;
-                    vertical-alignment: center;
-                    overflow: elide;
+                    wrap: word-wrap;
                 }
+                if root.yara-hit-lines.length > 0: VerticalLayout {
+                    spacing: 2px;
+                    Text {
+                        text: Strings.yara-hits;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 700;
+                    }
+                    for line in root.yara-hit-lines: Text {
+                        text: line;
+                        color: Theme.mono-fg;
+                        font-family: "monospace";
+                        font-size: 11px;
+                    }
+                }
+                if root.hashset-hit-lines.length > 0: VerticalLayout {
+                    spacing: 2px;
+                    Text {
+                        text: Strings.hashset-hits;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 700;
+                    }
+                    for line in root.hashset-hit-lines: Text {
+                        text: line;
+                        color: Theme.mono-fg;
+                        font-family: "monospace";
+                        font-size: 11px;
+                    }
+                }
+                Rectangle { vertical-stretch: 1; }
             }
         }
 
-        if root.yara-hit-lines.length > 0: SectionCard {
-            title: Strings.yara-hits;
+        PanelCard {
+            horizontal-stretch: 1.4;
             VerticalLayout {
-                spacing: 2px;
-                for line in root.yara-hit-lines: Text {
-                    text: line;
-                    color: Theme.mono-fg;
-                    font-family: "monospace";
-                    font-size: 11px;
+                padding: 14px;
+                spacing: 10px;
+                HorizontalLayout {
+                    Text {
+                        text: Strings.results-title;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                    }
+                    if root.hit-count > 0: Text {
+                        text: "\{root.hit-count} " + Strings.hits;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                    }
                 }
-            }
-        }
-        if root.hashset-hit-lines.length > 0: SectionCard {
-            title: Strings.hashset-hits;
-            VerticalLayout {
-                spacing: 2px;
-                for line in root.hashset-hit-lines: Text {
-                    text: line;
-                    color: Theme.mono-fg;
-                    font-family: "monospace";
-                    font-size: 11px;
-                }
-            }
-        }
-
-        if show-empty: EmptyState {
-            title: Strings.empty-no-search;
-            body: Strings.empty-hint-search;
-            vertical-stretch: 1;
-        }
-
-        if !show-empty: SectionCard {
-            title: Strings.results-title;
-            vertical-stretch: 1;
-
-            VerticalLayout {
-                spacing: 6px;
-                vertical-stretch: 1;
-
                 if root.hit-count > 0: HorizontalLayout {
                     spacing: 8px;
                     LabButton {
@@ -117,78 +129,67 @@ export component SearchScreen inherits Rectangle {
                         clicked => { root.open-in-evidence-clicked(); }
                     }
                     LabButton {
-                        primary: false;
+                        primary: true;
                         label: Strings.add-bookmark;
                         clicked => { root.bookmark-hit-clicked(); }
                     }
-                    Rectangle { horizontal-stretch: 1; }
-                    Text {
-                        text: "\{root.hit-count} " + Strings.hits;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        vertical-alignment: center;
-                    }
                 }
-
-                HorizontalLayout {
-                    spacing: 8px;
-                    Text { text: Strings.col-kind; color: Theme.text-secondary; font-size: 11px; width: 120px; }
-                    Text { text: Strings.col-summary; color: Theme.text-secondary; font-size: 11px; horizontal-stretch: 1; }
-                    Text { text: Strings.col-provenance; color: Theme.text-secondary; font-size: 11px; width: 160px; }
-                }
-
-                Rectangle { height: 1px; background: Theme.border; }
-
-                Flickable {
+                if show-empty: EmptyState {
+                    title: Strings.empty-no-search;
+                    body: Strings.empty-hint-search;
                     vertical-stretch: 1;
-                    viewport-width: parent.width;
+                }
+                if !show-empty: Flickable {
+                    vertical-stretch: 1;
+                    viewport-width: parent.width - 28px;
                     VerticalLayout {
                         spacing: 2px;
-                        width: parent.width;
-
+                        width: parent.width - 28px;
                         if root.use-artifacts: VerticalLayout {
                             spacing: 2px;
-                            for kind[index] in root.artifact-kinds: HorizontalLayout {
-                                padding-top: 4px;
-                                padding-bottom: 4px;
-                                spacing: 8px;
-                                Text {
-                                    text: kind;
-                                    color: Theme.text-primary;
-                                    font-size: 12px;
-                                    width: 120px;
-                                    overflow: elide;
-                                }
-                                Text {
-                                    text: index < root.artifact-summaries.length ? root.artifact-summaries[index] : "";
-                                    color: Theme.text-primary;
-                                    font-size: 12px;
-                                    horizontal-stretch: 1;
-                                    overflow: elide;
-                                }
-                                Text {
-                                    text: index < root.artifact-provenances.length ? root.artifact-provenances[index] : "";
-                                    color: Theme.mono-fg;
-                                    font-family: "monospace";
-                                    font-size: 11px;
-                                    width: 160px;
-                                    overflow: elide;
+                            for kind[index] in root.artifact-kinds: Rectangle {
+                                height: 36px;
+                                border-radius: Theme.chip-radius;
+                                HorizontalLayout {
+                                    padding-left: 8px;
+                                    padding-right: 8px;
+                                    spacing: 8px;
+                                    Text {
+                                        text: kind;
+                                        color: Theme.accent;
+                                        font-size: 11px;
+                                        font-weight: 700;
+                                        width: 100px;
+                                        vertical-alignment: center;
+                                        overflow: elide;
+                                    }
+                                    Text {
+                                        text: index < root.artifact-summaries.length ? root.artifact-summaries[index] : "";
+                                        color: Theme.text-primary;
+                                        font-size: 12px;
+                                        horizontal-stretch: 1;
+                                        vertical-alignment: center;
+                                        overflow: elide;
+                                    }
+                                    Text {
+                                        text: index < root.artifact-provenances.length ? root.artifact-provenances[index] : "";
+                                        color: Theme.mono-fg;
+                                        font-family: "monospace";
+                                        font-size: 10px;
+                                        width: 120px;
+                                        vertical-alignment: center;
+                                        overflow: elide;
+                                    }
                                 }
                             }
                         }
-
                         if !root.use-artifacts: VerticalLayout {
                             spacing: 2px;
-                            for row in root.search-results: HorizontalLayout {
-                                padding-top: 4px;
-                                padding-bottom: 4px;
-                                Text {
-                                    text: row;
-                                    color: Theme.text-primary;
-                                    font-size: 12px;
-                                    horizontal-stretch: 1;
-                                    overflow: elide;
-                                }
+                            for row in root.search-results: Text {
+                                text: row;
+                                color: Theme.text-primary;
+                                font-size: 12px;
+                                overflow: elide;
                             }
                         }
                     }

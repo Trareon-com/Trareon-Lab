@@ -1,0 +1,85 @@
+import { Theme } from "../theme.slint";
+import { Icon } from "icon.slint";
+
+/// Full-width clickable workflow step — horizontal so titles never stack letter-by-letter.
+export component WorkflowCard inherits Rectangle {
+    in-out property <string> title;
+    in-out property <string> subtitle;
+    in-out property <image> glyph;
+    callback clicked();
+
+    background: Theme.surface;
+    border-width: 1px;
+    border-color: Theme.border;
+    border-radius: Theme.chip-radius;
+    min-height: 64px;
+    horizontal-stretch: 1;
+    clip: true;
+
+    HorizontalLayout {
+        padding-left: 14px;
+        padding-right: 14px;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        spacing: 12px;
+        alignment: center;
+
+        Rectangle {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: Theme.accent-muted;
+            HorizontalLayout {
+                alignment: center;
+                Icon {
+                    glyph: root.glyph;
+                    tint: Theme.accent;
+                    size: 18px;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        VerticalLayout {
+            spacing: 3px;
+            horizontal-stretch: 1;
+            alignment: center;
+            Text {
+                text: root.title;
+                color: Theme.text-primary;
+                font-family: Theme.font-ui;
+                font-size: 13px;
+                font-weight: 700;
+                overflow: elide;
+            }
+            Text {
+                text: root.subtitle;
+                color: Theme.text-secondary;
+                font-family: Theme.font-ui;
+                font-size: 11px;
+                font-weight: 500;
+                wrap: word-wrap;
+            }
+        }
+
+        Text {
+            text: "→";
+            color: Theme.accent;
+            font-size: 14px;
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+    }
+
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+
+    states [
+        hover when ta.has-hover: {
+            background: Theme.row-hover;
+            border-color: Theme.accent;
+        }
+    ]
+}

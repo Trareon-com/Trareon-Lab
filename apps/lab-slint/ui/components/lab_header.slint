@@ -1,0 +1,238 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+
+/// ASCII header 48px — brand mark · CASE chip · search · locale · theme
+export component LabHeader inherits Rectangle {
+    in-out property <string> case-title: "(no case)";
+    in-out property <string> case-state-label: "created";
+    in-out property <bool> compact: false;
+    in-out property <bool> dark-mode: false;
+    in-out property <string> locale: "en";
+    in-out property <string> clock: "";
+    callback palette-clicked();
+    callback case-clicked();
+    callback locale-toggled(string);
+    callback theme-toggled(bool);
+
+    height: Theme.header-height;
+    background: Theme.surface;
+
+    VerticalLayout {
+        spacing: 0px;
+        HorizontalLayout {
+            padding-left: 12px;
+            padding-right: 12px;
+            spacing: 8px;
+            alignment: center;
+
+            // Copper brand mark
+            Rectangle {
+                width: 30px;
+                height: 30px;
+                border-radius: 6px;
+                background: Theme.accent;
+                Text {
+                    text: "T";
+                    color: Theme.on-accent;
+                    font-family: Theme.font-ui;
+                    font-size: 15px;
+                    font-weight: 800;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+            Text {
+                text: "TRAREON";
+                color: Theme.text-primary;
+                font-family: Theme.font-ui;
+                font-size: 12px;
+                font-weight: 800;
+                letter-spacing: 0.4px;
+                vertical-alignment: center;
+            }
+            Text {
+                text: "|";
+                color: Theme.border;
+                font-size: 14px;
+                vertical-alignment: center;
+            }
+            Text {
+                text: "LAB";
+                color: Theme.accent;
+                font-family: Theme.font-ui;
+                font-size: 12px;
+                font-weight: 800;
+                letter-spacing: 0.8px;
+                vertical-alignment: center;
+            }
+
+            // Case chip
+            Rectangle {
+                height: 28px;
+                min-width: 110px;
+                border-radius: Theme.chip-radius;
+                background: Theme.surface-raised;
+                border-width: 1px;
+                border-color: Theme.border;
+                HorizontalLayout {
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    spacing: 5px;
+                    alignment: center;
+                    Text {
+                        text: Strings.chip-case + ":";
+                        color: Theme.icon-muted;
+                        font-family: Theme.font-ui;
+                        font-size: 10px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                    Text {
+                        text: root.case-title;
+                        color: Theme.text-primary;
+                        font-family: Theme.font-ui;
+                        font-size: 11px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                        max-width: root.compact ? 100px : 200px;
+                        overflow: elide;
+                    }
+                    if !root.compact && root.case-state-label != "": Text {
+                        text: "· " + root.case-state-label;
+                        color: Theme.text-secondary;
+                        font-family: Theme.font-ui;
+                        font-size: 10px;
+                        vertical-alignment: center;
+                    }
+                }
+                TouchArea {
+                    mouse-cursor: pointer;
+                    clicked => { root.case-clicked(); }
+                }
+            }
+
+            // Search / palette
+            Rectangle {
+                height: 28px;
+                min-width: root.compact ? 40px : 200px;
+                horizontal-stretch: 1;
+                border-radius: Theme.chip-radius;
+                border-width: 1px;
+                border-color: Theme.border;
+                background: Theme.surface-raised;
+                HorizontalLayout {
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    spacing: 6px;
+                    Text {
+                        text: "⌕";
+                        color: Theme.icon-muted;
+                        font-size: 12px;
+                        vertical-alignment: center;
+                    }
+                    Text {
+                        text: root.compact ? "/" : Strings.header-search-hint;
+                        color: Theme.text-secondary;
+                        font-family: Theme.font-ui;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                        overflow: elide;
+                        horizontal-stretch: 1;
+                    }
+                }
+                TouchArea {
+                    mouse-cursor: pointer;
+                    clicked => { root.palette-clicked(); }
+                }
+            }
+
+            // EN | ID
+            Rectangle {
+                height: 26px;
+                border-radius: Theme.chip-radius;
+                border-width: 1px;
+                border-color: Theme.border;
+                background: Theme.surface;
+                HorizontalLayout {
+                    padding: 2px;
+                    spacing: 2px;
+                    Rectangle {
+                        width: 30px;
+                        height: 22px;
+                        border-radius: 3px;
+                        background: root.locale == "en" ? Theme.accent : transparent;
+                        Text {
+                            text: Strings.lang-en;
+                            color: root.locale == "en" ? Theme.on-accent : Theme.text-secondary;
+                            font-size: 10px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                        TouchArea {
+                            mouse-cursor: pointer;
+                            clicked => {
+                                root.locale = "en";
+                                root.locale-toggled("en");
+                            }
+                        }
+                    }
+                    Rectangle {
+                        width: 30px;
+                        height: 22px;
+                        border-radius: 3px;
+                        background: root.locale == "id" ? Theme.accent : transparent;
+                        Text {
+                            text: Strings.lang-id;
+                            color: root.locale == "id" ? Theme.on-accent : Theme.text-secondary;
+                            font-size: 10px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                        TouchArea {
+                            mouse-cursor: pointer;
+                            clicked => {
+                                root.locale = "id";
+                                root.locale-toggled("id");
+                            }
+                        }
+                    }
+                }
+            }
+
+            if root.clock != "" && !root.compact: Text {
+                text: root.clock;
+                color: Theme.icon-muted;
+                font-family: "monospace";
+                font-size: 10px;
+                vertical-alignment: center;
+            }
+
+            // Theme
+            Rectangle {
+                width: 34px;
+                height: 26px;
+                border-radius: Theme.chip-radius;
+                background: Theme.surface-raised;
+                border-width: 1px;
+                border-color: Theme.border;
+                Text {
+                    text: root.dark-mode ? "☾" : "☀";
+                    color: Theme.text-primary;
+                    font-size: 14px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+                TouchArea {
+                    mouse-cursor: pointer;
+                    clicked => {
+                        root.dark-mode = !root.dark-mode;
+                        root.theme-toggled(root.dark-mode);
+                    }
+                }
+            }
+        }
+        Rectangle { height: 1px; background: Theme.border; }
+    }
+}

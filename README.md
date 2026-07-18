@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-blue.svg" alt="License: GPL-3.0-only" /></a>
-  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-GitHub%20Actions-2088FF.svg" alt="CI" /></a>
+  <a href="https://github.com/Trareon-com/Trareon-Lab/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Trareon-com/Trareon-Lab/ci.yml?branch=main&label=CI" alt="CI status" /></a>
   <img src="https://img.shields.io/badge/UI-Slint-3D9B8F.svg" alt="UI: Slint" />
   <img src="https://img.shields.io/badge/status-Engineering%20Alpha-orange.svg" alt="Engineering Alpha" />
   <img src="https://img.shields.io/badge/installers-UNSIGNED-critical.svg" alt="Unsigned" />
@@ -133,11 +133,27 @@ Recapture locally (macOS): `./scripts/capture-readme-screens.sh`
 | **Timeline** | Empty until real labels exist; optional CSV import (Plaso / Hayabusa sidecar) |
 | **Bookmarks** | Persisted findings → report claim material |
 | **Report / Transfer** | Export digests + Ed25519-signed offline pack; finalize blockers + SoD hint |
-| **Workbench** | Five-region chrome · command palette · Dark/Light · **EN / ID** |
+| **Quick Verify** | Drop one file → hash + signature carve (ephemeral; not custody) |
+| **Carving** | Header/footer signatures (jpg/png/gif/bmp/tiff/pdf/ole/zip/rar/7z/mp3/wav/avi/mp4); 64 MiB RAM ceiling |
+| **Demo** | **Load demo case** uses `testdata/demo/demo-disk.dd` |
+| **Workbench** | Acquire-family light chrome · command palette · Dark/Light · **EN / ID** |
 
 ---
 
-## Quick start
+## Build & Run
+
+Three steps from a clean clone:
+
+```bash
+git clone https://github.com/Trareon-com/Trareon-Lab.git
+cd Trareon-Lab
+cargo build -p lab-slint --bin trareon-lab --features gui --release
+./target/release/trareon-lab
+```
+
+Or iterate with `cargo run -p lab-slint --bin trareon-lab --features gui`.
+
+Toolchain pin: see [`rust-toolchain.toml`](rust-toolchain.toml) (MSRV = that channel). Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ### Binary (storefront)
 
@@ -145,29 +161,20 @@ Recapture locally (macOS): `./scripts/capture-readme-screens.sh`
 2. Verify SHA-256 against published `SHA256SUMS`.
 3. Expect Gatekeeper / SmartScreen — [`docs/SELLING-UNSIGNED.md`](docs/SELLING-UNSIGNED.md).
 
-### From source
-
-```bash
-git clone https://github.com/Trareon-com/Trareon-Lab.git
-cd Trareon-Lab
-cargo run -p lab-slint --bin trareon-lab --features gui
-```
-
-Headless tests (no display):
+### Tests & automation
 
 ```bash
 cargo test --workspace --exclude lab-slint
 cargo test -p lab-slint --features gui
 ```
 
-Automation (skip folder/file pickers):
-
 ```bash
 export TRAREON_CASE_DIR=/path/to/case
 export TRAREON_IMPORT_PATH=/path/to/image.dd
-export TRAREON_AUTO_OPEN=1          # open case on launch
-export TRAREON_IMPORT_AUTO=1        # import after open
+export TRAREON_AUTO_OPEN=1
+export TRAREON_IMPORT_AUTO=1
 export TRAREON_START_SCREEN=Evidence
+export TRAREON_QUICK_VERIFY_PATH=/path/to/file   # skip Quick Verify picker
 ```
 
 ---
@@ -177,8 +184,9 @@ export TRAREON_START_SCREEN=Evidence
 Full step-by-step guide: **[`docs/user/TUTORIAL.md`](docs/user/TUTORIAL.md)**
 
 ```text
-Open / create case folder
-  → Import disk image
+Try without evidence: Load demo case  (or Quick Verify one file)
+  → Open / create case folder
+  → Import disk image · Run carving (optional)
   → Evidence · Inspector/hex · Search (read coverage)
   → Bookmark findings (b)
   → Report blockers · Export report / transfer pack
@@ -218,8 +226,10 @@ Outside this table = not claimed.
 | [`docs/RELEASE-01-CAPABILITY-MATRIX.md`](docs/RELEASE-01-CAPABILITY-MATRIX.md) | R1 capability matrix |
 | [`docs/KNOWN-ISSUES.md`](docs/KNOWN-ISSUES.md) | Known limits |
 | [`docs/superpowers/specs/2026-07-18-dfir-workbench-research-ux.md`](docs/superpowers/specs/2026-07-18-dfir-workbench-research-ux.md) | Workbench UX research |
+| [`docs/superpowers/specs/2026-07-18-lab-acquire-family-skin.md`](docs/superpowers/specs/2026-07-18-lab-acquire-family-skin.md) | Acquire-family UI skin |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) | OSS contribution |
 
-Smoke packaging: `./packaging/smoke.sh`
+Smoke packaging: `./packaging/smoke.sh` · recapture gallery: `./scripts/capture-readme-screens.sh`
 
 ---
 

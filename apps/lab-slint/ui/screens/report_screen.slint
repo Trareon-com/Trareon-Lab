@@ -1,9 +1,9 @@
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
-import { SectionCard } from "../components/section_card.slint";
 import { EmptyState } from "../components/empty_state.slint";
 import { StatusBadge } from "../components/status_badge.slint";
 import { LabButton } from "../components/lab_button.slint";
+import { PanelCard } from "../components/panel_card.slint";
 
 export component ReportScreen inherits Rectangle {
     in-out property <string> report-state;
@@ -19,116 +19,131 @@ export component ReportScreen inherits Rectangle {
     background: transparent;
     property <bool> empty: finding-claims.length == 0;
 
-    VerticalLayout {
+    HorizontalLayout {
         padding: 12px;
         spacing: 12px;
 
-        HorizontalLayout {
-            spacing: 12px;
-            alignment: start;
-            Text {
-                text: Strings.report-state;
-                color: Theme.text-secondary;
-                font-size: 12px;
-                vertical-alignment: center;
-            }
-            StatusBadge {
-                label: root.report-state;
-                kind: root.report-state == "draft" ? "warn" : "ok";
-            }
-            StatusBadge {
-                label: root.report-finalizable ? "finalizable" : "blocked";
-                kind: root.report-finalizable ? "ok" : "danger";
-            }
-            Rectangle { horizontal-stretch: 1; }
-            LabButton {
-                primary: true;
-                label: Strings.export-action;
-                clicked => { root.export-clicked(); }
-            }
-            LabButton {
-                primary: false;
-                label: Strings.transfer-export;
-                clicked => { root.transfer-export-clicked(); }
-            }
-        }
-
-        Text {
-            text: Strings.sod-hint;
-            color: Theme.text-secondary;
-            font-size: 11px;
-        }
-
-        if root.export-status != "": Text {
-            text: root.export-status;
-            color: Theme.mono-fg;
-            font-family: "monospace";
-            font-size: 11px;
-            wrap: word-wrap;
-        }
-
-        if root.report-blockers.length > 0: SectionCard {
-            title: Strings.report-blockers-title;
+        PanelCard {
+            horizontal-stretch: 1;
             VerticalLayout {
-                spacing: 4px;
-                for b in root.report-blockers: Text {
-                    text: "·  " + b;
-                    color: Theme.danger;
-                    font-size: 12px;
+                padding: 14px;
+                spacing: 12px;
+                Text {
+                    text: Strings.report-state;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    StatusBadge {
+                        label: root.report-state;
+                        kind: root.report-state == "draft" ? "warn" : "ok";
+                    }
+                    StatusBadge {
+                        label: root.report-finalizable ? "finalizable" : "blocked";
+                        kind: root.report-finalizable ? "ok" : "danger";
+                    }
+                }
+                Text {
+                    text: Strings.sod-hint;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    wrap: word-wrap;
+                }
+                if root.report-blockers.length > 0: VerticalLayout {
+                    spacing: 4px;
+                    Text {
+                        text: Strings.report-blockers-title;
+                        color: Theme.danger;
+                        font-size: 11px;
+                        font-weight: 800;
+                    }
+                    for b in root.report-blockers: Text {
+                        text: "·  " + b;
+                        color: Theme.danger;
+                        font-size: 12px;
+                        wrap: word-wrap;
+                    }
+                }
+                if root.export-status != "": Text {
+                    text: root.export-status;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                    wrap: word-wrap;
+                }
+                LabButton {
+                    primary: true;
+                    prominent: true;
+                    enabled: root.report-finalizable;
+                    label: Strings.export-action;
+                    clicked => { root.export-clicked(); }
+                }
+                LabButton {
+                    primary: false;
+                    label: Strings.transfer-export;
+                    clicked => { root.transfer-export-clicked(); }
+                }
+                Rectangle { vertical-stretch: 1; }
+                Text {
+                    text: root.about-line;
+                    color: Theme.text-secondary;
+                    font-size: 10px;
+                    wrap: word-wrap;
                 }
             }
         }
 
-        if empty: EmptyState {
-            title: Strings.empty-no-findings;
-            body: Strings.empty-hint-report;
-            vertical-stretch: 1;
-        }
-
-        if !empty: SectionCard {
-            title: Strings.col-claim;
-            vertical-stretch: 1;
-            Flickable {
-                vertical-stretch: 1;
-                viewport-width: parent.width - 28px;
-                VerticalLayout {
-                    spacing: 6px;
-                    width: parent.width - 28px;
-                    for claim[index] in root.finding-claims: Rectangle {
-                        border-width: 1px;
-                        border-color: Theme.border;
-                        border-radius: 4px;
-                        background: Theme.surface-raised;
-                        VerticalLayout {
-                            padding: 10px;
-                            spacing: 4px;
-                            Text {
-                                text: claim;
-                                color: Theme.text-primary;
-                                font-size: 12px;
-                                wrap: word-wrap;
-                            }
-                            Text {
-                                text: index < root.finding-uuids.length ? root.finding-uuids[index] : "";
-                                color: Theme.mono-fg;
-                                font-family: "monospace";
-                                font-size: 11px;
-                                overflow: elide;
+        PanelCard {
+            horizontal-stretch: 1.4;
+            VerticalLayout {
+                padding: 14px;
+                spacing: 10px;
+                Text {
+                    text: Strings.col-claim;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
+                }
+                if empty: EmptyState {
+                    title: Strings.empty-no-findings;
+                    body: Strings.empty-hint-report;
+                    vertical-stretch: 1;
+                }
+                if !empty: Flickable {
+                    vertical-stretch: 1;
+                    viewport-width: parent.width - 28px;
+                    VerticalLayout {
+                        spacing: 6px;
+                        width: parent.width - 28px;
+                        for claim[index] in root.finding-claims: Rectangle {
+                            border-width: 1px;
+                            border-color: Theme.border;
+                            border-radius: Theme.chip-radius;
+                            background: Theme.surface;
+                            VerticalLayout {
+                                padding: 10px;
+                                spacing: 4px;
+                                Text {
+                                    text: claim;
+                                    color: Theme.text-primary;
+                                    font-size: 12px;
+                                    wrap: word-wrap;
+                                }
+                                Text {
+                                    text: index < root.finding-uuids.length ? root.finding-uuids[index] : "";
+                                    color: Theme.mono-fg;
+                                    font-family: "monospace";
+                                    font-size: 11px;
+                                    overflow: elide;
+                                }
                             }
                         }
                     }
                 }
-            }
-        }
-
-        SectionCard {
-            title: Strings.about-prefix;
-            vertical-stretch: 0;
-            Text {
-                text: root.about-line;
-                color: Theme.text-secondary;
-                font-size: 11px;
-                wrap: word-wrap;
             }
         }
     }

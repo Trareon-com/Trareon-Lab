@@ -1,9 +1,9 @@
 import { LineEdit } from "std-widgets.slint";
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
-import { SectionCard } from "../components/section_card.slint";
 import { EmptyState } from "../components/empty_state.slint";
 import { LabButton } from "../components/lab_button.slint";
+import { PanelCard } from "../components/panel_card.slint";
 
 export component TimelineScreen inherits Rectangle {
     in-out property <[string]> timeline-labels;
@@ -14,99 +14,127 @@ export component TimelineScreen inherits Rectangle {
     background: transparent;
     property <bool> empty: timeline-labels.length == 0;
     property <int> event-count: timeline-labels.length;
+    property <int> selected-index: -1;
+    property <string> selected-label: root.selected-index >= 0 && root.selected-index < root.timeline-labels.length
+        ? root.timeline-labels[root.selected-index] : "";
 
-    VerticalLayout {
+    if empty: VerticalLayout {
+        padding: 12px;
+        EmptyState {
+            title: Strings.empty-no-timeline;
+            body: Strings.empty-hint-timeline;
+            show-cta: true;
+            cta-label: Strings.import-timeline;
+            cta-clicked => { root.import-timeline-clicked(); }
+            vertical-stretch: 1;
+        }
+    }
+
+    if !empty: HorizontalLayout {
         padding: 12px;
         spacing: 12px;
 
-        HorizontalLayout {
-            spacing: 8px;
-            LineEdit {
-                placeholder-text: Strings.filter-stub;
-                enabled: false;
-                horizontal-stretch: 1;
-            }
-            LabButton {
-                primary: false;
-                label: Strings.import-timeline;
-                clicked => { root.import-timeline-clicked(); }
-            }
-            if !empty: LabButton {
-                primary: false;
-                label: Strings.jump-evidence;
-                clicked => { root.jump-evidence-clicked(); }
-            }
-            if !empty: LabButton {
-                primary: false;
-                label: Strings.add-bookmark;
-                clicked => { root.bookmark-hit-clicked(); }
-            }
-        }
-
-        if !empty: Rectangle {
-            height: 36px;
-            border-radius: 4px;
-            background: Theme.surface-raised;
-            border-width: 1px;
-            border-color: Theme.border;
-            HorizontalLayout {
-                padding-left: 8px;
-                padding-right: 8px;
-                spacing: 4px;
+        PanelCard {
+            horizontal-stretch: 1.6;
+            VerticalLayout {
+                padding: 14px;
+                spacing: 10px;
+                HorizontalLayout {
+                    spacing: 8px;
+                    LineEdit {
+                        placeholder-text: Strings.filter-stub;
+                        enabled: false;
+                        horizontal-stretch: 1;
+                    }
+                    LabButton {
+                        primary: false;
+                        label: Strings.import-timeline;
+                        clicked => { root.import-timeline-clicked(); }
+                    }
+                    Text {
+                        text: "\{root.event-count}";
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
                 Text {
-                    text: "\{root.event-count}";
+                    text: Strings.col-event;
                     color: Theme.text-secondary;
                     font-size: 11px;
-                    vertical-alignment: center;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
                 }
-                Rectangle {
-                    horizontal-stretch: 1;
-                    height: 12px;
-                    background: Theme.accent-muted;
-                    border-radius: 2px;
-                }
-                Text {
-                    text: "CFTL-lite overview";
-                    color: Theme.text-secondary;
-                    font-size: 10px;
-                    vertical-alignment: center;
-                }
-            }
-        }
-
-        if empty: EmptyState {
-            title: Strings.empty-no-timeline;
-            body: Strings.empty-hint-timeline;
-            vertical-stretch: 1;
-        }
-
-        if !empty: SectionCard {
-            title: Strings.col-event;
-            vertical-stretch: 1;
-            Flickable {
-                vertical-stretch: 1;
-                viewport-width: parent.width - 28px;
-                VerticalLayout {
-                    spacing: 2px;
-                    width: parent.width - 28px;
-                    for label in root.timeline-labels: Rectangle {
-                        height: 28px;
-                        border-radius: 4px;
-                        background: transparent;
-                        HorizontalLayout {
-                            padding-left: 8px;
-                            padding-right: 8px;
-                            Text {
-                                text: label;
-                                color: Theme.mono-fg;
-                                font-family: "monospace";
-                                font-size: 12px;
-                                vertical-alignment: center;
-                                overflow: elide;
+                Flickable {
+                    vertical-stretch: 1;
+                    viewport-width: parent.width - 28px;
+                    VerticalLayout {
+                        spacing: 2px;
+                        width: parent.width - 28px;
+                        for label[index] in root.timeline-labels: Rectangle {
+                            height: 30px;
+                            border-radius: Theme.chip-radius;
+                            background: root.selected-index == index ? Theme.accent-muted : transparent;
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                padding-right: 8px;
+                                Text {
+                                    text: label;
+                                    color: Theme.mono-fg;
+                                    font-family: "monospace";
+                                    font-size: 12px;
+                                    vertical-alignment: center;
+                                    overflow: elide;
+                                }
+                            }
+                            TouchArea {
+                                clicked => { root.selected-index = index; }
                             }
                         }
                     }
                 }
+            }
+        }
+
+        PanelCard {
+            horizontal-stretch: 1;
+            VerticalLayout {
+                padding: 14px;
+                spacing: 10px;
+                Text {
+                    text: Strings.detail-title;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
+                }
+                if root.selected-label == "": Text {
+                    text: Strings.empty-no-selection;
+                    color: Theme.text-secondary;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                if root.selected-label != "": Text {
+                    text: root.selected-label;
+                    color: Theme.text-primary;
+                    font-family: "monospace";
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                LabButton {
+                    primary: true;
+                    label: Strings.jump-evidence;
+                    enabled: root.selected-label != "";
+                    clicked => { root.jump-evidence-clicked(); }
+                }
+                LabButton {
+                    primary: false;
+                    label: Strings.add-bookmark;
+                    enabled: root.selected-label != "";
+                    clicked => { root.bookmark-hit-clicked(); }
+                }
+                Rectangle { vertical-stretch: 1; }
             }
         }
     }

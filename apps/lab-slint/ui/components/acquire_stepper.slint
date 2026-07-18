@@ -1,0 +1,59 @@
+import { Theme } from "../theme.slint";
+
+component StepDot inherits HorizontalLayout {
+    in-out property <int> index;
+    in-out property <string> label;
+    in-out property <int> active-index: 0;
+    in-out property <bool> show-connector: true;
+    spacing: 8px;
+    alignment: center;
+
+    property <bool> is-active: root.index == root.active-index;
+    property <bool> is-done: root.index < root.active-index;
+
+    Rectangle {
+        width: 26px;
+        height: 26px;
+        border-radius: 13px;
+        background: root.is-active || root.is-done ? Theme.accent : Theme.surface;
+        border-width: 1.5px;
+        border-color: root.is-active || root.is-done ? Theme.accent : #C5C9D0;
+        Text {
+            width: 100%;
+            height: 100%;
+            text: "\{root.index}";
+            color: root.is-active || root.is-done ? Theme.on-accent : Theme.text-secondary;
+            font-family: Theme.font-ui;
+            font-size: 12px;
+            font-weight: 700;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+    Text {
+        text: root.label;
+        color: root.is-active ? Theme.accent : Theme.text-secondary;
+        font-family: Theme.font-ui;
+        font-size: 13px;
+        font-weight: root.is-active ? 700 : 500;
+        vertical-alignment: center;
+    }
+    if root.show-connector: Rectangle {
+        width: 32px;
+        height: 1.5px;
+        background: #D1D5DB;
+    }
+}
+
+export component AcquireStepper inherits HorizontalLayout {
+    in-out property <int> active-index: 1;
+    in-out property <[string]> labels: ["Case", "Source", "WB", "Confirm", "Start"];
+    spacing: 4px;
+    alignment: center;
+
+    StepDot { index: 1; label: root.labels.length > 0 ? root.labels[0] : "1"; active-index: root.active-index; show-connector: true; }
+    StepDot { index: 2; label: root.labels.length > 1 ? root.labels[1] : "2"; active-index: root.active-index; show-connector: true; }
+    StepDot { index: 3; label: root.labels.length > 2 ? root.labels[2] : "3"; active-index: root.active-index; show-connector: true; }
+    StepDot { index: 4; label: root.labels.length > 3 ? root.labels[3] : "4"; active-index: root.active-index; show-connector: true; }
+    StepDot { index: 5; label: root.labels.length > 4 ? root.labels[4] : "5"; active-index: root.active-index; show-connector: false; }
+}

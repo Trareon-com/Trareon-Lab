@@ -2,8 +2,35 @@ import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
 import { LabButton } from "lab_button.slint";
 import { StatusBadge } from "status_badge.slint";
+import { MetaRow } from "meta_row.slint";
 
-/// Chrome-level inspector — selection detail survives screen changes.
+component InspTab inherits Rectangle {
+    in-out property <string> label;
+    in-out property <bool> active: false;
+    callback clicked();
+    height: 26px;
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        Text {
+            text: root.label;
+            color: root.active ? Theme.accent : Theme.text-secondary;
+            font-family: Theme.font-ui;
+            font-size: 11px;
+            font-weight: root.active ? 700 : 500;
+            vertical-alignment: center;
+        }
+    }
+    if root.active: Rectangle {
+        y: parent.height - 2px;
+        height: 2px;
+        width: parent.width;
+        background: Theme.nav-active-bar;
+    }
+    TouchArea { clicked => { root.clicked(); } }
+}
+
+/// Content viewer — Properties | Hex. Selection survives screen changes.
 export component InspectorPanel inherits Rectangle {
     in-out property <string> title: "";
     in-out property <string> path: "";
@@ -15,16 +42,22 @@ export component InspectorPanel inherits Rectangle {
     in-out property <bool> tagged: false;
     in-out property <string> hex-status: "";
     in-out property <[string]> hex-lines: [];
+    in-out property <string> active-tab: "properties";
     callback bookmark-clicked();
     callback find-related-clicked();
     callback close-clicked();
+    callback tab-changed(string);
+    callback hex-popout-clicked();
+    callback hex-prev-clicked();
+    callback hex-next-clicked();
 
+    width: Theme.inspector-width;
     background: Theme.surface;
     HorizontalLayout {
         spacing: 0px;
         Rectangle { width: 1px; background: Theme.border; }
         VerticalLayout {
-            padding: 8px;
+            padding: Theme.chrome-pad;
             spacing: 8px;
             HorizontalLayout {
                 spacing: 8px;
@@ -49,6 +82,28 @@ export component InspectorPanel inherits Rectangle {
                 }
             }
 
+            HorizontalLayout {
+                spacing: 0px;
+                InspTab {
+                    label: "Properties";
+                    active: root.active-tab == "properties";
+                    clicked => {
+                        root.active-tab = "properties";
+                        root.tab-changed("properties");
+                    }
+                }
+                InspTab {
+                    label: Strings.hex-title;
+                    active: root.active-tab == "hex";
+                    clicked => {
+                        root.active-tab = "hex";
+                        root.tab-changed("hex");
+                    }
+                }
+                Rectangle { horizontal-stretch: 1; }
+            }
+            Rectangle { height: 1px; background: Theme.border; }
+
             if !root.has-selection: Text {
                 text: Strings.empty-no-selection;
                 color: Theme.text-secondary;
@@ -56,58 +111,13 @@ export component InspectorPanel inherits Rectangle {
                 wrap: word-wrap;
             }
 
-            if root.has-selection: VerticalLayout {
-                spacing: 6px;
-                Text {
-                    text: Strings.col-name;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                }
-                Text {
-                    text: root.title;
-                    color: Theme.text-primary;
-                    font-size: 12px;
-                    font-weight: 600;
-                    wrap: word-wrap;
-                }
-                Text {
-                    text: Strings.col-path;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                }
-                Text {
-                    text: root.path;
-                    color: Theme.mono-fg;
-                    font-family: "monospace";
-                    font-size: 11px;
-                    wrap: word-wrap;
-                }
-                Text {
-                    text: Strings.col-size;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                }
-                Text {
-                    text: root.size-label;
-                    color: Theme.mono-fg;
-                    font-family: "monospace";
-                    font-size: 11px;
-                }
-                Text {
-                    text: Strings.designation;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                }
-                Text {
-                    text: root.designation-label;
-                    color: Theme.text-primary;
-                    font-size: 12px;
-                }
-                Text {
-                    text: Strings.integrity;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                }
+            if root.has-selection && root.active-tab == "properties": VerticalLayout {
+                spacing: 8px;
+                MetaRow { label: Strings.col-name; value: root.title; }
+                MetaRow { label: Strings.col-path; value: root.path; }
+                MetaRow { label: Strings.col-size; value: root.size-label; }
+                MetaRow { label: Strings.designation; value: root.designation-label; }
+                MetaRow { label: Strings.integrity; value: root.integrity-label; }
                 StatusBadge {
                     label: root.integrity-label;
                     kind: root.integrity-label == "VerifiedMatch" ? "ok"
@@ -122,33 +132,46 @@ export component InspectorPanel inherits Rectangle {
                     label: Strings.tagged;
                     kind: "ok";
                 }
-                HorizontalLayout {
-                    spacing: 6px;
-                    LabButton {
-                        primary: true;
-                        label: Strings.add-bookmark;
-                        clicked => { root.bookmark-clicked(); }
-                    }
+                LabButton {
+                    primary: true;
+                    label: Strings.add-bookmark;
+                    clicked => { root.bookmark-clicked(); }
                 }
                 LabButton {
                     primary: false;
                     label: Strings.find-related;
                     clicked => { root.find-related-clicked(); }
                 }
-                Text {
-                    text: Strings.hex-title;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                    font-weight: 700;
-                }
+            }
+
+            if root.has-selection && root.active-tab == "hex": VerticalLayout {
+                spacing: 6px;
                 Text {
                     text: root.hex-status;
                     color: Theme.text-secondary;
                     font-size: 11px;
                     wrap: word-wrap;
                 }
+                HorizontalLayout {
+                    spacing: 6px;
+                    LabButton {
+                        primary: false;
+                        label: "◀";
+                        clicked => { root.hex-prev-clicked(); }
+                    }
+                    LabButton {
+                        primary: false;
+                        label: "▶";
+                        clicked => { root.hex-next-clicked(); }
+                    }
+                    LabButton {
+                        primary: false;
+                        label: "Pop out";
+                        clicked => { root.hex-popout-clicked(); }
+                    }
+                }
                 Flickable {
-                    height: 120px;
+                    vertical-stretch: 1;
                     viewport-width: parent.width;
                     VerticalLayout {
                         spacing: 1px;

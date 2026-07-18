@@ -4,11 +4,12 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use lab_carving::Carver;
 use lab_case::{AuditEvent, CaseDb, CaseLock, CoverageRecord};
 use lab_core::{
     compare_runs, export_case_html, export_case_pdfa, export_case_skeleton, export_case_uco,
-    CoverageStatus, ExportMode, IntegrityState, LabResult, RunManifest, ScopeAction, ScopeBounds,
-    ScopeGuard, ScopeOverride, CASE_UCO_PROFILE_VERSION,
+    CoverageStatus, ExportMode, IntegrityState, LabResult, NullProgress, RunManifest, ScopeAction,
+    ScopeBounds, ScopeGuard, ScopeOverride, CASE_UCO_PROFILE_VERSION,
 };
 use lab_crypto::TrustState;
 use lab_index::{IndexDb, IndexEntry, SearchPlan, SearchQuery};
@@ -332,6 +333,26 @@ impl LabSession {
             ),
         )?;
         Ok(())
+    }
+
+    /// Signature-carve a path with the common-media set and RAM ceiling.
+    pub fn carve_common_media(path: &Path) -> LabResult<Vec<String>> {
+        let mut img = open_image(path)?;
+        let carved = Carver::common_media().carve(img.as_mut(), &mut NullProgress)?;
+        Ok(carved
+            .into_iter()
+            .map(|c| {
+                let sha = if c.sha256.len() >= 16 {
+                    &c.sha256[..16]
+                } else {
+                    &c.sha256
+                };
+                format!(
+                    "{} · {}-{} · {}… · {:?}",
+                    c.signature_name, c.offset_start, c.offset_end, sha, c.confidence
+                )
+            })
+            .collect())
     }
 
     /// Read a hex window from a local evidence path.

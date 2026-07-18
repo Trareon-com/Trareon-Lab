@@ -1,0 +1,58 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { LabButton } from "../components/lab_button.slint";
+import { SectionCard } from "../components/section_card.slint";
+import { MetaRow } from "../components/meta_row.slint";
+
+export component TransferScreen inherits Rectangle {
+    in-out property <string> transfer-status: "";
+    in-out property <string> transfer-trust-label: "";
+    callback export-clicked();
+    callback verify-clicked();
+
+    background: transparent;
+
+    VerticalLayout {
+        padding: Theme.main-pad;
+        spacing: 12px;
+        Text {
+            text: Strings.nav-transfer;
+            color: Theme.text-primary;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        Text {
+            text: "Export a signed package from an open case (Ed25519). Tampered packages verify as Invalid.";
+            color: Theme.text-secondary;
+            font-size: 12px;
+            wrap: word-wrap;
+        }
+        SectionCard {
+            show-title: false;
+            VerticalLayout {
+                spacing: 8px;
+                MetaRow {
+                    label: "Status";
+                    value: root.transfer-status == "" ? "—" : root.transfer-status;
+                }
+                MetaRow {
+                    label: "Trust";
+                    value: root.transfer-trust-label == "" ? "—" : root.transfer-trust-label;
+                }
+                HorizontalLayout {
+                    spacing: 8px;
+                    LabButton {
+                        primary: true;
+                        label: Strings.transfer-export;
+                        clicked => { root.export-clicked(); }
+                    }
+                    LabButton {
+                        primary: false;
+                        label: Strings.transfer-verify;
+                        clicked => { root.verify-clicked(); }
+                    }
+                }
+            }
+        }
+    }
+}

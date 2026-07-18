@@ -14,12 +14,27 @@ fn main() -> Result<(), slint::PlatformError> {
     let apply = |ui: &AppWindow, snap: &UiSnapshot| {
         ui.set_case_title(snap.case_title.clone().into());
         ui.set_case_state_label(snap.case_state.as_str().into());
+        {
+            // ponytail: UTC clock from epoch; local TZ needs a time crate later
+            use std::time::{SystemTime, UNIX_EPOCH};
+            let secs = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .map(|d| d.as_secs())
+                .unwrap_or(0);
+            let h = (secs / 3600) % 24;
+            let m = (secs / 60) % 60;
+            let s = secs % 60;
+            let _ = (h, m, s); // clock folded into last_action / status; keep UTC tick for future
+            ui.set_footer_clock(format!("{h:02}:{m:02}:{s:02} UTC").into());
+        }
         ui.set_evidence_count(snap.evidence_count);
         ui.set_coverage_count(snap.coverage_count);
         ui.set_bookmark_count(snap.bookmark_count);
         ui.set_open_case_focused(snap.open_case_focused);
         ui.set_active_screen(snap.active_screen.label().into());
         ui.set_about_line(snap.about_disclosure.clone().into());
+        ui.set_version_line(format!("Trareon Lab {}", env!("CARGO_PKG_VERSION")).into());
+        ui.set_last_action(snap.last_action.clone().into());
         ui.set_dark_mode(snap.dark_mode);
         ui.set_locale(snap.locale.clone().into());
         ui.set_report_state(snap.report_state.clone().into());
@@ -32,6 +47,29 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.set_list_offset(snap.list_offset);
         ui.set_list_page_size(snap.list_page_size);
         ui.set_hex_status(snap.hex_status.clone().into());
+        ui.set_inspector_tab(snap.inspector_tab.clone().into());
+        ui.set_transfer_status(snap.transfer_status.clone().into());
+        ui.set_transfer_trust_label(snap.transfer_trust_label.clone().into());
+        let cap_ids: Vec<SharedString> = snap
+            .capabilities
+            .iter()
+            .map(|(id, _, _)| id.clone().into())
+            .collect();
+        let cap_st: Vec<SharedString> = snap
+            .capabilities
+            .iter()
+            .map(|(_, st, _)| st.clone().into())
+            .collect();
+        let cap_notes: Vec<SharedString> = snap
+            .capabilities
+            .iter()
+            .map(|(_, _, n)| n.clone().into())
+            .collect();
+        ui.set_capability_ids(ModelRc::new(VecModel::from(cap_ids)));
+        ui.set_capability_statuses(ModelRc::new(VecModel::from(cap_st)));
+        ui.set_capability_notes(ModelRc::new(VecModel::from(cap_notes)));
+        let edges: Vec<SharedString> = snap.graph_edges.iter().map(|s| s.clone().into()).collect();
+        ui.set_graph_edges(ModelRc::new(VecModel::from(edges)));
 
         let blockers: Vec<SharedString> = snap
             .report_blockers
@@ -78,6 +116,10 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.set_evidence_designations(ModelRc::new(VecModel::from(designations)));
 
         ui.set_nav_collapsed(snap.nav_collapsed);
+        ui.set_layout_compact(snap.layout_compact);
+        ui.set_nav_expanded(snap.nav_expanded());
+        ui.set_inspector_as_side(snap.inspector_as_side());
+        ui.set_inspector_as_overlay(snap.inspector_as_overlay());
         ui.set_inspector_open(snap.inspector_open);
         ui.set_log_open(snap.log_open);
         ui.set_palette_open(snap.palette_open);
@@ -86,6 +128,24 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.set_export_status(snap.export_status.clone().into());
         ui.set_placeholder_title(snap.placeholder_title.clone().into());
         ui.set_placeholder_body(snap.placeholder_body.clone().into());
+        let carve_hits: Vec<SharedString> = snap
+            .carve_hit_lines
+            .iter()
+            .map(|s| s.clone().into())
+            .collect();
+        ui.set_carve_hit_lines(ModelRc::new(VecModel::from(carve_hits)));
+        let qv_meta: Vec<SharedString> = snap
+            .quick_verify_meta_lines
+            .iter()
+            .map(|s| s.clone().into())
+            .collect();
+        ui.set_quick_verify_meta_lines(ModelRc::new(VecModel::from(qv_meta)));
+        let qv_tl: Vec<SharedString> = snap
+            .quick_verify_timeline_lines
+            .iter()
+            .map(|s| s.clone().into())
+            .collect();
+        ui.set_quick_verify_timeline_lines(ModelRc::new(VecModel::from(qv_tl)));
 
         let exceptions: Vec<SharedString> = snap
             .exception_lines
@@ -209,6 +269,11 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.set_progress_message(snap.progress_message.clone().into());
         ui.set_progress_visible(snap.progress_visible);
     };
+    {
+        let mut snap = snapshot.borrow_mut();
+        let w = ui.window().size().width as i32;
+        snap.apply_layout_width(if w > 0 { w } else { 1280 });
+    }
     apply(&ui, &snapshot.borrow());
 
     let ui_weak = ui.as_weak();
@@ -369,6 +434,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 let (start, _) = snap.page_slice_indices();
                 let abs = start + index as usize;
                 snap.select_file(abs);
+                snap.inspector_open = true;
                 let path = snap
                     .evidence_files
                     .get(abs)
@@ -433,7 +499,9 @@ fn main() -> Result<(), slint::PlatformError> {
                 .selected_file_index
                 .and_then(|i| snap.evidence_files.get(i).map(|f| f.name.clone()))
                 .unwrap_or_else(|| "related".into());
+            snap.add_graph_edge(&q, "related-search");
             snap.set_search(q, Vec::new());
+            snap.push_log("find related · edge recorded");
             apply(&ui, &snap);
         }
     });
@@ -482,6 +550,21 @@ fn main() -> Result<(), slint::PlatformError> {
             if c == "Import Evidence" {
                 drop(snap);
                 ui.invoke_import_evidence_clicked();
+                return;
+            }
+            if c == "Quick Verify" {
+                drop(snap);
+                ui.invoke_quick_verify_clicked();
+                return;
+            }
+            if c == "Load Demo Case" {
+                drop(snap);
+                ui.invoke_load_demo_clicked();
+                return;
+            }
+            if c == "Run Carving" {
+                drop(snap);
+                ui.invoke_run_carving_clicked();
                 return;
             }
             snap.activate_palette_command(&c);
@@ -585,6 +668,109 @@ fn main() -> Result<(), slint::PlatformError> {
     });
 
     let ui_weak = ui.as_weak();
+    let snap_tv = Rc::clone(&snapshot);
+    let sess_tv = Rc::clone(&session);
+    ui.on_transfer_verify_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_tv.borrow_mut();
+            if let Some(sess) = sess_tv.borrow().as_ref() {
+                match sess.verify_last_transfer_tampered() {
+                    Ok(()) => {
+                        snap.transfer_trust_label = "Invalid (tamper detected as expected)".into();
+                        snap.transfer_status = "tamper check complete".into();
+                        snap.push_log("transfer verify · tamper rejected (ok)");
+                    }
+                    Err(e) => {
+                        snap.transfer_status = format!("verify failed: {e:?}");
+                        snap.push_log(format!("transfer verify failed: {e:?}"));
+                    }
+                }
+            } else {
+                snap.transfer_status = "verify: open a case / export first".into();
+            }
+            snap.navigate_to(NavScreen::Transfer);
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_tab = Rc::clone(&snapshot);
+    ui.on_inspector_tab_changed(move |tab| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_tab.borrow_mut();
+            snap.inspector_tab = tab.to_string();
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_hp = Rc::clone(&snapshot);
+    let sess_hp = Rc::clone(&session);
+    ui.on_hex_prev_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_hp.borrow_mut();
+            snap.step_hex_offset(-256);
+            if let (Some(idx), Some(sess)) = (snap.selected_file_index, sess_hp.borrow().as_ref()) {
+                if let Some(path) = snap.evidence_files.get(idx).map(|f| f.path.clone()) {
+                    if !path.is_empty() {
+                        match sess.read_hex(std::path::Path::new(&path), snap.hex_offset, 256) {
+                            Ok((lines, status)) => {
+                                snap.hex_lines = lines;
+                                snap.hex_status = status;
+                            }
+                            Err(e) => {
+                                snap.hex_lines =
+                                    vec![format!("Error/Limited — hex read failed: {e:?}")];
+                                snap.hex_status = "Error/Limited".into();
+                            }
+                        }
+                    }
+                }
+            }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_hn = Rc::clone(&snapshot);
+    let sess_hn = Rc::clone(&session);
+    ui.on_hex_next_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_hn.borrow_mut();
+            snap.step_hex_offset(256);
+            if let (Some(idx), Some(sess)) = (snap.selected_file_index, sess_hn.borrow().as_ref()) {
+                if let Some(path) = snap.evidence_files.get(idx).map(|f| f.path.clone()) {
+                    if !path.is_empty() {
+                        match sess.read_hex(std::path::Path::new(&path), snap.hex_offset, 256) {
+                            Ok((lines, status)) => {
+                                snap.hex_lines = lines;
+                                snap.hex_status = status;
+                            }
+                            Err(e) => {
+                                snap.hex_lines =
+                                    vec![format!("Error/Limited — hex read failed: {e:?}")];
+                                snap.hex_status = "Error/Limited".into();
+                            }
+                        }
+                    }
+                }
+            }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_po = Rc::clone(&snapshot);
+    ui.on_hex_popout_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_po.borrow_mut();
+            snap.navigate_to(NavScreen::Hex);
+            snap.inspector_tab = "hex".into();
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
     let snap_it = Rc::clone(&snapshot);
     ui.on_import_timeline_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
@@ -636,6 +822,208 @@ fn main() -> Result<(), slint::PlatformError> {
         snapshot.borrow_mut().prefs_last_case = prev.trim().to_string();
     }
     apply(&ui, &snapshot.borrow());
+
+    // Quick Verify: ephemeral case + hash + common-media carve.
+    let ui_weak = ui.as_weak();
+    let snap_qv = Rc::clone(&snapshot);
+    let sess_qv = Rc::clone(&session);
+    ui.on_quick_verify_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_qv.borrow_mut();
+            let path = std::env::var_os("TRAREON_QUICK_VERIFY_PATH")
+                .map(PathBuf::from)
+                .or_else(|| {
+                    rfd::FileDialog::new()
+                        .set_title("Quick Verify — pick a file")
+                        .pick_file()
+                });
+            let Some(path) = path else {
+                snap.push_log("quick verify cancelled");
+                apply(&ui, &snap);
+                return;
+            };
+            if let Some(prev) = snap.ephemeral_case_dir.take() {
+                let _ = std::fs::remove_dir_all(&prev);
+            }
+            let temp = std::env::temp_dir().join(format!(
+                "trareon-quick-verify-{}",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0)
+            ));
+            let _ = std::fs::create_dir_all(&temp);
+            match LabSession::open_or_create(&temp) {
+                Ok(mut sess) => {
+                    if let Err(e) = sess.import_image(&path) {
+                        snap.push_log(format!("quick verify import: {e:?}"));
+                        apply(&ui, &snap);
+                        return;
+                    }
+                    let meta = std::fs::metadata(&path).ok();
+                    let size = meta.as_ref().map(|m| m.len()).unwrap_or(0);
+                    let mtime = meta
+                        .and_then(|m| m.modified().ok())
+                        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                        .map(|d| d.as_secs())
+                        .unwrap_or(0);
+                    let file_sha = {
+                        use sha2::{Digest, Sha256};
+                        match std::fs::read(&path) {
+                            Ok(bytes) if bytes.len() as u64 <= 64 * 1024 * 1024 => {
+                                let mut h = Sha256::new();
+                                h.update(&bytes);
+                                hex::encode(h.finalize())
+                            }
+                            Ok(_) => "sha256 deferred (file >64MiB)".into(),
+                            Err(e) => format!("sha256 error: {e}"),
+                        }
+                    };
+                    snap.quick_verify_meta_lines = vec![
+                        format!("path · {}", path.display()),
+                        format!("size · {size} bytes"),
+                        format!("sha256 · {file_sha}"),
+                        "banner · ephemeral · not a custody case".into(),
+                    ];
+                    snap.quick_verify_timeline_lines =
+                        vec![format!("host mtime · {mtime}Z (no FS timeline fabricated)")];
+                    match LabSession::carve_common_media(&path) {
+                        Ok(hits) => {
+                            let n = hits.len();
+                            snap.carve_hit_lines = hits;
+                            snap.push_log(format!("quick verify · {n} carve hit(s)"));
+                        }
+                        Err(e) => {
+                            snap.carve_hit_lines = vec![format!("carve Limited: {e:?}")];
+                            snap.push_log(format!("quick verify carve: {e:?}"));
+                        }
+                    }
+                    let _ = sess.sync_snapshot(&mut snap);
+                    snap.case_title = format!("QV · {}", path.display());
+                    snap.ephemeral_case_dir = Some(temp.display().to_string());
+                    snap.navigate_to(NavScreen::QuickVerify);
+                    *sess_qv.borrow_mut() = Some(sess);
+                }
+                Err(e) => snap.push_log(format!("quick verify case: {e:?}")),
+            }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_demo = Rc::clone(&snapshot);
+    let sess_demo = Rc::clone(&session);
+    ui.on_load_demo_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_demo.borrow_mut();
+            let demo = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../testdata/demo/demo-disk.dd")
+                .canonicalize()
+                .unwrap_or_else(|_| {
+                    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                        .join("../../testdata/demo/demo-disk.dd")
+                });
+            if !demo.is_file() {
+                snap.push_log(format!("demo missing: {}", demo.display()));
+                apply(&ui, &snap);
+                return;
+            }
+            let temp = std::env::temp_dir().join(format!(
+                "trareon-demo-{}",
+                std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0)
+            ));
+            let _ = std::fs::create_dir_all(&temp);
+            match LabSession::open_or_create(&temp) {
+                Ok(mut sess) => match sess.import_image(&demo) {
+                    Ok(()) => {
+                        let _ = sess.sync_snapshot(&mut snap);
+                        snap.case_title = "DEMO · demo-disk.dd".into();
+                        if let Ok(hits) = LabSession::carve_common_media(&demo) {
+                            snap.carve_hit_lines = hits;
+                        }
+                        snap.push_log("demo case loaded · UNSIGNED · lab use only");
+                        snap.navigate_to(NavScreen::Evidence);
+                        *sess_demo.borrow_mut() = Some(sess);
+                    }
+                    Err(e) => snap.push_log(format!("demo import: {e:?}")),
+                },
+                Err(e) => snap.push_log(format!("demo case: {e:?}")),
+            }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_carve = Rc::clone(&snapshot);
+    let sess_carve = Rc::clone(&session);
+    ui.on_run_carving_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_carve.borrow_mut();
+            let path = snap
+                .selected_file()
+                .map(|f| PathBuf::from(&f.path))
+                .or_else(|| snap.evidence_files.first().map(|f| PathBuf::from(&f.path)));
+            let Some(path) = path else {
+                snap.push_log("carve: no evidence path");
+                apply(&ui, &snap);
+                return;
+            };
+            if sess_carve.borrow().is_none() {
+                snap.push_log("carve: open a case first");
+                apply(&ui, &snap);
+                return;
+            }
+            snap.set_progress("carve", 0, Some(1), "signature carve");
+            match LabSession::carve_common_media(&path) {
+                Ok(hits) => {
+                    let n = hits.len();
+                    snap.artifact_hits = hits
+                        .iter()
+                        .take(200)
+                        .map(|line| lab_slint::ArtifactHitRow {
+                            kind: "carve".into(),
+                            summary: line.clone(),
+                            provenance_ref: path.display().to_string(),
+                            claim_type: lab_core::ClaimType::Indication,
+                            uncertainty: "signature carve".into(),
+                        })
+                        .collect();
+                    snap.carve_hit_lines = hits;
+                    snap.set_progress("carve", 1, Some(1), format!("{n} hit(s)"));
+                    snap.push_log(format!("carve · {n} hit(s) on {}", path.display()));
+                }
+                Err(e) => {
+                    snap.carve_hit_lines = vec![format!("carve Limited: {e:?}")];
+                    snap.clear_progress();
+                    snap.push_log(format!("carve: {e:?}"));
+                }
+            }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_disc = Rc::clone(&snapshot);
+    let sess_disc = Rc::clone(&session);
+    ui.on_discard_ephemeral_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_disc.borrow_mut();
+            if let Some(dir) = snap.ephemeral_case_dir.take() {
+                let _ = std::fs::remove_dir_all(&dir);
+                snap.push_log(format!("discarded ephemeral · {dir}"));
+            }
+            *sess_disc.borrow_mut() = None;
+            snap.carve_hit_lines.clear();
+            snap.quick_verify_meta_lines.clear();
+            snap.quick_verify_timeline_lines.clear();
+            snap.open_case("(no case)", 0, 0);
+            snap.navigate_to(NavScreen::CaseHome);
+            apply(&ui, &snap);
+        }
+    });
 
     ui.invoke_focus_open_case();
 

@@ -31,7 +31,7 @@ fn navigation_covers_examination_screens() {
     snap.set_bookmark_count(2);
 
     let expected = NavScreen::all();
-    assert_eq!(expected.len(), 16);
+    assert_eq!(expected.len(), 17);
 
     for &screen in expected {
         snap.navigate_to(screen);

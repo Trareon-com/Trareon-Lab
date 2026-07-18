@@ -2,15 +2,23 @@ import { Theme } from "../theme.slint";
 
 export component LabButton inherits Rectangle {
     in-out property <string> label;
+    in-out property <string> leading: "";
+    in-out property <image> leading-icon;
+    in-out property <bool> has-leading-icon: false;
     in-out property <bool> primary: false;
     in-out property <bool> enabled: true;
+    /// Acquire-style full-width primary CTA (e.g. START).
+    in-out property <bool> prominent: false;
     callback clicked();
 
-    height: 32px;
+    height: root.prominent ? 48px : 32px;
     min-width: 96px;
-    border-radius: 4px;
-    border-width: primary ? 0px : 1px;
-    border-color: Theme.border;
+    horizontal-stretch: root.prominent ? 1 : 0;
+    border-radius: 6px;
+    border-width: 1px;
+    border-color: !enabled ? Theme.border
+        : primary ? Theme.accent
+        : Theme.border;
     background: !enabled ? Theme.surface-raised
         : primary ? Theme.accent
         : Theme.surface;
@@ -19,12 +27,29 @@ export component LabButton inherits Rectangle {
     HorizontalLayout {
         padding-left: 14px;
         padding-right: 14px;
+        spacing: 8px;
         alignment: center;
+        if root.has-leading-icon: Image {
+            width: 18px;
+            height: 18px;
+            source: root.leading-icon;
+            colorize: root.primary && root.enabled ? Theme.on-accent : Theme.text-primary;
+            image-fit: contain;
+            vertical-alignment: center;
+        }
+        if !root.has-leading-icon && root.leading != "": Text {
+            text: root.leading;
+            color: root.primary && root.enabled ? Theme.on-accent : Theme.text-primary;
+            font-size: root.prominent ? 15px : 12px;
+            vertical-alignment: center;
+        }
         Text {
             text: root.label;
             color: root.primary && root.enabled ? Theme.on-accent : Theme.text-primary;
-            font-size: 12px;
-            font-weight: 600;
+            font-family: Theme.font-ui;
+            font-size: root.prominent ? 13px : 12px;
+            font-weight: root.prominent ? 800 : 600;
+            letter-spacing: root.prominent ? 0.5px : 0px;
             vertical-alignment: center;
             horizontal-alignment: center;
         }
@@ -42,7 +67,8 @@ export component LabButton inherits Rectangle {
             background: Theme.row-hover;
         }
         hover-primary when ta.has-hover && root.enabled && root.primary: {
-            background: Theme.accent-muted;
+            background: Theme.accent-hover;
+            border-color: Theme.accent-hover;
         }
     ]
 }

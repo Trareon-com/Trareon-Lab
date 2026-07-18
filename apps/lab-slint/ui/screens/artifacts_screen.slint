@@ -1,0 +1,77 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { EmptyState } from "../components/empty_state.slint";
+import { SectionCard } from "../components/section_card.slint";
+
+export component ArtifactsScreen inherits Rectangle {
+    in-out property <[string]> artifact-kinds: [];
+    in-out property <[string]> artifact-summaries: [];
+    in-out property <[string]> artifact-provenances: [];
+    callback go-search-clicked();
+
+    background: transparent;
+    property <bool> has-hits: artifact-kinds.length > 0;
+
+    if !has-hits: EmptyState {
+        title: Strings.nav-artifacts;
+        body: Strings.empty-hint-search;
+        show-cta: true;
+        cta-label: Strings.go-search;
+        cta-clicked => { root.go-search-clicked(); }
+    }
+
+    if has-hits: VerticalLayout {
+        padding: Theme.main-pad;
+        spacing: 8px;
+        Text {
+            text: Strings.nav-artifacts + " · " + artifact-kinds.length + " " + Strings.hits;
+            color: Theme.text-primary;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        SectionCard {
+            show-title: false;
+            vertical-stretch: 1;
+            Flickable {
+                viewport-width: parent.width;
+                VerticalLayout {
+                    spacing: 4px;
+                    for i in artifact-kinds.length: Rectangle {
+                        height: Theme.row-height + 8px;
+                        background: Theme.surface;
+                        border-radius: 4px;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            spacing: 10px;
+                            Text {
+                                text: artifact-kinds[i];
+                                color: Theme.accent;
+                                font-size: 11px;
+                                font-weight: 700;
+                                vertical-alignment: center;
+                                min-width: 80px;
+                            }
+                            Text {
+                                text: artifact-summaries[i];
+                                color: Theme.text-primary;
+                                font-size: 12px;
+                                vertical-alignment: center;
+                                horizontal-stretch: 1;
+                                overflow: elide;
+                            }
+                            Text {
+                                text: artifact-provenances[i];
+                                color: Theme.text-secondary;
+                                font-size: 10px;
+                                vertical-alignment: center;
+                                max-width: 180px;
+                                overflow: elide;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

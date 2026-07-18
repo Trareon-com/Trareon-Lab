@@ -1,0 +1,172 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { ProgressIndicator } from "std-widgets.slint";
+
+component ToggleChip inherits Rectangle {
+    in-out property <string> label;
+    in-out property <bool> active: false;
+    callback clicked();
+    height: 22px;
+    border-radius: Theme.chip-radius;
+    background: root.active ? Theme.accent-muted : Theme.surface;
+    border-width: 1px;
+    border-color: root.active ? Theme.accent : Theme.border;
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        Text {
+            text: root.label;
+            color: root.active ? Theme.accent : Theme.text-secondary;
+            font-family: Theme.font-ui;
+            font-size: 10px;
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+    }
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+/// Ambient status 30px — counts · progress · Log / Inspector toggles.
+export component LabStatusBar inherits Rectangle {
+    in-out property <int> evidence-count: 0;
+    in-out property <int> coverage-count: 0;
+    in-out property <int> bookmark-count: 0;
+    in-out property <string> last-action: "";
+    in-out property <string> clock: "";
+    in-out property <bool> progress-visible: false;
+    in-out property <float> progress-ratio: 0.0;
+    in-out property <string> progress-stage: "";
+    in-out property <string> progress-message: "";
+    in-out property <bool> nav-expanded: false;
+    in-out property <bool> log-open: false;
+    in-out property <bool> inspector-open: false;
+    callback toggle-nav-clicked();
+    callback toggle-log-clicked();
+    callback toggle-inspector-clicked();
+    callback cancel-progress-clicked();
+
+    height: Theme.status-height;
+    background: Theme.status-bar-bg;
+
+    VerticalLayout {
+        spacing: 0px;
+        Rectangle { height: 1px; background: Theme.border; }
+        HorizontalLayout {
+            padding-left: 12px;
+            padding-right: 10px;
+            spacing: 12px;
+            alignment: center;
+
+            HorizontalLayout {
+                spacing: 6px;
+                Text {
+                    text: "●";
+                    color: Theme.success;
+                    font-size: 9px;
+                    vertical-alignment: center;
+                }
+                Text {
+                    text: Strings.system-healthy;
+                    color: Theme.success;
+                    font-family: Theme.font-ui;
+                    font-size: 11px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                }
+            }
+
+            Text {
+                text: Strings.status-evidence + " " + root.evidence-count;
+                color: Theme.text-secondary;
+                font-family: Theme.font-ui;
+                font-size: 11px;
+                font-weight: 600;
+                vertical-alignment: center;
+            }
+            Text {
+                text: Strings.status-coverage + " " + root.coverage-count + "%";
+                color: Theme.text-secondary;
+                font-family: Theme.font-ui;
+                font-size: 11px;
+                font-weight: 600;
+                vertical-alignment: center;
+            }
+            Text {
+                text: "★ " + root.bookmark-count;
+                color: Theme.text-secondary;
+                font-family: Theme.font-ui;
+                font-size: 11px;
+                font-weight: 600;
+                vertical-alignment: center;
+            }
+
+            if root.last-action != "": Text {
+                text: root.last-action;
+                color: Theme.icon-muted;
+                font-family: Theme.font-ui;
+                font-size: 10px;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+                overflow: elide;
+            }
+            if root.last-action == "": Rectangle { horizontal-stretch: 1; }
+
+            if root.progress-visible: HorizontalLayout {
+                spacing: 8px;
+                ProgressIndicator {
+                    width: 100px;
+                    height: 5px;
+                    progress: root.progress-ratio;
+                }
+                Text {
+                    text: root.progress-stage + " " + root.progress-message;
+                    color: Theme.text-secondary;
+                    font-size: 10px;
+                    vertical-alignment: center;
+                    max-width: 140px;
+                    overflow: elide;
+                }
+                TouchArea {
+                    width: 48px;
+                    height: 18px;
+                    mouse-cursor: pointer;
+                    clicked => { root.cancel-progress-clicked(); }
+                    Text {
+                        text: "Cancel";
+                        color: Theme.text-secondary;
+                        font-size: 10px;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            if root.clock != "": Text {
+                text: root.clock;
+                color: Theme.icon-muted;
+                font-family: "monospace";
+                font-size: 10px;
+                vertical-alignment: center;
+            }
+
+            ToggleChip {
+                label: Strings.toggle-nav;
+                active: root.nav-expanded;
+                clicked => { root.toggle-nav-clicked(); }
+            }
+            ToggleChip {
+                label: Strings.toggle-log;
+                active: root.log-open;
+                clicked => { root.toggle-log-clicked(); }
+            }
+            ToggleChip {
+                label: Strings.toggle-inspector;
+                active: root.inspector-open;
+                clicked => { root.toggle-inspector-clicked(); }
+            }
+        }
+    }
+}

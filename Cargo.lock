@@ -3265,6 +3265,7 @@ name = "lab-slint"
 version = "0.1.0"
 dependencies = [
  "hex",
+ "lab-carving",
  "lab-case",
  "lab-core",
  "lab-crypto",
