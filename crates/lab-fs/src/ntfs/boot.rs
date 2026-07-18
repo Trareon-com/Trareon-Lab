@@ -57,7 +57,8 @@ pub fn parse_boot(image: &mut dyn ImageReader) -> LabResult<NtfsBootRecord> {
     let mft_cluster = u64::from_le_bytes(sector[0x30..0x38].try_into().unwrap());
     let mft_mirror_cluster = u64::from_le_bytes(sector[0x38..0x40].try_into().unwrap());
     let clusters_per_mft = sector[0x40] as i8;
-    let mft_record_size = record_size_from_clusters(clusters_per_mft, bytes_per_sector, sectors_per_cluster)?;
+    let mft_record_size =
+        record_size_from_clusters(clusters_per_mft, bytes_per_sector, sectors_per_cluster)?;
     let clusters_per_index = sector[0x44] as i8;
     let index_record_size =
         record_size_from_clusters(clusters_per_index, bytes_per_sector, sectors_per_cluster)?;

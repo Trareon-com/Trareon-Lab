@@ -29,7 +29,10 @@ pub struct BrowserCookie {
 pub mod chrome {
     use super::*;
 
-    pub fn parse_history(path: &std::path::Path, progress: &mut dyn ProgressSink) -> LabResult<Vec<BrowserHistory>> {
+    pub fn parse_history(
+        path: &std::path::Path,
+        progress: &mut dyn ProgressSink,
+    ) -> LabResult<Vec<BrowserHistory>> {
         parse_chromium_history(path, progress)
     }
 
@@ -66,7 +69,10 @@ pub mod chrome {
 pub mod edge {
     use super::*;
 
-    pub fn parse_history(path: &std::path::Path, progress: &mut dyn ProgressSink) -> LabResult<Vec<BrowserHistory>> {
+    pub fn parse_history(
+        path: &std::path::Path,
+        progress: &mut dyn ProgressSink,
+    ) -> LabResult<Vec<BrowserHistory>> {
         // Edge is Chromium-based
         parse_chromium_history(path, progress)
     }
@@ -75,7 +81,10 @@ pub mod edge {
 pub mod firefox {
     use super::*;
 
-    pub fn parse_places(path: &std::path::Path, progress: &mut dyn ProgressSink) -> LabResult<Vec<BrowserHistory>> {
+    pub fn parse_places(
+        path: &std::path::Path,
+        progress: &mut dyn ProgressSink,
+    ) -> LabResult<Vec<BrowserHistory>> {
         progress.report(ProgressEvent::new("browser.firefox", 0, Some(1), "places"));
         let conn = open_ro(path)?;
         let mut stmt = conn
@@ -114,7 +123,12 @@ fn parse_chromium_history(
     path: &std::path::Path,
     progress: &mut dyn ProgressSink,
 ) -> LabResult<Vec<BrowserHistory>> {
-    progress.report(ProgressEvent::new("browser.chromium", 0, Some(1), "history"));
+    progress.report(ProgressEvent::new(
+        "browser.chromium",
+        0,
+        Some(1),
+        "history",
+    ));
     let conn = open_ro(path)?;
     let mut stmt = conn
         .prepare(

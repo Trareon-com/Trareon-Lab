@@ -1,9 +1,10 @@
 import { Theme } from "theme.slint";
 import { Strings } from "strings.slint";
-import { ProgressIndicator } from "std-widgets.slint";
 import { NavItem } from "components/nav_item.slint";
 import { NavGroupLabel } from "components/nav_group_label.slint";
 import { StatusBadge } from "components/status_badge.slint";
+import { InspectorPanel } from "components/inspector_panel.slint";
+import { CommandPalette } from "components/command_palette.slint";
 import { CaseScreen } from "screens/case_screen.slint";
 import { EvidenceScreen } from "screens/evidence_screen.slint";
 import { SearchScreen } from "screens/search_screen.slint";
@@ -15,15 +16,13 @@ component SegmentBtn inherits Rectangle {
     in-out property <string> label;
     in-out property <bool> active: false;
     callback clicked();
-
-    height: 28px;
-    min-width: 40px;
-    border-radius: 4px;
+    height: 26px;
+    min-width: 36px;
+    border-radius: 3px;
     background: active ? Theme.accent : transparent;
-
     HorizontalLayout {
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: 8px;
+        padding-right: 8px;
         Text {
             text: root.label;
             color: root.active ? Theme.on-accent : Theme.text-secondary;
@@ -33,48 +32,32 @@ component SegmentBtn inherits Rectangle {
             horizontal-alignment: center;
         }
     }
-
-    ta := TouchArea {
-        clicked => { root.clicked(); }
-    }
-    states [
-        hover when ta.has-hover && !root.active: { background: Theme.row-hover; }
-    ]
+    ta := TouchArea { clicked => { root.clicked(); } }
+    states [ hover when ta.has-hover && !active: { background: Theme.row-hover; } ]
 }
 
-component HeaderSearchChip inherits Rectangle {
+component IconBtn inherits Rectangle {
+    in-out property <string> label;
+    in-out property <bool> active: false;
     callback clicked();
-    height: 32px;
-    min-width: 220px;
+    height: 28px;
+    min-width: 28px;
     border-radius: 4px;
     border-width: 1px;
     border-color: Theme.border;
-    background: Theme.surface-raised;
-
+    background: active ? Theme.surface-raised : Theme.surface;
     HorizontalLayout {
-        padding-left: 12px;
-        padding-right: 12px;
-        spacing: 8px;
+        padding-left: 8px;
+        padding-right: 8px;
         Text {
-            text: "⌕";
-            color: Theme.text-secondary;
-            vertical-alignment: center;
-        }
-        Text {
-            text: Strings.header-search-hint;
+            text: root.label;
             color: Theme.text-secondary;
             font-size: 12px;
             vertical-alignment: center;
-            overflow: elide;
         }
     }
-
-    ta := TouchArea {
-        clicked => { root.clicked(); }
-    }
-    states [
-        hover when ta.has-hover: { background: Theme.row-hover; }
-    ]
+    ta := TouchArea { clicked => { root.clicked(); } }
+    states [ hover when ta.has-hover: { background: Theme.row-hover; } ]
 }
 
 export component AppWindow inherits Window {
@@ -84,6 +67,7 @@ export component AppWindow inherits Window {
     min-width: 1100px;
     min-height: 680px;
     background: Theme.canvas;
+    forward-focus: keys;
 
     in-out property <string> case-title: "(no case)";
     in-out property <string> case-state-label: "created";
@@ -93,9 +77,24 @@ export component AppWindow inherits Window {
     in-out property <bool> open-case-focused: true;
     in-out property <string> active-screen: "Case";
     in-out property <string> about-line: "";
+    in-out property <string> status-message: "";
     in-out property <bool> dark-mode: true;
     in-out property <string> locale: "en";
     in-out property <bool> prefs-open: false;
+
+    in-out property <bool> nav-collapsed: false;
+    in-out property <bool> inspector-open: true;
+    in-out property <bool> log-open: false;
+    in-out property <bool> palette-open: false;
+    in-out property <string> palette-filter: "";
+    in-out property <[string]> palette-commands: [];
+    in-out property <[string]> log-lines: [];
+
+    in-out property <string> inspector-title: "";
+    in-out property <string> inspector-path: "";
+    in-out property <string> inspector-size: "";
+    in-out property <bool> inspector-deleted: false;
+    in-out property <bool> inspector-has-selection: false;
 
     in-out property <[string]> evidence-names: [];
     in-out property <[string]> evidence-paths: [];
@@ -116,16 +115,11 @@ export component AppWindow inherits Window {
     in-out property <[string]> finding-uuids: [];
     in-out property <string> report-state: "draft";
     in-out property <[string]> activity-lines: [];
-    in-out property <float> progress-ratio: 0.0;
-    in-out property <string> progress-stage: "";
-    in-out property <string> progress-message: "";
-    in-out property <bool> progress-visible: false;
 
     callback open-case-clicked();
     callback focus-open-case();
     callback navigate(string);
     callback import-evidence-clicked();
-    callback cancel-progress-clicked();
     callback theme-toggled(bool);
     callback locale-toggled(string);
     callback search-submitted();
@@ -133,15 +127,16 @@ export component AppWindow inherits Window {
     callback bookmark-selection-clicked();
     callback find-related-clicked();
     callback header-search-clicked();
+    callback shortcut-triggered(string);
+    callback command-activated(string);
+    callback palette-filter-changed(string);
+    callback toggle-nav-clicked();
+    callback toggle-inspector-clicked();
+    callback toggle-log-clicked();
+    callback drop-import-clicked();
 
-    changed dark-mode => {
-        Theme.apply(dark-mode);
-    }
-
-    changed locale => {
-        Strings.locale = locale;
-    }
-
+    changed dark-mode => { Theme.apply(dark-mode); }
+    changed locale => { Strings.locale = locale; }
     init => {
         Theme.apply(dark-mode);
         Strings.locale = locale;
@@ -152,366 +147,411 @@ export component AppWindow inherits Window {
         case-view.focus-open();
     }
 
-    VerticalLayout {
-        Rectangle {
-            height: 49px;
-            background: Theme.surface;
-            VerticalLayout {
-                spacing: 0px;
-                HorizontalLayout {
-                    height: 48px;
-                    padding-left: 14px;
-                    padding-right: 14px;
-                    spacing: 12px;
+    keys := FocusScope {
+        width: 100%;
+        height: 100%;
+        key-pressed(event) => {
+            if event.text == Key.Escape {
+                root.shortcut-triggered("Escape");
+                return accept;
+            }
+            if event.text == "/" {
+                root.shortcut-triggered("/");
+                return accept;
+            }
+            if event.text == "b" && !root.palette-open {
+                root.shortcut-triggered("b");
+                return accept;
+            }
+            if event.text == "1" { root.shortcut-triggered("1"); return accept; }
+            if event.text == "2" { root.shortcut-triggered("2"); return accept; }
+            if event.text == "3" { root.shortcut-triggered("3"); return accept; }
+            if event.text == "4" { root.shortcut-triggered("4"); return accept; }
+            if event.text == "5" { root.shortcut-triggered("5"); return accept; }
+            if event.text == "6" { root.shortcut-triggered("6"); return accept; }
+            if event.modifiers.control && event.text == "k" {
+                root.shortcut-triggered("/");
+                return accept;
+            }
+            if event.modifiers.control && event.text == "o" {
+                root.open-case-clicked();
+                return accept;
+            }
+            if event.modifiers.control && event.text == "i" {
+                root.import-evidence-clicked();
+                return accept;
+            }
+            if event.modifiers.control && event.text == "b" {
+                root.toggle-nav-clicked();
+                return accept;
+            }
+            if event.modifiers.control && event.text == "j" {
+                root.toggle-log-clicked();
+                return accept;
+            }
+            reject
+        }
 
-                    Text {
-                        text: Strings.brand;
-                        color: Theme.text-primary;
-                        font-size: 16px;
-                        font-weight: 700;
-                        vertical-alignment: center;
-                    }
+        VerticalLayout {
+            Rectangle {
+                height: 41px;
+                background: Theme.surface;
+                VerticalLayout {
+                    spacing: 0px;
+                    HorizontalLayout {
+                        height: 40px;
+                        padding-left: 8px;
+                        padding-right: 8px;
+                        spacing: 8px;
 
-                    Rectangle { width: 1px; height: 20px; background: Theme.border; }
-
-                    Text {
-                        text: root.case-title;
-                        color: Theme.mono-fg;
-                        font-family: "monospace";
-                        font-size: 12px;
-                        vertical-alignment: center;
-                        overflow: elide;
-                        horizontal-stretch: 1;
-                    }
-
-                    StatusBadge {
-                        label: root.case-state-label;
-                        kind: "info";
-                    }
-
-                    HeaderSearchChip {
-                        clicked => { root.header-search-clicked(); }
-                    }
-
-                    Rectangle {
-                        height: 32px;
-                        min-width: 36px;
-                        border-radius: 4px;
-                        border-width: 1px;
-                        border-color: Theme.border;
-                        background: root.prefs-open ? Theme.surface-raised : Theme.surface;
                         HorizontalLayout {
-                            padding-left: 10px;
-                            padding-right: 10px;
+                            spacing: 8px;
+                            alignment: center;
+                            Rectangle {
+                                width: 7px; height: 7px; border-radius: 1px;
+                                background: Theme.accent;
+                            }
                             Text {
-                                text: "⚙";
-                                color: Theme.text-secondary;
+                                text: Strings.brand;
+                                color: Theme.text-primary;
+                                font-size: 13px;
+                                font-weight: 700;
                                 vertical-alignment: center;
                             }
                         }
-                        TouchArea {
+
+                        Rectangle { width: 1px; height: 16px; background: Theme.border; }
+
+                        Text {
+                            text: root.case-title == "(no case)" || root.case-title == ""
+                                ? Strings.empty-no-case : root.case-title;
+                            color: Theme.mono-fg;
+                            font-family: "monospace";
+                            font-size: 11px;
+                            vertical-alignment: center;
+                            overflow: elide;
+                            horizontal-stretch: 1;
+                        }
+
+                        StatusBadge {
+                            label: root.case-title == "(no case)" || root.case-title == ""
+                                ? Strings.idle-state : root.case-state-label;
+                            kind: root.case-title == "(no case)" || root.case-title == ""
+                                ? "neutral" : "ok";
+                        }
+
+                        IconBtn {
+                            label: Strings.command-chip;
+                            clicked => { root.header-search-clicked(); }
+                        }
+                        IconBtn {
+                            label: Strings.import-evidence;
+                            clicked => { root.import-evidence-clicked(); }
+                        }
+                        IconBtn {
+                            label: "⚙";
+                            active: root.prefs-open;
                             clicked => { root.prefs-open = !root.prefs-open; }
                         }
                     }
+                    Rectangle { height: 1px; background: Theme.border; }
                 }
-                Rectangle { height: 1px; background: Theme.border; }
             }
-        }
 
-        if root.prefs-open: Rectangle {
-            height: 44px;
-            background: Theme.surface-raised;
-            HorizontalLayout {
-                padding-left: 14px;
-                padding-right: 14px;
-                spacing: 16px;
-                Text {
-                    text: Strings.prefs;
-                    color: Theme.text-secondary;
-                    font-size: 12px;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                }
-                Rectangle {
-                    border-width: 1px;
-                    border-color: Theme.border;
-                    border-radius: 4px;
-                    background: Theme.surface;
-                    HorizontalLayout {
-                        padding: 2px;
-                        spacing: 2px;
-                        SegmentBtn {
-                            label: Strings.lang-id;
-                            active: root.locale == "id";
-                            clicked => {
-                                root.locale = "id";
-                                root.locale-toggled("id");
-                            }
-                        }
-                        SegmentBtn {
-                            label: Strings.lang-en;
-                            active: root.locale == "en";
-                            clicked => {
-                                root.locale = "en";
-                                root.locale-toggled("en");
-                            }
-                        }
-                    }
-                }
-                Rectangle {
-                    border-width: 1px;
-                    border-color: Theme.border;
-                    border-radius: 4px;
-                    background: Theme.surface;
-                    HorizontalLayout {
-                        padding: 2px;
-                        spacing: 2px;
-                        SegmentBtn {
-                            label: Strings.theme-dark;
-                            active: root.dark-mode;
-                            clicked => {
-                                root.dark-mode = true;
-                                root.theme-toggled(true);
-                            }
-                        }
-                        SegmentBtn {
-                            label: Strings.theme-light;
-                            active: !root.dark-mode;
-                            clicked => {
-                                root.dark-mode = false;
-                                root.theme-toggled(false);
-                            }
-                        }
-                    }
-                }
-                Rectangle { horizontal-stretch: 1; }
-            }
-        }
-
-        HorizontalLayout {
-            vertical-stretch: 1;
-
-            Rectangle {
-                width: 201px;
-                background: Theme.surface;
+            if root.prefs-open: Rectangle {
+                height: 36px;
+                background: Theme.surface-raised;
                 HorizontalLayout {
-                    spacing: 0px;
-                    VerticalLayout {
-                        width: 200px;
-                        padding: 10px;
-                        spacing: 2px;
-
-                        NavGroupLabel { label: Strings.nav-group-case; }
-                        NavItem {
-                            glyph: "▣";
-                            label: Strings.nav-case;
-                            active: root.active-screen == "Case";
-                            clicked => { root.navigate("Case"); }
-                        }
-
-                        NavGroupLabel { label: Strings.nav-group-examine; }
-                        NavItem {
-                            glyph: "▤";
-                            label: Strings.nav-evidence;
-                            active: root.active-screen == "Evidence";
-                            clicked => { root.navigate("Evidence"); }
-                        }
-                        NavItem {
-                            glyph: "⌕";
-                            label: Strings.nav-search;
-                            active: root.active-screen == "Search";
-                            clicked => { root.navigate("Search"); }
-                        }
-                        NavItem {
-                            glyph: "⏱";
-                            label: Strings.nav-timeline;
-                            active: root.active-screen == "Timeline";
-                            clicked => { root.navigate("Timeline"); }
-                        }
-
-                        NavGroupLabel { label: Strings.nav-group-work; }
-                        NavItem {
-                            glyph: "★";
-                            label: Strings.nav-bookmarks;
-                            active: root.active-screen == "Bookmarks";
-                            clicked => { root.navigate("Bookmarks"); }
-                        }
-                        NavItem {
-                            glyph: "☰";
-                            label: Strings.nav-report;
-                            active: root.active-screen == "Report";
-                            clicked => { root.navigate("Report"); }
-                        }
-
-                        Rectangle { vertical-stretch: 1; }
-                    }
-                    Rectangle { width: 1px; background: Theme.border; }
-                }
-            }
-
-            Rectangle {
-                background: Theme.canvas;
-                horizontal-stretch: 1;
-                clip: true;
-
-                case-view := CaseScreen {
-                    visible: root.active-screen == "Case";
-                    width: 100%;
-                    height: 100%;
-                    case-title: root.case-title;
-                    case-state-label: root.case-state-label;
-                    evidence-count: root.evidence-count;
-                    coverage-count: root.coverage-count;
-                    bookmark-count: root.bookmark-count;
-                    activity-lines: root.activity-lines;
-                    open-case-clicked => { root.open-case-clicked(); }
-                    import-evidence-clicked => { root.import-evidence-clicked(); }
-                    navigate(s) => { root.navigate(s); }
-                }
-
-                EvidenceScreen {
-                    visible: root.active-screen == "Evidence";
-                    width: 100%;
-                    height: 100%;
-                    evidence-names: root.evidence-names;
-                    evidence-paths: root.evidence-paths;
-                    evidence-sizes: root.evidence-sizes;
-                    evidence-deleted: root.evidence-deleted;
-                    selected-file-index: root.selected-file-index;
-                    filter-text <=> root.evidence-filter;
-                    import-evidence-clicked => { root.import-evidence-clicked(); }
-                    evidence-row-selected(i) => { root.evidence-row-selected(i); }
-                    bookmark-selection-clicked => { root.bookmark-selection-clicked(); }
-                    find-related-clicked => { root.find-related-clicked(); }
-                }
-
-                SearchScreen {
-                    visible: root.active-screen == "Search";
-                    width: 100%;
-                    height: 100%;
-                    search-query <=> root.search-query;
-                    search-results: root.search-results;
-                    artifact-kinds: root.artifact-kinds;
-                    artifact-summaries: root.artifact-summaries;
-                    artifact-provenances: root.artifact-provenances;
-                    search-attempted <=> root.search-attempted;
-                    search-submitted => { root.search-submitted(); }
-                    query-changed(q) => { root.search-query = q; }
-                    open-in-evidence-clicked => { root.navigate("Evidence"); }
-                    bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
-                }
-
-                TimelineScreen {
-                    visible: root.active-screen == "Timeline";
-                    width: 100%;
-                    height: 100%;
-                    timeline-labels: root.timeline-labels;
-                    jump-evidence-clicked => { root.navigate("Evidence"); }
-                    bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
-                }
-
-                BookmarksScreen {
-                    visible: root.active-screen == "Bookmarks";
-                    width: 100%;
-                    height: 100%;
-                    finding-claims: root.finding-claims;
-                    finding-uuids: root.finding-uuids;
-                    bookmark-count: root.bookmark-count;
-                    navigate-report => { root.navigate("Report"); }
-                }
-
-                ReportScreen {
-                    visible: root.active-screen == "Report";
-                    width: 100%;
-                    height: 100%;
-                    report-state: root.report-state;
-                    finding-claims: root.finding-claims;
-                    finding-uuids: root.finding-uuids;
-                    about-line: root.about-line;
-                }
-            }
-        }
-
-        Rectangle {
-            height: root.progress-visible ? 57px : 29px;
-            background: Theme.status-bar-bg;
-            VerticalLayout {
-                spacing: 0px;
-                Rectangle { height: 1px; background: Theme.border; }
-                if root.progress-visible: HorizontalLayout {
-                    height: 28px;
-                    padding-left: 14px;
-                    padding-right: 14px;
+                    padding-left: 8px;
+                    padding-right: 8px;
                     spacing: 12px;
                     Text {
-                        text: root.progress-stage + " — " + root.progress-message;
+                        text: Strings.prefs;
                         color: Theme.text-secondary;
                         font-size: 11px;
+                        font-weight: 600;
                         vertical-alignment: center;
-                        overflow: elide;
-                        horizontal-stretch: 1;
-                    }
-                    ProgressIndicator {
-                        width: 140px;
-                        height: 6px;
-                        progress: root.progress-ratio;
-                        indeterminate: root.progress-ratio <= 0.0 && root.progress-stage != "";
                     }
                     Rectangle {
-                        height: 22px;
-                        min-width: 56px;
-                        border-radius: 4px;
-                        border-width: 1px;
-                        border-color: Theme.border;
+                        border-width: 1px; border-color: Theme.border; border-radius: 3px;
+                        background: Theme.surface;
                         HorizontalLayout {
-                            padding-left: 8px;
-                            padding-right: 8px;
-                            Text {
-                                text: "Cancel";
-                                color: Theme.text-secondary;
-                                font-size: 11px;
-                                vertical-alignment: center;
+                            padding: 2px; spacing: 2px;
+                            SegmentBtn {
+                                label: Strings.lang-id;
+                                active: root.locale == "id";
+                                clicked => { root.locale = "id"; root.locale-toggled("id"); }
+                            }
+                            SegmentBtn {
+                                label: Strings.lang-en;
+                                active: root.locale == "en";
+                                clicked => { root.locale = "en"; root.locale-toggled("en"); }
                             }
                         }
-                        TouchArea {
-                            clicked => { root.cancel-progress-clicked(); }
+                    }
+                    Rectangle {
+                        border-width: 1px; border-color: Theme.border; border-radius: 3px;
+                        background: Theme.surface;
+                        HorizontalLayout {
+                            padding: 2px; spacing: 2px;
+                            SegmentBtn {
+                                label: Strings.theme-dark;
+                                active: root.dark-mode;
+                                clicked => { root.dark-mode = true; root.theme-toggled(true); }
+                            }
+                            SegmentBtn {
+                                label: Strings.theme-light;
+                                active: !root.dark-mode;
+                                clicked => { root.dark-mode = false; root.theme-toggled(false); }
+                            }
                         }
                     }
+                    Rectangle { horizontal-stretch: 1; }
                 }
-                HorizontalLayout {
-                    height: 28px;
-                    padding-left: 14px;
-                    padding-right: 14px;
-                    spacing: 16px;
-                    Text {
-                        text: Strings.status-evidence + ": \{root.evidence-count}";
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        vertical-alignment: center;
+            }
+
+            HorizontalLayout {
+                vertical-stretch: 1;
+
+                // Nav rail
+                Rectangle {
+                    width: root.nav-collapsed ? 49px : 181px;
+                    background: Theme.surface;
+                    HorizontalLayout {
+                        spacing: 0px;
+                        VerticalLayout {
+                            width: root.nav-collapsed ? 48px : 180px;
+                            padding: 6px;
+                            spacing: 2px;
+
+                            if !root.nav-collapsed: NavGroupLabel { label: Strings.nav-group-case; }
+                            NavItem {
+                                glyph: "⌂";
+                                label: Strings.nav-case;
+                                collapsed: root.nav-collapsed;
+                                active: root.active-screen == "Case";
+                                clicked => { root.navigate("Case"); }
+                            }
+
+                            if !root.nav-collapsed: NavGroupLabel { label: Strings.nav-group-examine; }
+                            NavItem {
+                                glyph: "▣";
+                                label: Strings.nav-evidence;
+                                collapsed: root.nav-collapsed;
+                                active: root.active-screen == "Evidence";
+                                clicked => { root.navigate("Evidence"); }
+                            }
+                            NavItem {
+                                glyph: "⌕";
+                                label: Strings.nav-search;
+                                collapsed: root.nav-collapsed;
+                                active: root.active-screen == "Search";
+                                clicked => { root.navigate("Search"); }
+                            }
+                            NavItem {
+                                glyph: "◷";
+                                label: Strings.nav-timeline;
+                                collapsed: root.nav-collapsed;
+                                active: root.active-screen == "Timeline";
+                                clicked => { root.navigate("Timeline"); }
+                            }
+
+                            if !root.nav-collapsed: NavGroupLabel { label: Strings.nav-group-work; }
+                            NavItem {
+                                glyph: "★";
+                                label: Strings.nav-bookmarks;
+                                collapsed: root.nav-collapsed;
+                                active: root.active-screen == "Bookmarks";
+                                clicked => { root.navigate("Bookmarks"); }
+                            }
+                            NavItem {
+                                glyph: "▤";
+                                label: Strings.nav-report;
+                                collapsed: root.nav-collapsed;
+                                active: root.active-screen == "Report";
+                                clicked => { root.navigate("Report"); }
+                            }
+
+                            Rectangle { vertical-stretch: 1; }
+                            IconBtn {
+                                label: root.nav-collapsed ? "»" : "«";
+                                clicked => { root.toggle-nav-clicked(); }
+                            }
+                        }
+                        Rectangle { width: 1px; background: Theme.border; }
                     }
-                    Text {
-                        text: Strings.status-coverage + ": \{root.coverage-count}";
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        vertical-alignment: center;
+                }
+
+                // Main
+                Rectangle {
+                    background: Theme.canvas;
+                    horizontal-stretch: 1;
+                    clip: true;
+
+                    case-view := CaseScreen {
+                        visible: root.active-screen == "Case";
+                        width: 100%; height: 100%;
+                        case-title: root.case-title;
+                        case-state-label: root.case-state-label;
+                        evidence-count: root.evidence-count;
+                        coverage-count: root.coverage-count;
+                        bookmark-count: root.bookmark-count;
+                        activity-lines: root.activity-lines;
+                        open-case-clicked => { root.open-case-clicked(); }
+                        import-evidence-clicked => { root.import-evidence-clicked(); }
+                        navigate(s) => { root.navigate(s); }
                     }
-                    Text {
-                        text: Strings.status-bookmarks + ": \{root.bookmark-count}";
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        vertical-alignment: center;
+
+                    EvidenceScreen {
+                        visible: root.active-screen == "Evidence";
+                        width: 100%; height: 100%;
+                        evidence-names: root.evidence-names;
+                        evidence-paths: root.evidence-paths;
+                        evidence-sizes: root.evidence-sizes;
+                        evidence-deleted: root.evidence-deleted;
+                        selected-file-index: root.selected-file-index;
+                        filter-text <=> root.evidence-filter;
+                        import-evidence-clicked => { root.import-evidence-clicked(); }
+                        evidence-row-selected(i) => { root.evidence-row-selected(i); }
+                        drop-import-clicked => { root.drop-import-clicked(); }
                     }
-                    Text {
-                        text: Strings.shortcuts-hint;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        vertical-alignment: center;
-                        horizontal-stretch: 1;
-                        overflow: elide;
-                        horizontal-alignment: right;
+
+                    SearchScreen {
+                        visible: root.active-screen == "Search";
+                        width: 100%; height: 100%;
+                        search-query <=> root.search-query;
+                        search-results: root.search-results;
+                        artifact-kinds: root.artifact-kinds;
+                        artifact-summaries: root.artifact-summaries;
+                        artifact-provenances: root.artifact-provenances;
+                        search-attempted <=> root.search-attempted;
+                        search-submitted => { root.search-submitted(); }
+                        query-changed(q) => { root.search-query = q; }
+                        open-in-evidence-clicked => { root.navigate("Evidence"); }
+                        bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
+                    }
+
+                    TimelineScreen {
+                        visible: root.active-screen == "Timeline";
+                        width: 100%; height: 100%;
+                        timeline-labels: root.timeline-labels;
+                        jump-evidence-clicked => { root.navigate("Evidence"); }
+                        bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
+                    }
+
+                    BookmarksScreen {
+                        visible: root.active-screen == "Bookmarks";
+                        width: 100%; height: 100%;
+                        finding-claims: root.finding-claims;
+                        finding-uuids: root.finding-uuids;
+                        bookmark-count: root.bookmark-count;
+                        navigate-report => { root.navigate("Report"); }
+                    }
+
+                    ReportScreen {
+                        visible: root.active-screen == "Report";
+                        width: 100%; height: 100%;
+                        report-state: root.report-state;
+                        finding-claims: root.finding-claims;
+                        finding-uuids: root.finding-uuids;
+                        about-line: root.about-line;
+                    }
+                }
+
+                // Inspector
+                if root.inspector-open: InspectorPanel {
+                    width: 300px;
+                    title: root.inspector-title;
+                    path: root.inspector-path;
+                    size-label: root.inspector-size;
+                    deleted: root.inspector-deleted;
+                    has-selection: root.inspector-has-selection;
+                    bookmark-clicked => { root.bookmark-selection-clicked(); }
+                    find-related-clicked => { root.find-related-clicked(); }
+                    close-clicked => { root.toggle-inspector-clicked(); }
+                }
+            }
+
+            // Status + optional log
+            Rectangle {
+                background: Theme.status-bar-bg;
+                VerticalLayout {
+                    spacing: 0px;
+                    if root.log-open: Rectangle {
+                        height: 96px;
+                        VerticalLayout {
+                            padding: 6px;
+                            spacing: 2px;
+                            for line in root.log-lines: Text {
+                                text: line;
+                                color: Theme.mono-fg;
+                                font-family: "monospace";
+                                font-size: 11px;
+                                overflow: elide;
+                            }
+                        }
+                    }
+                    Rectangle { height: 1px; background: Theme.border; }
+                    HorizontalLayout {
+                        height: 26px;
+                        padding-left: 8px;
+                        padding-right: 8px;
+                        spacing: 10px;
+                        Text {
+                            text: Strings.status-evidence + ": \{root.evidence-count}";
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            text: Strings.status-coverage + ": \{root.coverage-count}";
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            text: Strings.status-bookmarks + ": \{root.bookmark-count}";
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            text: root.status-message;
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                            overflow: elide;
+                        }
+                        IconBtn {
+                            label: Strings.toggle-inspector;
+                            active: root.inspector-open;
+                            clicked => { root.toggle-inspector-clicked(); }
+                        }
+                        IconBtn {
+                            label: Strings.toggle-log;
+                            active: root.log-open;
+                            clicked => { root.toggle-log-clicked(); }
+                        }
+                        Text {
+                            text: Strings.shortcuts-hint;
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                        }
                     }
                 }
             }
+        }
+
+        if root.palette-open: CommandPalette {
+            width: 100%;
+            height: 100%;
+            filter <=> root.palette-filter;
+            commands: root.palette-commands;
+            filter-changed(t) => { root.palette-filter-changed(t); }
+            command-activated(c) => { root.command-activated(c); }
+            dismissed => { root.shortcut-triggered("Escape"); }
         }
     }
 }

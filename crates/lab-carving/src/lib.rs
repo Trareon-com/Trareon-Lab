@@ -86,7 +86,8 @@ impl Carver {
                                 continue;
                             }
                         } else {
-                            let end = (start + sig.max_size.min(data.len() - start)).min(data.len());
+                            let end =
+                                (start + sig.max_size.min(data.len() - start)).min(data.len());
                             (end, CarveConfidence::Medium)
                         }
                     }

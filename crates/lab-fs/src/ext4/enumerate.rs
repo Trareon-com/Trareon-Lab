@@ -36,7 +36,16 @@ pub fn enumerate_ext4(
     // Root inode is #2
     let root = read_inode(image, &sb, inode_table_block, 2)?;
     let mut out = Vec::new();
-    walk_dir(image, &sb, inode_table_block, &root, "/", &mut out, progress, 0)?;
+    walk_dir(
+        image,
+        &sb,
+        inode_table_block,
+        &root,
+        "/",
+        &mut out,
+        progress,
+        0,
+    )?;
     Ok(out)
 }
 
@@ -53,8 +62,7 @@ fn read_inode(
     ino: u32,
 ) -> LabResult<Inode> {
     let index = ino - 1;
-    let off = inode_table_block as u64 * sb.block_size as u64
-        + index as u64 * sb.inode_size as u64;
+    let off = inode_table_block as u64 * sb.block_size as u64 + index as u64 * sb.inode_size as u64;
     let mut buf = vec![0u8; sb.inode_size as usize];
     image.read_at(off, &mut buf)?;
     let mode = u16::from_le_bytes(buf[0..2].try_into().unwrap());
@@ -69,6 +77,7 @@ fn read_inode(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn walk_dir(
     image: &mut dyn ImageReader,
     sb: &crate::ext4::superblock::Ext4Superblock,
@@ -99,12 +108,12 @@ fn walk_dir(
             if inode_nr != 0 && name_len > 0 && off + 8 + name_len <= buf.len() {
                 let name = String::from_utf8_lossy(&buf[off + 8..off + 8 + name_len]).into_owned();
                 if name != "." && name != ".." {
-                    let kind = if file_type == 2 || (inode.mode & 0xF000 == 0x4000 && file_type == 0)
-                    {
-                        FsEntryKind::Directory
-                    } else {
-                        FsEntryKind::File
-                    };
+                    let kind =
+                        if file_type == 2 || (inode.mode & 0xF000 == 0x4000 && file_type == 0) {
+                            FsEntryKind::Directory
+                        } else {
+                            FsEntryKind::File
+                        };
                     // Prefer file_type for dirs
                     let kind = if file_type == 2 {
                         FsEntryKind::Directory

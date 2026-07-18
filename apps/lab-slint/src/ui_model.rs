@@ -87,6 +87,12 @@ pub struct UiSnapshot {
     pub about_disclosure: String,
     pub dark_mode: bool,
     pub locale: String,
+    /// Workbench chrome (desktop UX redesign).
+    pub nav_collapsed: bool,
+    pub inspector_open: bool,
+    pub log_open: bool,
+    pub palette_open: bool,
+    pub log_lines: Vec<String>,
     pub progress_ratio: f64,
     pub progress_stage: String,
     pub progress_message: String,
@@ -117,9 +123,14 @@ impl Default for UiSnapshot {
             transfer_status: String::new(),
             second_method_count: 0,
             blind_pt_status: "none".into(),
-            about_disclosure: "SBOM: release-evidence/sbom/; licenses: docs/DEPENDENCY-AND-LICENSE-POLICY.md; notes: docs/user/RELEASE-NOTES-1.0.0.md".into(),
+            about_disclosure: "Trareon Lab v1 · offline case DB · raw/dd import + hash/provenance · path/name/hash search · bookmarks · unsigned builds — see docs/SELLING-UNSIGNED.md · NOT court-ready / NOT ISO-accredited".into(),
             dark_mode: true,
             locale: "en".into(),
+            nav_collapsed: false,
+            inspector_open: true,
+            log_open: false,
+            palette_open: false,
+            log_lines: Vec::new(),
             progress_ratio: 0.0,
             progress_stage: String::new(),
             progress_message: String::new(),
@@ -176,13 +187,20 @@ impl UiSnapshot {
         }
     }
 
-    /// Day 20 keyboard stubs.
+    /// Workbench keyboard: palette, chrome toggles, screen jump, bookmark.
     pub fn handle_shortcut(&mut self, key: &str) {
         self.last_shortcut = key.to_string();
         match key {
-            "/" => {
-                self.navigate_to(NavScreen::Search);
-                self.open_case_focused = false;
+            "/" | "palette" => {
+                self.palette_open = true;
+            }
+            "Escape" => {
+                if self.palette_open {
+                    self.palette_open = false;
+                } else {
+                    self.selected_file_index = None;
+                    self.provenance_open = None;
+                }
             }
             "b" if self.selected_file_index.is_some() => {
                 self.bookmark_count += 1;
@@ -191,11 +209,23 @@ impl UiSnapshot {
             "Enter" if self.selected_file_index.is_some() => {
                 self.open_case_focused = false;
             }
-            "Escape" => {
-                self.selected_file_index = None;
-                self.provenance_open = None;
-            }
+            "1" => self.navigate_to(NavScreen::CaseHome),
+            "2" => self.navigate_to(NavScreen::Evidence),
+            "3" => self.navigate_to(NavScreen::Search),
+            "4" => self.navigate_to(NavScreen::Timeline),
+            "5" => self.navigate_to(NavScreen::Bookmarks),
+            "6" => self.navigate_to(NavScreen::Report),
+            "nav" => self.nav_collapsed = !self.nav_collapsed,
+            "inspector" => self.inspector_open = !self.inspector_open,
+            "log" => self.log_open = !self.log_open,
             _ => {}
+        }
+    }
+
+    pub fn push_log(&mut self, line: impl Into<String>) {
+        self.log_lines.insert(0, line.into());
+        if self.log_lines.len() > 40 {
+            self.log_lines.truncate(40);
         }
     }
 

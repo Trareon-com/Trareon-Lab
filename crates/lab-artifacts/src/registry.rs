@@ -124,7 +124,8 @@ impl HiveFile {
                 detail: "cell OOB".into(),
             });
         }
-        let size = i32::from_le_bytes(self.data[abs..abs + 4].try_into().unwrap()).unsigned_abs() as usize;
+        let size =
+            i32::from_le_bytes(self.data[abs..abs + 4].try_into().unwrap()).unsigned_abs() as usize;
         if abs + size > self.data.len() {
             return Err(LabError::Internal {
                 detail: "cell size OOB".into(),
@@ -255,8 +256,11 @@ pub fn write_minimal_hive(path: &std::path::Path) -> LabResult<()> {
     data[0x14..0x18].copy_from_slice(&1u32.to_le_bytes());
     data[0x18..0x1C].copy_from_slice(&3u32.to_le_bytes());
     data[0x24..0x28].copy_from_slice(&0x20u32.to_le_bytes()); // root cell at 0x20 in hbin
-    // file name
-    let name = "SYSTEM\0".encode_utf16().flat_map(|u| u.to_le_bytes()).collect::<Vec<_>>();
+                                                              // file name
+    let name = "SYSTEM\0"
+        .encode_utf16()
+        .flat_map(|u| u.to_le_bytes())
+        .collect::<Vec<_>>();
     data[0x30..0x30 + name.len()].copy_from_slice(&name);
     // hbin header
     data[0x1000..0x1004].copy_from_slice(b"hbin");

@@ -132,10 +132,7 @@ fn append_stdinfo(rec: &mut [u8], c: u64, m: u64, mft: u64, a: u64) {
 }
 
 fn append_filename(rec: &mut [u8], parent: u64, name: &str, ns: u8, is_dir: bool) {
-    let utf16: Vec<u8> = name
-        .encode_utf16()
-        .flat_map(|u| u.to_le_bytes())
-        .collect();
+    let utf16: Vec<u8> = name.encode_utf16().flat_map(|u| u.to_le_bytes()).collect();
     let mut content = vec![0u8; 66 + utf16.len()];
     let pref = (parent & 0x0000_FFFF_FFFF) | ((1u64) << 48);
     content[0..8].copy_from_slice(&pref.to_le_bytes());
@@ -158,7 +155,7 @@ fn append_resident_data(rec: &mut [u8], data: &[u8]) {
 fn append_resident_attr(rec: &mut [u8], ty: u32, content: &[u8]) {
     let off = attr_cursor(rec);
     let content_off = 24u16;
-    let total = ((content_off as usize + content.len() + 7) / 8) * 8;
+    let total = (content_off as usize + content.len()).div_ceil(8) * 8;
     if off + total + 8 > rec.len() {
         return;
     }
@@ -178,7 +175,7 @@ fn append_resident_attr(rec: &mut [u8], ty: u32, content: &[u8]) {
 fn append_nonresident_data(rec: &mut [u8], runs: &[u8], data_size: u64) {
     let off = attr_cursor(rec);
     let run_off = 64u16;
-    let total = ((run_off as usize + runs.len() + 1 + 7) / 8) * 8;
+    let total = (run_off as usize + runs.len() + 1).div_ceil(8) * 8;
     if off + total + 8 > rec.len() {
         return;
     }
@@ -203,9 +200,12 @@ fn encode_run(length: u64, lcn: i64) -> Vec<u8> {
 }
 
 fn build_sample_usn() -> Vec<u8> {
-    let name = "secret.txt".encode_utf16().flat_map(|u| u.to_le_bytes()).collect::<Vec<_>>();
+    let name = "secret.txt"
+        .encode_utf16()
+        .flat_map(|u| u.to_le_bytes())
+        .collect::<Vec<_>>();
     let name_off = 60u16;
-    let record_len = ((name_off as usize + name.len() + 7) / 8) * 8;
+    let record_len = (name_off as usize + name.len()).div_ceil(8) * 8;
     let mut r = vec![0u8; record_len];
     r[0..4].copy_from_slice(&(record_len as u32).to_le_bytes());
     r[4..6].copy_from_slice(&2u16.to_le_bytes()); // major

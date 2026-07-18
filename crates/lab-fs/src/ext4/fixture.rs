@@ -29,7 +29,7 @@ pub fn write_minimal_ext4_image(path: &Path) -> LabResult<()> {
 
     // Inode table at block 5; inode 2 = root at index 1
     let inode_size = 128usize;
-    let root_off = 5 * block + 1 * inode_size;
+    let root_off = 5 * block + inode_size;
     let root = &mut img[root_off..root_off + inode_size];
     root[0..2].copy_from_slice(&0x41EDu16.to_le_bytes()); // dir mode
     root[4..8].copy_from_slice(&(block as u32).to_le_bytes());
@@ -64,7 +64,7 @@ pub fn write_minimal_ext4_image(path: &Path) -> LabResult<()> {
 
 fn write_dirent(buf: &mut [u8], off: usize, inode: u32, name: &str, ftype: u8) {
     let name_b = name.as_bytes();
-    let rec = ((8 + name_b.len() + 3) / 4) * 4;
+    let rec = (8 + name_b.len()).div_ceil(4) * 4;
     buf[off..off + 4].copy_from_slice(&inode.to_le_bytes());
     buf[off + 4..off + 6].copy_from_slice(&(rec as u16).to_le_bytes());
     buf[off + 6] = name_b.len() as u8;

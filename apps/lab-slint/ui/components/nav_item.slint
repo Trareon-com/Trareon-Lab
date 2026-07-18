@@ -4,21 +4,22 @@ export component NavItem inherits Rectangle {
     in-out property <string> label;
     in-out property <string> glyph: "•";
     in-out property <bool> active: false;
+    in-out property <bool> collapsed: false;
     callback clicked();
 
-    height: 32px;
+    height: 28px;
     background: active ? Theme.surface-raised : transparent;
     border-radius: 4px;
 
     HorizontalLayout {
-        padding-left: 8px;
-        padding-right: 8px;
-        spacing: 10px;
+        padding-left: 4px;
+        padding-right: root.collapsed ? 4px : 8px;
+        spacing: root.collapsed ? 0px : 8px;
 
         Rectangle {
             width: 3px;
-            height: 24px;
-            y: 4px;
+            height: 14px;
+            y: 7px;
             background: root.active ? Theme.nav-active-bar : transparent;
             border-radius: 1px;
         }
@@ -27,13 +28,16 @@ export component NavItem inherits Rectangle {
             text: root.glyph;
             color: root.active ? Theme.accent : Theme.text-secondary;
             vertical-alignment: center;
-            font-size: 13px;
+            font-size: 12px;
+            width: 18px;
+            horizontal-alignment: center;
         }
 
-        Text {
+        if !root.collapsed: Text {
             text: root.label;
             color: root.active ? Theme.text-primary : Theme.text-secondary;
-            font-size: 13px;
+            font-size: 12px;
+            font-weight: root.active ? 600 : 500;
             vertical-alignment: center;
             horizontal-stretch: 1;
             overflow: elide;

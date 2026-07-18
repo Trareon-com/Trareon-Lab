@@ -6,19 +6,21 @@ export component LabButton inherits Rectangle {
     in-out property <bool> enabled: true;
     callback clicked();
 
-    height: 32px;
-    min-width: 96px;
-    border-radius: 4px;
+    height: 34px;
+    min-width: 108px;
+    horizontal-stretch: 0;
+    vertical-stretch: 0;
+    border-radius: 5px;
     border-width: primary ? 0px : 1px;
     border-color: Theme.border;
     background: !enabled ? Theme.surface-raised
         : primary ? Theme.accent
-        : Theme.surface;
-    opacity: enabled ? 1.0 : 0.55;
+        : Theme.surface-raised;
+    opacity: enabled ? 1.0 : 0.5;
 
     HorizontalLayout {
-        padding-left: 14px;
-        padding-right: 14px;
+        padding-left: 16px;
+        padding-right: 16px;
         alignment: center;
         Text {
             text: root.label;
@@ -40,6 +42,7 @@ export component LabButton inherits Rectangle {
     states [
         hover when ta.has-hover && root.enabled && !root.primary: {
             background: Theme.row-hover;
+            border-color: Theme.accent-muted;
         }
         hover-primary when ta.has-hover && root.enabled && root.primary: {
             background: Theme.accent-muted;
