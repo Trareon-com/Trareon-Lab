@@ -39,9 +39,16 @@ fn keyboard_shortcuts_bookmark_and_search() {
     assert_eq!(snap.bookmark_count, 1);
     assert_eq!(snap.active_screen, NavScreen::Bookmarks);
     snap.handle_shortcut("/");
-    assert_eq!(snap.active_screen, NavScreen::Search);
+    assert!(snap.palette_open);
+    snap.handle_shortcut("Escape");
+    assert!(!snap.palette_open);
+    assert_eq!(snap.selected_file_index, Some(0));
     snap.handle_shortcut("Escape");
     assert!(snap.selected_file_index.is_none());
+    snap.handle_shortcut("2");
+    assert_eq!(snap.active_screen, NavScreen::Evidence);
+    snap.handle_shortcut("nav");
+    assert!(snap.nav_collapsed);
 }
 
 #[test]

@@ -195,6 +195,12 @@ pub struct UiSnapshot {
     pub graph_edges: Vec<String>,
     pub ai_enabled: bool,
     pub live_preflight_message: String,
+    /// Workbench chrome (from institutional UI; model-backed toggles).
+    pub nav_collapsed: bool,
+    pub inspector_open: bool,
+    pub log_open: bool,
+    pub palette_open: bool,
+    pub log_lines: Vec<String>,
 }
 
 impl Default for UiSnapshot {
@@ -257,6 +263,11 @@ impl Default for UiSnapshot {
             graph_edges: Vec::new(),
             ai_enabled: false,
             live_preflight_message: "Live intake requires Trareon Acquire — Open Acquire".into(),
+            nav_collapsed: false,
+            inspector_open: true,
+            log_open: false,
+            palette_open: false,
+            log_lines: Vec::new(),
         }
     }
 }
@@ -316,11 +327,15 @@ impl UiSnapshot {
         }
     }
 
+    pub fn push_log(&mut self, line: impl Into<String>) {
+        self.log_lines.push(line.into());
+    }
+
     pub fn handle_shortcut(&mut self, key: &str) {
         self.last_shortcut = key.to_string();
         match key {
             "/" => {
-                self.navigate_to(NavScreen::Search);
+                self.palette_open = true;
                 self.open_case_focused = false;
             }
             "b" if self.selected_file_index.is_some() => {
@@ -331,9 +346,23 @@ impl UiSnapshot {
                 self.open_case_focused = false;
             }
             "Escape" => {
-                self.selected_file_index = None;
-                self.provenance_open = None;
+                if self.palette_open {
+                    self.palette_open = false;
+                } else {
+                    self.selected_file_index = None;
+                    self.provenance_open = None;
+                }
             }
+            "1" => self.navigate_to(NavScreen::CaseHome),
+            "2" => self.navigate_to(NavScreen::Evidence),
+            "3" => self.navigate_to(NavScreen::Search),
+            "4" => self.navigate_to(NavScreen::Timeline),
+            "5" => self.navigate_to(NavScreen::Bookmarks),
+            "6" => self.navigate_to(NavScreen::Report),
+            "palette" => self.palette_open = !self.palette_open,
+            "inspector" => self.inspector_open = !self.inspector_open,
+            "log" => self.log_open = !self.log_open,
+            "nav" => self.nav_collapsed = !self.nav_collapsed,
             _ => {}
         }
     }
