@@ -332,9 +332,7 @@ impl LabSession {
         }
         let status = format!(
             "{} · offset {offset} · {n} bytes · {}",
-            path.file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or("image"),
+            path.file_name().and_then(|s| s.to_str()).unwrap_or("image"),
             IntegrityState::ComputedUnanchored.as_str()
         );
         Ok((lines, status))
@@ -432,11 +430,7 @@ impl LabSession {
             },
         };
         let signed = export_signed_package(pkg, &self.transfer_keypair)?;
-        let trust = import_verify_package(
-            &signed,
-            &self.transfer_keypair.public_bytes(),
-            true,
-        )?;
+        let trust = import_verify_package(&signed, &self.transfer_keypair.public_bytes(), true)?;
         self.last_transfer = Some(signed);
         self.append_audit("examiner", "transfer_export", "{\"ok\":true}")?;
         Ok(trust)
@@ -526,12 +520,7 @@ impl LabSession {
     }
 
     /// Record a fail-closed parser outcome in the append-only coverage ledger.
-    pub fn record_parser_failure(
-        &self,
-        parser: &str,
-        scope: &str,
-        reason: &str,
-    ) -> LabResult<()> {
+    pub fn record_parser_failure(&self, parser: &str, scope: &str, reason: &str) -> LabResult<()> {
         self.db.append_coverage_record(&CoverageRecord {
             coverage_uuid: uuid_v4_like("parser-failure"),
             case_uuid: self.case_uuid.clone(),
@@ -557,10 +546,7 @@ impl LabSession {
                 format!("html:{}", html.validation_level),
                 html.digest_sha256,
             ),
-            (
-                format!("pdfa:{}", pdf.validation_level),
-                pdf.digest_sha256,
-            ),
+            (format!("pdfa:{}", pdf.validation_level), pdf.digest_sha256),
             (
                 format!(
                     "case_uco:{}:{}",
@@ -725,17 +711,19 @@ mod tests {
         let case_dir = dir.path().join("case");
         let mut session =
             LabSession::create(&case_dir, "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "T").unwrap();
-        let mut snap = UiSnapshot::default();
-        snap.intake_accepted = true;
-        snap.coverage_status = CoverageStatus::Complete;
-        snap.evidence_files.push(EvidenceFileRow {
-            path: String::new(),
-            name: "e".into(),
-            size: 0,
-            deleted: false,
-            integrity: IntegrityState::VerifiedMatch,
-            designation: "forensic_copy".into(),
-        });
+        let mut snap = UiSnapshot {
+            intake_accepted: true,
+            coverage_status: CoverageStatus::Complete,
+            evidence_files: vec![EvidenceFileRow {
+                path: String::new(),
+                name: "e".into(),
+                size: 0,
+                deleted: false,
+                integrity: IntegrityState::VerifiedMatch,
+                designation: "forensic_copy".into(),
+            }],
+            ..Default::default()
+        };
         snap.recompute_report_gate();
         assert!(session.try_finalize(&mut snap, "alice", "alice").is_err());
     }
@@ -787,7 +775,10 @@ mod tests {
         session.append_note("second").unwrap();
         assert!(session.notes[0].ends_with("first"));
         assert!(session.notes[1].ends_with("second"));
-        assert_eq!(session.db.count_audit_events(&session.case_uuid).unwrap(), 3);
+        assert_eq!(
+            session.db.count_audit_events(&session.case_uuid).unwrap(),
+            3
+        );
     }
 
     #[test]

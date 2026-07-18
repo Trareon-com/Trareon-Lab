@@ -66,10 +66,8 @@ fn main() -> Result<(), slint::PlatformError> {
         let paths: Vec<SharedString> = page.iter().map(|f| f.path.clone().into()).collect();
         let sizes: Vec<SharedString> = page.iter().map(|f| f.size.to_string().into()).collect();
         let deleted: Vec<bool> = page.iter().map(|f| f.deleted).collect();
-        let integrity: Vec<SharedString> = page
-            .iter()
-            .map(|f| f.integrity.as_str().into())
-            .collect();
+        let integrity: Vec<SharedString> =
+            page.iter().map(|f| f.integrity.as_str().into()).collect();
         ui.set_evidence_names(ModelRc::new(VecModel::from(names)));
         ui.set_evidence_paths(ModelRc::new(VecModel::from(paths)));
         ui.set_evidence_sizes(ModelRc::new(VecModel::from(sizes)));
@@ -158,10 +156,7 @@ fn main() -> Result<(), slint::PlatformError> {
             let case_dir = std::env::var("TRAREON_CASE_DIR")
                 .map(PathBuf::from)
                 .unwrap_or_else(|_| {
-                    std::env::temp_dir().join(format!(
-                        "trareon-lab-case-{}",
-                        std::process::id()
-                    ))
+                    std::env::temp_dir().join(format!("trareon-lab-case-{}", std::process::id()))
                 });
             let case_uuid = "00000000-0000-4000-8000-000000000001";
             match LabSession::create(&case_dir, case_uuid, "Untitled Case")
@@ -228,8 +223,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     None,
                     "Set TRAREON_IMPORT_PATH to a .dd/.e01 file (stub disabled)",
                 );
-                snap.hex_status =
-                    "Import: TRAREON_IMPORT_PATH required (demo_seed off)".into();
+                snap.hex_status = "Import: TRAREON_IMPORT_PATH required (demo_seed off)".into();
                 snap.clear_progress();
             }
             apply(&ui, &snap);
@@ -308,11 +302,8 @@ fn main() -> Result<(), slint::PlatformError> {
                         }
                     }
                 } else if let Some(f) = snap.evidence_files.get(abs) {
-                    snap.hex_status = format!(
-                        "{} · {} · no local path",
-                        f.name,
-                        f.integrity.as_str()
-                    );
+                    snap.hex_status =
+                        format!("{} · {} · no local path", f.name, f.integrity.as_str());
                     snap.hex_lines = vec!["Status: Limited — provenance path missing".into()];
                 }
             }

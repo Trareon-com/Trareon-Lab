@@ -1,6 +1,4 @@
-use lab_core::{
-    export_case_pdfa, export_case_uco, ExportMode, CASE_UCO_PROFILE_VERSION,
-};
+use lab_core::{export_case_pdfa, export_case_uco, ExportMode, CASE_UCO_PROFILE_VERSION};
 
 const CASE_ID: &str = "11111111-1111-4111-8111-111111111111";
 

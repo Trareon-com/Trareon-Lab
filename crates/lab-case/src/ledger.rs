@@ -228,7 +228,11 @@ impl CaseDb {
     }
 
     /// Latest provenance path for an evidence uuid, if present in detail_json.
-    pub fn evidence_source_path(&self, case_uuid: &str, evidence_uuid: &str) -> LabResult<Option<String>> {
+    pub fn evidence_source_path(
+        &self,
+        case_uuid: &str,
+        evidence_uuid: &str,
+    ) -> LabResult<Option<String>> {
         let mut stmt = self
             .connection()
             .prepare(
@@ -239,11 +243,11 @@ impl CaseDb {
             .map_err(|e| LabError::Internal {
                 detail: format!("provenance path prepare: {e}"),
             })?;
-        let mut rows = stmt
-            .query(params![case_uuid, evidence_uuid])
-            .map_err(|e| LabError::Internal {
-                detail: format!("provenance path query: {e}"),
-            })?;
+        let mut rows =
+            stmt.query(params![case_uuid, evidence_uuid])
+                .map_err(|e| LabError::Internal {
+                    detail: format!("provenance path query: {e}"),
+                })?;
         if let Some(row) = rows.next().map_err(|e| LabError::Internal {
             detail: format!("provenance path next: {e}"),
         })? {

@@ -62,9 +62,12 @@ impl E01Image {
                 detail: format!("not an EVF/E01 file: {}", path.display()),
             });
         }
-        let file_len = file.metadata().map_err(|e| LabError::Internal {
-            detail: format!("stat e01 {}: {e}", path.display()),
-        })?.len();
+        let file_len = file
+            .metadata()
+            .map_err(|e| LabError::Internal {
+                detail: format!("stat e01 {}: {e}", path.display()),
+            })?
+            .len();
 
         let mut metadata = E01Metadata::default();
         let mut byte_length = 0_u64;
@@ -603,8 +606,8 @@ fn inflate_zlib_limited(data: &[u8], max_output: usize) -> LabResult<Vec<u8>> {
     dec.take(max_output.saturating_add(1) as u64)
         .read_to_end(&mut out)
         .map_err(|e| LabError::Internal {
-        detail: format!("zlib decompress: {e}"),
-    })?;
+            detail: format!("zlib decompress: {e}"),
+        })?;
     if out.len() > max_output {
         return Err(LabError::Internal {
             detail: "zlib output exceeds limit".into(),
