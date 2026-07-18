@@ -7,10 +7,10 @@ component ToggleChip inherits Rectangle {
     in-out property <bool> active: false;
     callback clicked();
     height: 22px;
-    border-radius: 3px;
-    background: root.active ? Theme.accent-muted : transparent;
-    border-width: root.active ? 0px : 1px;
-    border-color: Theme.border;
+    border-radius: Theme.chip-radius;
+    background: root.active ? Theme.accent-muted : Theme.surface;
+    border-width: 1px;
+    border-color: root.active ? Theme.accent : Theme.border;
     HorizontalLayout {
         padding-left: 8px;
         padding-right: 8px;
@@ -23,15 +23,19 @@ component ToggleChip inherits Rectangle {
             vertical-alignment: center;
         }
     }
-    TouchArea { clicked => { root.clicked(); } }
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
 }
 
-/// Ambient metrics + progress + Nav/Log/Insp toggles (single 28px band).
+/// Ambient status 30px — counts · progress · Log / Inspector toggles.
 export component LabStatusBar inherits Rectangle {
     in-out property <int> evidence-count: 0;
     in-out property <int> coverage-count: 0;
     in-out property <int> bookmark-count: 0;
     in-out property <string> last-action: "";
+    in-out property <string> clock: "";
     in-out property <bool> progress-visible: false;
     in-out property <float> progress-ratio: 0.0;
     in-out property <string> progress-stage: "";
@@ -48,15 +52,34 @@ export component LabStatusBar inherits Rectangle {
     background: Theme.status-bar-bg;
 
     VerticalLayout {
+        spacing: 0px;
         Rectangle { height: 1px; background: Theme.border; }
         HorizontalLayout {
-            padding-left: 10px;
-            padding-right: 8px;
-            spacing: 10px;
+            padding-left: 12px;
+            padding-right: 10px;
+            spacing: 12px;
             alignment: center;
 
+            HorizontalLayout {
+                spacing: 6px;
+                Text {
+                    text: "●";
+                    color: Theme.success;
+                    font-size: 9px;
+                    vertical-alignment: center;
+                }
+                Text {
+                    text: Strings.system-healthy;
+                    color: Theme.success;
+                    font-family: Theme.font-ui;
+                    font-size: 11px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                }
+            }
+
             Text {
-                text: Strings.status-evidence + ": " + root.evidence-count;
+                text: Strings.status-evidence + " " + root.evidence-count;
                 color: Theme.text-secondary;
                 font-family: Theme.font-ui;
                 font-size: 11px;
@@ -64,7 +87,7 @@ export component LabStatusBar inherits Rectangle {
                 vertical-alignment: center;
             }
             Text {
-                text: Strings.status-coverage + ": " + root.coverage-count + "%";
+                text: Strings.status-coverage + " " + root.coverage-count + "%";
                 color: Theme.text-secondary;
                 font-family: Theme.font-ui;
                 font-size: 11px;
@@ -81,8 +104,8 @@ export component LabStatusBar inherits Rectangle {
             }
 
             if root.last-action != "": Text {
-                text: "· " + root.last-action;
-                color: Theme.text-secondary;
+                text: root.last-action;
+                color: Theme.icon-muted;
                 font-family: Theme.font-ui;
                 font-size: 10px;
                 vertical-alignment: center;
@@ -103,12 +126,13 @@ export component LabStatusBar inherits Rectangle {
                     color: Theme.text-secondary;
                     font-size: 10px;
                     vertical-alignment: center;
-                    max-width: 160px;
+                    max-width: 140px;
                     overflow: elide;
                 }
                 TouchArea {
                     width: 48px;
                     height: 18px;
+                    mouse-cursor: pointer;
                     clicked => { root.cancel-progress-clicked(); }
                     Text {
                         text: "Cancel";
@@ -118,6 +142,14 @@ export component LabStatusBar inherits Rectangle {
                         vertical-alignment: center;
                     }
                 }
+            }
+
+            if root.clock != "": Text {
+                text: root.clock;
+                color: Theme.icon-muted;
+                font-family: "monospace";
+                font-size: 10px;
+                vertical-alignment: center;
             }
 
             ToggleChip {

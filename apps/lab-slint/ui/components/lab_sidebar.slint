@@ -102,6 +102,7 @@ component ToolRow inherits Rectangle {
 export component LabSidebar inherits Rectangle {
     in-out property <string> active-key: "Case";
     in-out property <bool> expanded: true;
+    in-out property <string> version-line: "";
     callback navigate-key(string);
 
     width: root.expanded ? Theme.sidebar-width : Theme.sidebar-rail-width;
@@ -110,11 +111,57 @@ export component LabSidebar inherits Rectangle {
     HorizontalLayout {
         spacing: 0px;
         VerticalLayout {
-            padding-top: 8px;
+            padding-top: 10px;
             padding-bottom: 8px;
             padding-left: 6px;
             padding-right: 6px;
             spacing: 1px;
+
+            if root.expanded: VerticalLayout {
+                padding-left: 8px;
+                padding-right: 8px;
+                padding-bottom: 10px;
+                spacing: 2px;
+                HorizontalLayout {
+                    spacing: 8px;
+                    Rectangle {
+                        width: 26px;
+                        height: 26px;
+                        border-radius: 6px;
+                        background: Theme.accent;
+                        Text {
+                            text: "T";
+                            color: Theme.on-accent;
+                            font-size: 13px;
+                            font-weight: 800;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                    }
+                    VerticalLayout {
+                        spacing: 0px;
+                        Text {
+                            text: "TRAREON LAB";
+                            color: Theme.text-primary;
+                            font-family: Theme.font-ui;
+                            font-size: 11px;
+                            font-weight: 800;
+                            letter-spacing: 0.3px;
+                        }
+                        Text {
+                            text: Strings.brand-subtitle;
+                            color: Theme.icon-muted;
+                            font-family: Theme.font-ui;
+                            font-size: 8px;
+                            font-weight: 700;
+                            letter-spacing: 0.4px;
+                            overflow: elide;
+                        }
+                    }
+                }
+                Rectangle { height: 8px; }
+                Rectangle { height: 1px; background: Theme.border; }
+            }
 
             GroupLabel { label: Strings.nav-group-workflow; show-label: root.expanded; }
             RailItem {
@@ -207,6 +254,38 @@ export component LabSidebar inherits Rectangle {
             }
 
             Rectangle { vertical-stretch: 1; }
+
+            if root.expanded: VerticalLayout {
+                padding-left: 10px;
+                padding-right: 8px;
+                padding-top: 8px;
+                spacing: 4px;
+                Rectangle { height: 1px; background: Theme.border; }
+                HorizontalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: "●";
+                        color: Theme.success;
+                        font-size: 9px;
+                        vertical-alignment: center;
+                    }
+                    Text {
+                        text: Strings.system-healthy;
+                        color: Theme.success;
+                        font-family: Theme.font-ui;
+                        font-size: 10px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+                if root.version-line != "": Text {
+                    text: root.version-line;
+                    color: Theme.icon-muted;
+                    font-family: Theme.font-ui;
+                    font-size: 9px;
+                    overflow: elide;
+                }
+            }
         }
         Rectangle { width: 1px; background: Theme.border; }
     }

@@ -197,6 +197,7 @@ export component AppWindow inherits Window {
                 compact: root.layout-compact;
                 dark-mode <=> root.dark-mode;
                 locale <=> root.locale;
+                clock: root.footer-clock;
                 palette-clicked => {
                     root.header-search-clicked();
                     root.shortcut-key("/");
@@ -212,6 +213,7 @@ export component AppWindow inherits Window {
                 LabSidebar {
                     active-key: root.active-screen;
                     expanded: root.nav-expanded;
+                    version-line: root.version-line;
                     navigate-key(k) => { root.navigate(k); }
                 }
 
@@ -536,6 +538,7 @@ export component AppWindow inherits Window {
                 coverage-count: root.coverage-count;
                 bookmark-count: root.bookmark-count;
                 last-action: root.last-action;
+                clock: root.footer-clock;
                 progress-visible: root.progress-visible;
                 progress-ratio: root.progress-ratio;
                 progress-stage: root.progress-stage;
