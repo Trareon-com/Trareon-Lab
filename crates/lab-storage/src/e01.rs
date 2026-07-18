@@ -14,6 +14,8 @@ use crate::raw::ImageKind;
 
 const EVF_MAGIC: &[u8; 8] = b"EVF\x09\x0d\x0a\xff\x00";
 const SECTION_HEADER_SIZE: u64 = 76;
+const MAX_METADATA_SECTION_BYTES: u64 = 16 * 1024 * 1024;
+const MAX_INFLATED_METADATA_BYTES: usize = 1024 * 1024;
 
 /// Metadata extracted from the E01 header section.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -51,14 +53,18 @@ impl E01Image {
             detail: format!("open e01 {}: {e}", path.display()),
         })?;
         let mut magic = [0u8; 8];
-        file.read_exact(&mut magic).map_err(|e| LabError::Internal {
-            detail: format!("read e01 magic: {e}"),
-        })?;
+        file.read_exact(&mut magic)
+            .map_err(|e| LabError::Internal {
+                detail: format!("read e01 magic: {e}"),
+            })?;
         if &magic != EVF_MAGIC {
             return Err(LabError::Internal {
                 detail: format!("not an EVF/E01 file: {}", path.display()),
             });
         }
+        let file_len = file.metadata().map_err(|e| LabError::Internal {
+            detail: format!("stat e01 {}: {e}", path.display()),
+        })?.len();
 
         let mut metadata = E01Metadata::default();
         let mut byte_length = 0_u64;
@@ -66,11 +72,22 @@ impl E01Image {
         let mut sectors_offset = 0_u64;
         let mut table_entries: Vec<u32> = Vec::new();
         let mut next = 8_u64;
+        let mut saw_done = false;
 
         loop {
-            file.seek(SeekFrom::Start(next)).map_err(|e| LabError::Internal {
-                detail: format!("seek section: {e}"),
-            })?;
+            if next
+                .checked_add(SECTION_HEADER_SIZE)
+                .filter(|end| *end <= file_len)
+                .is_none()
+            {
+                return Err(LabError::Internal {
+                    detail: "e01 truncated section header".into(),
+                });
+            }
+            file.seek(SeekFrom::Start(next))
+                .map_err(|e| LabError::Internal {
+                    detail: format!("seek section: {e}"),
+                })?;
             let mut hdr = [0u8; SECTION_HEADER_SIZE as usize];
             let nread = file.read(&mut hdr).map_err(|e| LabError::Internal {
                 detail: format!("read section header: {e}"),
@@ -84,8 +101,22 @@ impl E01Image {
             };
             let next_off = u64::from_le_bytes(hdr[16..24].try_into().unwrap());
             let section_size = u64::from_le_bytes(hdr[24..32].try_into().unwrap());
+            if section_size < SECTION_HEADER_SIZE {
+                return Err(LabError::Internal {
+                    detail: format!("e01 invalid {type_str} section size"),
+                });
+            }
             let data_off = next + SECTION_HEADER_SIZE;
-            let data_len = section_size.saturating_sub(SECTION_HEADER_SIZE);
+            let data_len = section_size - SECTION_HEADER_SIZE;
+            if data_off
+                .checked_add(data_len)
+                .filter(|end| *end <= file_len)
+                .is_none()
+            {
+                return Err(LabError::Internal {
+                    detail: format!("e01 {type_str} section exceeds file length"),
+                });
+            }
 
             match type_str.as_str() {
                 "header" | "header2" => {
@@ -103,19 +134,27 @@ impl E01Image {
                 "table" | "table2" => {
                     table_entries = parse_table_section(&mut file, data_off, data_len)?;
                 }
-                "done" => break,
+                "done" => {
+                    saw_done = true;
+                    break;
+                }
                 _ => {}
             }
 
             if next_off == 0 || next_off <= next {
                 break;
             }
+            if next_off > file_len {
+                return Err(LabError::Internal {
+                    detail: "e01 next section offset exceeds file length".into(),
+                });
+            }
             next = next_off;
         }
 
-        if table_entries.is_empty() || sectors_offset == 0 {
+        if !saw_done || table_entries.is_empty() || sectors_offset == 0 {
             return Err(LabError::Internal {
-                detail: "e01 missing sectors/table sections".into(),
+                detail: "e01 missing sectors/table/done sections".into(),
             });
         }
 
@@ -126,16 +165,29 @@ impl E01Image {
         for (i, &rel) in table_entries.iter().enumerate() {
             let abs = sectors_offset + rel as u64;
             // Chunk layout we write: u32 le size | bit31=compressed, then data, then u32 crc
-            file.seek(SeekFrom::Start(abs)).map_err(|e| LabError::Internal {
-                detail: format!("seek chunk: {e}"),
-            })?;
+            file.seek(SeekFrom::Start(abs))
+                .map_err(|e| LabError::Internal {
+                    detail: format!("seek chunk: {e}"),
+                })?;
             let mut sz_buf = [0u8; 4];
-            file.read_exact(&mut sz_buf).map_err(|e| LabError::Internal {
-                detail: format!("read chunk size: {e}"),
-            })?;
+            file.read_exact(&mut sz_buf)
+                .map_err(|e| LabError::Internal {
+                    detail: format!("read chunk size: {e}"),
+                })?;
             let raw_sz = u32::from_le_bytes(sz_buf);
             let compressed = (raw_sz & 0x8000_0000) != 0;
             let comp_size = raw_sz & 0x7fff_ffff;
+            let max_payload = chunk_size.saturating_mul(2).saturating_add(1024);
+            if comp_size > max_payload
+                || (abs + 4)
+                    .checked_add(u64::from(comp_size) + 4)
+                    .filter(|end| *end <= file_len)
+                    .is_none()
+            {
+                return Err(LabError::Internal {
+                    detail: format!("e01 chunk {i} payload is out of bounds"),
+                });
+            }
             chunk_offsets.push(abs + 4);
             chunk_comp_sizes.push(comp_size);
             chunk_compressed.push(compressed);
@@ -212,7 +264,7 @@ impl E01Image {
         }
 
         let data = if compressed {
-            inflate_zlib(&payload)?
+            inflate_zlib_limited(&payload, self.chunk_size as usize)?
         } else {
             payload
         };
@@ -320,7 +372,9 @@ pub fn write_simple_e01(
     let mut file = File::create(path).map_err(|e| LabError::Internal {
         detail: format!("create e01: {e}"),
     })?;
-    file.write_all(EVF_MAGIC).map_err(|e| LabError::Internal { detail: format!("write magic: {e}") })?;
+    file.write_all(EVF_MAGIC).map_err(|e| LabError::Internal {
+        detail: format!("write magic: {e}"),
+    })?;
 
     let mut cursor = 8_u64;
 
@@ -337,7 +391,10 @@ pub fn write_simple_e01(
     let header_section_size = SECTION_HEADER_SIZE + header_zlib.len() as u64;
     let after_header = cursor + header_section_size;
     write_section_header(&mut file, "header", after_header, header_section_size)?;
-    file.write_all(&header_zlib).map_err(|e| LabError::Internal { detail: format!("write header: {e}") })?;
+    file.write_all(&header_zlib)
+        .map_err(|e| LabError::Internal {
+            detail: format!("write header: {e}"),
+        })?;
     cursor = after_header;
 
     // volume section (112 bytes typical layout — we use a compact custom layout
@@ -348,7 +405,9 @@ pub fn write_simple_e01(
     let volume_section_size = SECTION_HEADER_SIZE + volume.len() as u64;
     let after_volume = cursor + volume_section_size;
     write_section_header(&mut file, "volume", after_volume, volume_section_size)?;
-    file.write_all(&volume).map_err(|e| LabError::Internal { detail: format!("write volume: {e}") })?;
+    file.write_all(&volume).map_err(|e| LabError::Internal {
+        detail: format!("write volume: {e}"),
+    })?;
     cursor = after_volume;
 
     // Build chunks
@@ -374,7 +433,10 @@ pub fn write_simple_e01(
     let sectors_section_size = SECTION_HEADER_SIZE + sectors_blob.len() as u64;
     let after_sectors = cursor + sectors_section_size;
     write_section_header(&mut file, "sectors", after_sectors, sectors_section_size)?;
-    file.write_all(&sectors_blob).map_err(|e| LabError::Internal { detail: format!("write sectors: {e}") })?;
+    file.write_all(&sectors_blob)
+        .map_err(|e| LabError::Internal {
+            detail: format!("write sectors: {e}"),
+        })?;
     cursor = after_sectors;
 
     // table section: u32 count + entries + checksum placeholder
@@ -387,7 +449,10 @@ pub fn write_simple_e01(
     let table_section_size = SECTION_HEADER_SIZE + table_data.len() as u64;
     let after_table = cursor + table_section_size;
     write_section_header(&mut file, "table", after_table, table_section_size)?;
-    file.write_all(&table_data).map_err(|e| LabError::Internal { detail: format!("write table: {e}") })?;
+    file.write_all(&table_data)
+        .map_err(|e| LabError::Internal {
+            detail: format!("write table: {e}"),
+        })?;
     cursor = after_table;
 
     // done
@@ -412,14 +477,20 @@ fn write_section_header(file: &mut File, name: &str, next: u64, size: u64) -> La
 }
 
 fn parse_header_section(file: &mut File, off: u64, len: u64) -> LabResult<E01Metadata> {
-    file.seek(SeekFrom::Start(off)).map_err(|e| LabError::Internal {
-        detail: format!("seek header: {e}"),
-    })?;
+    if len > MAX_METADATA_SECTION_BYTES {
+        return Err(LabError::Internal {
+            detail: "e01 metadata section exceeds limit".into(),
+        });
+    }
+    file.seek(SeekFrom::Start(off))
+        .map_err(|e| LabError::Internal {
+            detail: format!("seek header: {e}"),
+        })?;
     let mut buf = vec![0u8; len as usize];
     file.read_exact(&mut buf).map_err(|e| LabError::Internal {
         detail: format!("read header: {e}"),
     })?;
-    let text = match inflate_zlib(&buf) {
+    let text = match inflate_zlib_limited(&buf, MAX_INFLATED_METADATA_BYTES) {
         Ok(t) => String::from_utf8_lossy(&t).into_owned(),
         Err(_) => String::from_utf8_lossy(&buf).into_owned(),
     };
@@ -447,9 +518,10 @@ fn parse_header_section(file: &mut File, off: u64, len: u64) -> LabResult<E01Met
 }
 
 fn parse_volume_section(file: &mut File, off: u64, len: u64) -> LabResult<(u64, u32)> {
-    file.seek(SeekFrom::Start(off)).map_err(|e| LabError::Internal {
-        detail: format!("seek volume: {e}"),
-    })?;
+    file.seek(SeekFrom::Start(off))
+        .map_err(|e| LabError::Internal {
+            detail: format!("seek volume: {e}"),
+        })?;
     let mut buf = vec![0u8; len.min(112) as usize];
     file.read_exact(&mut buf).map_err(|e| LabError::Internal {
         detail: format!("read volume: {e}"),
@@ -467,9 +539,10 @@ fn parse_volume_section(file: &mut File, off: u64, len: u64) -> LabResult<(u64, 
 }
 
 fn parse_table_section(file: &mut File, off: u64, len: u64) -> LabResult<Vec<u32>> {
-    file.seek(SeekFrom::Start(off)).map_err(|e| LabError::Internal {
-        detail: format!("seek table: {e}"),
-    })?;
+    file.seek(SeekFrom::Start(off))
+        .map_err(|e| LabError::Internal {
+            detail: format!("seek table: {e}"),
+        })?;
     let mut buf = vec![0u8; len as usize];
     file.read_exact(&mut buf).map_err(|e| LabError::Internal {
         detail: format!("read table: {e}"),
@@ -480,13 +553,20 @@ fn parse_table_section(file: &mut File, off: u64, len: u64) -> LabResult<Vec<u32
         });
     }
     let count = u32::from_le_bytes(buf[0..4].try_into().unwrap()) as usize;
+    if count > (buf.len() - 4) / 4 {
+        return Err(LabError::Internal {
+            detail: "table entry count exceeds section length".into(),
+        });
+    }
     let mut entries = Vec::with_capacity(count);
     for i in 0..count {
         let start = 4 + i * 4;
         if start + 4 > buf.len() {
             break;
         }
-        entries.push(u32::from_le_bytes(buf[start..start + 4].try_into().unwrap()));
+        entries.push(u32::from_le_bytes(
+            buf[start..start + 4].try_into().unwrap(),
+        ));
     }
     Ok(entries)
 }
@@ -516,12 +596,19 @@ fn deflate_zlib(data: &[u8]) -> LabResult<Vec<u8>> {
     })
 }
 
-fn inflate_zlib(data: &[u8]) -> LabResult<Vec<u8>> {
+fn inflate_zlib_limited(data: &[u8], max_output: usize) -> LabResult<Vec<u8>> {
     use flate2::read::ZlibDecoder;
-    let mut dec = ZlibDecoder::new(data);
+    let dec = ZlibDecoder::new(data);
     let mut out = Vec::new();
-    dec.read_to_end(&mut out).map_err(|e| LabError::Internal {
+    dec.take(max_output.saturating_add(1) as u64)
+        .read_to_end(&mut out)
+        .map_err(|e| LabError::Internal {
         detail: format!("zlib decompress: {e}"),
     })?;
+    if out.len() > max_output {
+        return Err(LabError::Internal {
+            detail: "zlib output exceeds limit".into(),
+        });
+    }
     Ok(out)
 }

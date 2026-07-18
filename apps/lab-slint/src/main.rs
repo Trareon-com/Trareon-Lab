@@ -1,42 +1,15 @@
 #[cfg(feature = "gui")]
 fn main() -> Result<(), slint::PlatformError> {
-    use lab_slint::{
-        AppWindow, ArtifactHitRow, EvidenceFileRow, FindingRow, NavScreen, UiSnapshot,
-    };
+    use lab_slint::{AppWindow, FindingRow, LabSession, NavScreen, UiSnapshot};
     use slint::{ComponentHandle, ModelRc, SharedString, VecModel};
     use std::cell::RefCell;
+    use std::path::PathBuf;
     use std::rc::Rc;
 
     let ui = AppWindow::new()?;
+    // M0 honesty: default snapshot is empty — no fabricated case/search/import.
     let snapshot = Rc::new(RefCell::new(UiSnapshot::default()));
-    {
-        let mut snap = snapshot.borrow_mut();
-        snap.open_case("Foundation Demo Case", 2, 5);
-        snap.set_bookmark_count(1);
-        snap.evidence_files = vec![
-            EvidenceFileRow {
-                path: "/evidence/disk.E01".into(),
-                name: "disk.E01".into(),
-                size: 4_294_967_296,
-                deleted: false,
-            },
-            EvidenceFileRow {
-                path: "/evidence/unalloc.bin".into(),
-                name: "unalloc.bin".into(),
-                size: 1024,
-                deleted: true,
-            },
-        ];
-        snap.timeline_labels = vec![
-            "2026-07-17 10:02:11 | FILE | disk.E01 mounted".into(),
-            "2026-07-17 10:05:44 | ART  | Chrome History parsed".into(),
-        ];
-        snap.findings = vec![FindingRow {
-            claim: "Browser history indicates overnight activity".into(),
-            bookmark_uuid: "bm-001-demo".into(),
-        }];
-        snap.report_state = "draft".into();
-    }
+    let session: Rc<RefCell<Option<LabSession>>> = Rc::new(RefCell::new(None));
 
     let apply = |ui: &AppWindow, snap: &UiSnapshot| {
         ui.set_case_title(snap.case_title.clone().into());
@@ -52,35 +25,73 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.set_report_state(snap.report_state.clone().into());
         ui.set_search_query(snap.search_query.clone().into());
         ui.set_selected_file_index(snap.selected_file_index.map(|i| i as i32).unwrap_or(-1));
+        ui.set_disclosure_line(snap.disclosure_line.clone().into());
+        ui.set_coverage_status_label(snap.coverage_status.as_str().into());
+        ui.set_report_finalizable(snap.report_finalizable);
+        ui.set_list_total(snap.list_total);
+        ui.set_list_offset(snap.list_offset);
+        ui.set_list_page_size(snap.list_page_size);
+        ui.set_hex_status(snap.hex_status.clone().into());
+
+        let blockers: Vec<SharedString> = snap
+            .report_blockers
+            .iter()
+            .map(|s| s.clone().into())
+            .collect();
+        ui.set_report_blockers(ModelRc::new(VecModel::from(blockers)));
 
         let activity = vec![
-            SharedString::from(format!("case open · {}", snap.case_title)),
-            SharedString::from(format!("{} evidence object(s)", snap.evidence_count)),
-            SharedString::from(format!("coverage count · {}", snap.coverage_count)),
+            SharedString::from(format!("case · {}", snap.case_title)),
+            SharedString::from(format!("{} evidence", snap.evidence_count)),
+            SharedString::from(format!(
+                "coverage · {} (p{}/s{}/f{})",
+                snap.coverage_status.as_str(),
+                snap.coverage_processed,
+                snap.coverage_skipped,
+                snap.coverage_failed
+            )),
+            SharedString::from(format!(
+                "showing {}–{} of {}",
+                snap.list_offset + 1,
+                (snap.list_offset + snap.list_page_size).min(snap.list_total.max(0)),
+                snap.list_total
+            )),
             SharedString::from(format!("{} bookmark(s)", snap.bookmark_count)),
         ];
         ui.set_activity_lines(ModelRc::new(VecModel::from(activity)));
 
-        let names: Vec<SharedString> = snap
-            .evidence_files
+        let (start, end) = snap.page_slice_indices();
+        let page = &snap.evidence_files[start..end];
+        let names: Vec<SharedString> = page.iter().map(|f| f.name.clone().into()).collect();
+        let paths: Vec<SharedString> = page.iter().map(|f| f.path.clone().into()).collect();
+        let sizes: Vec<SharedString> = page.iter().map(|f| f.size.to_string().into()).collect();
+        let deleted: Vec<bool> = page.iter().map(|f| f.deleted).collect();
+        let integrity: Vec<SharedString> = page
             .iter()
-            .map(|f| f.name.clone().into())
+            .map(|f| f.integrity.as_str().into())
             .collect();
-        let paths: Vec<SharedString> = snap
-            .evidence_files
-            .iter()
-            .map(|f| f.path.clone().into())
-            .collect();
-        let sizes: Vec<SharedString> = snap
-            .evidence_files
-            .iter()
-            .map(|f| f.size.to_string().into())
-            .collect();
-        let deleted: Vec<bool> = snap.evidence_files.iter().map(|f| f.deleted).collect();
         ui.set_evidence_names(ModelRc::new(VecModel::from(names)));
         ui.set_evidence_paths(ModelRc::new(VecModel::from(paths)));
         ui.set_evidence_sizes(ModelRc::new(VecModel::from(sizes)));
         ui.set_evidence_deleted(ModelRc::new(VecModel::from(deleted)));
+        ui.set_evidence_integrity(ModelRc::new(VecModel::from(integrity)));
+
+        let tree_labels: Vec<SharedString> = snap
+            .tree_nodes
+            .iter()
+            .map(|n| n.label.clone().into())
+            .collect();
+        let tree_depths: Vec<i32> = snap.tree_nodes.iter().map(|n| n.depth).collect();
+        let tree_kinds: Vec<SharedString> = snap
+            .tree_nodes
+            .iter()
+            .map(|n| n.kind.clone().into())
+            .collect();
+        let tree_idx: Vec<i32> = snap.tree_nodes.iter().map(|n| n.file_index).collect();
+        ui.set_tree_labels(ModelRc::new(VecModel::from(tree_labels)));
+        ui.set_tree_depths(ModelRc::new(VecModel::from(tree_depths)));
+        ui.set_tree_kinds(ModelRc::new(VecModel::from(tree_kinds)));
+        ui.set_tree_file_index(ModelRc::new(VecModel::from(tree_idx)));
 
         let results: Vec<SharedString> = snap
             .search_results
@@ -127,6 +138,10 @@ fn main() -> Result<(), slint::PlatformError> {
             .collect();
         ui.set_finding_claims(ModelRc::new(VecModel::from(claims)));
         ui.set_finding_uuids(ModelRc::new(VecModel::from(uuids)));
+
+        let hex: Vec<SharedString> = snap.hex_lines.iter().map(|s| s.clone().into()).collect();
+        ui.set_hex_lines(ModelRc::new(VecModel::from(hex)));
+
         ui.set_progress_ratio(snap.progress_ratio as f32);
         ui.set_progress_stage(snap.progress_stage.clone().into());
         ui.set_progress_message(snap.progress_message.clone().into());
@@ -136,12 +151,34 @@ fn main() -> Result<(), slint::PlatformError> {
 
     let ui_weak = ui.as_weak();
     let snap_open = Rc::clone(&snapshot);
+    let sess_open = Rc::clone(&session);
     ui.on_open_case_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
             let mut snap = snap_open.borrow_mut();
-            let evidence = snap.evidence_count.max(1);
-            let coverage = snap.coverage_count.max(1);
-            snap.open_case("Opened Case", evidence, coverage);
+            let case_dir = std::env::var("TRAREON_CASE_DIR")
+                .map(PathBuf::from)
+                .unwrap_or_else(|_| {
+                    std::env::temp_dir().join(format!(
+                        "trareon-lab-case-{}",
+                        std::process::id()
+                    ))
+                });
+            let case_uuid = "00000000-0000-4000-8000-000000000001";
+            match LabSession::create(&case_dir, case_uuid, "Untitled Case")
+                .or_else(|_| LabSession::open(&case_dir, case_uuid, "Untitled Case"))
+            {
+                Ok(sess) => {
+                    let _ = sess.sync_snapshot(&mut snap);
+                    snap.intake_accepted = false;
+                    *sess_open.borrow_mut() = Some(sess);
+                }
+                Err(e) => {
+                    snap.open_case("Untitled Case", 0, 0);
+                    snap.hex_status = format!("Case open Limited: {e:?}");
+                }
+            }
+            snap.coverage_status = lab_core::CoverageStatus::NotRun;
+            snap.recompute_report_gate();
             apply(&ui, &snap);
         }
     });
@@ -150,35 +187,51 @@ fn main() -> Result<(), slint::PlatformError> {
     let snap_nav = Rc::clone(&snapshot);
     ui.on_navigate(move |label| {
         if let Some(ui) = ui_weak.upgrade() {
-            let screen = match label.as_str() {
-                "Evidence" => NavScreen::Evidence,
-                "Search" => NavScreen::Search,
-                "Timeline" => NavScreen::Timeline,
-                "Bookmarks" => NavScreen::Bookmarks,
-                "Report" => NavScreen::Report,
-                _ => NavScreen::CaseHome,
-            };
             let mut snap = snap_nav.borrow_mut();
-            snap.navigate_to(screen);
+            snap.navigate_to(NavScreen::from_label(label.as_str()));
             apply(&ui, &snap);
         }
     });
 
     let ui_weak = ui.as_weak();
     let snap_import = Rc::clone(&snapshot);
+    let sess_import = Rc::clone(&session);
     ui.on_import_evidence_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
             let mut snap = snap_import.borrow_mut();
-            snap.set_progress("import", 0, Some(1), "preparing import");
-            snap.import_evidence_stub();
-            let n = snap.evidence_count;
-            snap.evidence_files.push(EvidenceFileRow {
-                path: format!("/evidence/import-{n}.bin"),
-                name: format!("import-{n}.bin"),
-                size: 4096,
-                deleted: false,
-            });
-            snap.set_progress("import", 1, Some(1), "import complete");
+            if snap.demo_seed {
+                snap.set_progress("import", 0, Some(1), "demo_seed import");
+                snap.import_evidence_stub();
+                snap.set_progress("import", 1, Some(1), "demo import complete");
+            } else if let Some(path) = std::env::var_os("TRAREON_IMPORT_PATH") {
+                let path = PathBuf::from(path);
+                snap.set_progress("import", 0, Some(1), "importing…");
+                if let Some(sess) = sess_import.borrow_mut().as_mut() {
+                    match sess.import_image(&path) {
+                        Ok(()) => {
+                            let _ = sess.sync_snapshot(&mut snap);
+                            snap.set_progress("import", 1, Some(1), "import complete");
+                        }
+                        Err(e) => {
+                            snap.hex_status = format!("Import failed: {e:?}");
+                            snap.clear_progress();
+                        }
+                    }
+                } else {
+                    snap.hex_status = "Import: open a case first".into();
+                    snap.clear_progress();
+                }
+            } else {
+                snap.set_progress(
+                    "import",
+                    0,
+                    None,
+                    "Set TRAREON_IMPORT_PATH to a .dd/.e01 file (stub disabled)",
+                );
+                snap.hex_status =
+                    "Import: TRAREON_IMPORT_PATH required (demo_seed off)".into();
+                snap.clear_progress();
+            }
             apply(&ui, &snap);
         }
     });
@@ -205,40 +258,63 @@ fn main() -> Result<(), slint::PlatformError> {
 
     let ui_weak = ui.as_weak();
     let snap_search = Rc::clone(&snapshot);
+    let sess_search = Rc::clone(&session);
     ui.on_search_submitted(move || {
         if let Some(ui) = ui_weak.upgrade() {
             let mut snap = snap_search.borrow_mut();
             let q = ui.get_search_query().to_string();
-            snap.set_search(
-                q.clone(),
-                vec![
-                    format!("hit: browser history matching '{q}'"),
-                    format!("hit: prefetch matching '{q}'"),
-                ],
-            );
-            snap.set_artifact_hits(vec![
-                ArtifactHitRow {
-                    kind: "Browser".into(),
-                    summary: format!("History entry for '{q}'"),
-                    provenance_ref: "art://chrome/history#1".into(),
-                },
-                ArtifactHitRow {
-                    kind: "Prefetch".into(),
-                    summary: format!("Prefetch hit for '{q}'"),
-                    provenance_ref: "art://prefetch#2".into(),
-                },
-            ]);
+            if snap.demo_seed {
+                snap.set_search(q.clone(), vec![format!("hit: demo matching '{q}'")]);
+            } else if let Some(sess) = sess_search.borrow_mut().as_mut() {
+                if let Err(e) = sess.search(&q, &mut snap) {
+                    snap.set_search(q, vec![format!("search error: {e:?}")]);
+                }
+            } else {
+                snap.set_search(q, Vec::new());
+                snap.artifact_hits.clear();
+            }
             apply(&ui, &snap);
         }
     });
 
     let ui_weak = ui.as_weak();
     let snap_sel = Rc::clone(&snapshot);
+    let sess_sel = Rc::clone(&session);
     ui.on_evidence_row_selected(move |index| {
         if let Some(ui) = ui_weak.upgrade() {
             let mut snap = snap_sel.borrow_mut();
             if index >= 0 {
-                snap.select_file(index as usize);
+                let (start, _) = snap.page_slice_indices();
+                let abs = start + index as usize;
+                snap.select_file(abs);
+                let path = snap
+                    .evidence_files
+                    .get(abs)
+                    .map(|f| f.path.clone())
+                    .unwrap_or_default();
+                if !path.is_empty() {
+                    if let Some(sess) = sess_sel.borrow().as_ref() {
+                        match sess.read_hex(std::path::Path::new(&path), 0, 256) {
+                            Ok((lines, status)) => {
+                                snap.hex_lines = lines;
+                                snap.hex_status = status;
+                                snap.hex_offset = 0;
+                            }
+                            Err(e) => {
+                                snap.hex_lines =
+                                    vec![format!("Error/Limited — hex read failed: {e:?}")];
+                                snap.hex_status = "Error/Limited".into();
+                            }
+                        }
+                    }
+                } else if let Some(f) = snap.evidence_files.get(abs) {
+                    snap.hex_status = format!(
+                        "{} · {} · no local path",
+                        f.name,
+                        f.integrity.as_str()
+                    );
+                    snap.hex_lines = vec!["Status: Limited — provenance path missing".into()];
+                }
             }
             apply(&ui, &snap);
         }
@@ -254,8 +330,6 @@ fn main() -> Result<(), slint::PlatformError> {
                     .get(idx)
                     .map(|f| format!("Bookmarked file {}", f.name))
                     .unwrap_or_else(|| "Bookmarked selection".into())
-            } else if let Some(hit) = snap.artifact_hits.first() {
-                format!("Bookmarked {}", hit.summary)
             } else {
                 "Bookmarked examination hit".into()
             };
@@ -264,6 +338,7 @@ fn main() -> Result<(), slint::PlatformError> {
             snap.findings.push(FindingRow {
                 claim,
                 bookmark_uuid: format!("bm-{n:03}"),
+                claim_type: lab_core::ClaimType::Observation,
             });
             snap.navigate_to(NavScreen::Bookmarks);
             apply(&ui, &snap);
@@ -279,12 +354,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 .selected_file_index
                 .and_then(|i| snap.evidence_files.get(i).map(|f| f.name.clone()))
                 .unwrap_or_else(|| "related".into());
-            snap.set_search(q.clone(), vec![format!("related to '{q}'")]);
-            snap.set_artifact_hits(vec![ArtifactHitRow {
-                kind: "Related".into(),
-                summary: format!("Artifacts linked to {q}"),
-                provenance_ref: "art://related#1".into(),
-            }]);
+            snap.set_search(q, Vec::new());
             apply(&ui, &snap);
         }
     });

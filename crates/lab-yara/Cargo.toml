@@ -7,6 +7,7 @@ description = "YARA scanning for Trareon Lab"
 
 [dependencies]
 lab-core = { workspace = true }
+yara-x = { version = "=1.19.0", default-features = false, features = ["constant-folding", "exact-atoms", "fast-regexp"] }
 
 [dev-dependencies]
 tempfile = "3"

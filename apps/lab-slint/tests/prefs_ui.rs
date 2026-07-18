@@ -3,10 +3,11 @@
 use lab_slint::UiSnapshot;
 
 #[test]
-fn defaults_are_dark_and_english() {
+fn defaults_are_light_and_english() {
     let snap = UiSnapshot::default();
-    assert!(snap.dark_mode);
+    assert!(!snap.dark_mode);
     assert_eq!(snap.locale, "en");
+    assert!(!snap.demo_seed);
 }
 
 #[test]

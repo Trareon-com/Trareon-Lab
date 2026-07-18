@@ -1,10 +1,37 @@
 //! NSRL / known-bad hash set database.
 
 use std::collections::HashMap;
+use std::io::Read;
 use std::path::Path;
 
 use lab_core::{LabError, LabResult, ProgressEvent, ProgressSink};
 use rusqlite::{params, Connection};
+use sha2::{Digest, Sha256};
+
+/// On-disk hash-set format identifier included in run manifest pins.
+pub const HASH_SET_FORMAT_VERSION: &str = "trareon-hashset-db-1";
+
+/// Return a stable `version:sha256:digest` pin for a hash-set database file.
+pub fn hash_set_version_pin(path: &Path) -> LabResult<String> {
+    let mut file = std::fs::File::open(path).map_err(|e| LabError::Internal {
+        detail: format!("open hashset for pin: {e}"),
+    })?;
+    let mut digest = Sha256::new();
+    let mut buffer = [0_u8; 64 * 1024];
+    loop {
+        let read = file.read(&mut buffer).map_err(|e| LabError::Internal {
+            detail: format!("read hashset for pin: {e}"),
+        })?;
+        if read == 0 {
+            break;
+        }
+        digest.update(&buffer[..read]);
+    }
+    Ok(format!(
+        "{HASH_SET_FORMAT_VERSION}:sha256:{}",
+        hex::encode(digest.finalize())
+    ))
+}
 
 /// Result of looking up a file hash.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -117,9 +144,12 @@ impl HashSetDb {
             detail: format!("read nsrl: {e}"),
         })?;
         let mut count = 0u64;
-        let tx = self.db.unchecked_transaction().map_err(|e| LabError::Internal {
-            detail: format!("tx: {e}"),
-        })?;
+        let tx = self
+            .db
+            .unchecked_transaction()
+            .map_err(|e| LabError::Internal {
+                detail: format!("tx: {e}"),
+            })?;
         for (i, line) in text.lines().enumerate() {
             if progress.is_cancelled() {
                 break;

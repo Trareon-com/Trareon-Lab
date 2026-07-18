@@ -1,6 +1,7 @@
 //! Day 6: persist 10k index rows across reopen.
 
 use lab_index::{IndexDb, IndexEntry};
+use std::time::Instant;
 use tempfile::tempdir;
 
 #[test]
@@ -43,4 +44,15 @@ fn ten_thousand_rows_survive_reopen() {
     assert_eq!(last.len(), 1);
     assert_eq!(last[0].display_text, "file-9999.dll");
     assert_eq!(last[0].sort_key, "00009999");
+
+    let started = Instant::now();
+    let page = reopened
+        .list_for_case(case_uuid, 200, 5_000)
+        .expect("200-row page");
+    let elapsed = started.elapsed();
+    assert_eq!(page.len(), 200);
+    assert!(
+        elapsed.as_secs_f64() < 5.0,
+        "200-row page exceeded generous CI budget: {elapsed:?}"
+    );
 }

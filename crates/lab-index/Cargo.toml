@@ -8,6 +8,8 @@ description = "Forensic search/index store for Trareon Lab cases"
 [dependencies]
 lab-core = { workspace = true }
 rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
+serde_json = "1"
 tempfile = "3"

@@ -41,7 +41,7 @@ pub fn write_minimal_fat32_image(path: &Path) -> LabResult<()> {
     // Root dir at cluster 2
     let data_off = fat_off + spf as usize * 512;
     let dir_off = data_off; // cluster 2
-    // HELLO.TXT short entry
+                            // HELLO.TXT short entry
     let ent = &mut img[dir_off..dir_off + 32];
     ent[0..11].copy_from_slice(b"HELLO   TXT");
     ent[0x0B] = 0x20;
@@ -91,7 +91,10 @@ pub fn write_minimal_exfat_image(path: &Path) -> LabResult<()> {
     img[root + 32 + 8..root + 32 + 16].copy_from_slice(&4u64.to_le_bytes());
     img[root + 32 + 20..root + 32 + 24].copy_from_slice(&3u32.to_le_bytes());
     img[root + 64] = 0xC1;
-    let name = "hi".encode_utf16().flat_map(|u| u.to_le_bytes()).collect::<Vec<_>>();
+    let name = "hi"
+        .encode_utf16()
+        .flat_map(|u| u.to_le_bytes())
+        .collect::<Vec<_>>();
     img[root + 66..root + 66 + name.len()].copy_from_slice(&name);
 
     File::create(path)

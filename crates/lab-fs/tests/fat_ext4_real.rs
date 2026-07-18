@@ -33,8 +33,5 @@ fn ext4_lists_hello_txt() {
     write_minimal_ext4_image(&path).unwrap();
     let mut img = RawImage::open_raw(&path).unwrap();
     let entries = enumerate_ext4(&mut img, &mut NullProgress).unwrap();
-    assert!(
-        entries.iter().any(|e| e.name == "hello.txt"),
-        "{entries:?}"
-    );
+    assert!(entries.iter().any(|e| e.name == "hello.txt"), "{entries:?}");
 }

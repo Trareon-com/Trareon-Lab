@@ -93,7 +93,7 @@ export component AppWindow inherits Window {
     in-out property <bool> open-case-focused: true;
     in-out property <string> active-screen: "Case";
     in-out property <string> about-line: "";
-    in-out property <bool> dark-mode: true;
+    in-out property <bool> dark-mode: false;
     in-out property <string> locale: "en";
     in-out property <bool> prefs-open: false;
 
@@ -101,6 +101,7 @@ export component AppWindow inherits Window {
     in-out property <[string]> evidence-paths: [];
     in-out property <[string]> evidence-sizes: [];
     in-out property <[bool]> evidence-deleted: [];
+    in-out property <[string]> evidence-integrity: [];
     in-out property <int> selected-file-index: -1;
     in-out property <string> evidence-filter: "";
 
@@ -120,6 +121,20 @@ export component AppWindow inherits Window {
     in-out property <string> progress-stage: "";
     in-out property <string> progress-message: "";
     in-out property <bool> progress-visible: false;
+
+    in-out property <string> disclosure-line: "UNSIGNED — Lab use only · NOT court-ready · NOT ISO-certified";
+    in-out property <string> coverage-status-label: "NotRun";
+    in-out property <bool> report-finalizable: false;
+    in-out property <[string]> report-blockers: [];
+    in-out property <int> list-total: 0;
+    in-out property <int> list-offset: 0;
+    in-out property <int> list-page-size: 200;
+    in-out property <string> hex-status: "";
+    in-out property <[string]> hex-lines: [];
+    in-out property <[string]> tree-labels: [];
+    in-out property <[int]> tree-depths: [];
+    in-out property <[string]> tree-kinds: [];
+    in-out property <[int]> tree-file-index: [];
 
     callback open-case-clicked();
     callback focus-open-case();
@@ -154,6 +169,22 @@ export component AppWindow inherits Window {
 
     VerticalLayout {
         Rectangle {
+            height: 28px;
+            background: Theme.warning;
+            HorizontalLayout {
+                padding-left: 12px;
+                padding-right: 12px;
+                Text {
+                    text: root.disclosure-line;
+                    color: #121820;
+                    font-size: 11px;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            }
+        }
+        Rectangle {
             height: 49px;
             background: Theme.surface;
             VerticalLayout {
@@ -165,9 +196,17 @@ export component AppWindow inherits Window {
                     spacing: 12px;
 
                     Text {
-                        text: Strings.brand;
-                        color: Theme.text-primary;
-                        font-size: 16px;
+                        text: "TRAREON";
+                        color: Theme.accent;
+                        font-size: 11px;
+                        font-weight: 700;
+                        letter-spacing: 2px;
+                        vertical-alignment: center;
+                    }
+                    Text {
+                        text: "LAB";
+                        color: Theme.lab-accent;
+                        font-size: 14px;
                         font-weight: 700;
                         vertical-alignment: center;
                     }
@@ -317,6 +356,18 @@ export component AppWindow inherits Window {
                             clicked => { root.navigate("Evidence"); }
                         }
                         NavItem {
+                            glyph: "01";
+                            label: Strings.nav-hex;
+                            active: root.active-screen == "Hex";
+                            clicked => { root.navigate("Hex"); }
+                        }
+                        NavItem {
+                            glyph: "◆";
+                            label: Strings.nav-artifacts;
+                            active: root.active-screen == "Artifacts";
+                            clicked => { root.navigate("Artifacts"); }
+                        }
+                        NavItem {
                             glyph: "⌕";
                             label: Strings.nav-search;
                             active: root.active-screen == "Search";
@@ -337,10 +388,40 @@ export component AppWindow inherits Window {
                             clicked => { root.navigate("Bookmarks"); }
                         }
                         NavItem {
+                            glyph: "◇";
+                            label: Strings.nav-graph;
+                            active: root.active-screen == "Graph";
+                            clicked => { root.navigate("Graph"); }
+                        }
+                        NavItem {
+                            glyph: "▶";
+                            label: Strings.nav-runs;
+                            active: root.active-screen == "Runs";
+                            clicked => { root.navigate("Runs"); }
+                        }
+                        NavItem {
                             glyph: "☰";
                             label: Strings.nav-report;
                             active: root.active-screen == "Report";
                             clicked => { root.navigate("Report"); }
+                        }
+                        NavItem {
+                            glyph: "⇄";
+                            label: Strings.nav-transfer;
+                            active: root.active-screen == "Transfer";
+                            clicked => { root.navigate("Transfer"); }
+                        }
+                        NavItem {
+                            glyph: "✓";
+                            label: Strings.nav-capabilities;
+                            active: root.active-screen == "Capabilities";
+                            clicked => { root.navigate("Capabilities"); }
+                        }
+                        NavItem {
+                            glyph: "i";
+                            label: Strings.nav-about;
+                            active: root.active-screen == "About";
+                            clicked => { root.navigate("About"); }
                         }
 
                         Rectangle { vertical-stretch: 1; }

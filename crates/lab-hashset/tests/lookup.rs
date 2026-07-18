@@ -1,5 +1,5 @@
 use lab_core::NullProgress;
-use lab_hashset::{HashLookupResult, HashSetDb};
+use lab_hashset::{hash_set_version_pin, HashLookupResult, HashSetDb, HASH_SET_FORMAT_VERSION};
 use std::io::Write;
 
 #[test]
@@ -48,4 +48,21 @@ fn nsrl_and_known_bad_lookup() {
             .unwrap(),
         HashLookupResult::Unknown
     );
+}
+
+#[test]
+fn hash_set_pin_contains_format_version_and_file_sha256() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("hashes.db");
+    std::fs::write(&path, b"abc").unwrap();
+
+    assert_eq!(
+        hash_set_version_pin(&path).unwrap(),
+        concat!(
+            "trareon-hashset-db-1:sha256:",
+            "ba7816bf8f01cfea414140de5dae2223",
+            "b00361a396177a9cb410ff61f20015ad"
+        )
+    );
+    assert_eq!(HASH_SET_FORMAT_VERSION, "trareon-hashset-db-1");
 }

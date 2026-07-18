@@ -25,15 +25,15 @@ fn ui_smoke_opens_case_shows_coverage_and_focus() {
 }
 
 #[test]
-fn navigation_covers_six_examination_screens() {
+fn navigation_covers_examination_screens() {
     let mut snap = UiSnapshot::default();
     snap.open_case("CASE-NAV", 1, 1);
     snap.set_bookmark_count(2);
 
     let expected = NavScreen::all();
-    assert_eq!(expected.len(), 6);
+    assert_eq!(expected.len(), 16);
 
-    for screen in expected {
+    for &screen in expected {
         snap.navigate_to(screen);
         assert_eq!(snap.active_screen, screen);
         assert_eq!(snap.active_screen.label(), screen.label());
@@ -48,10 +48,44 @@ fn navigation_covers_six_examination_screens() {
 }
 
 #[test]
-fn import_evidence_stub_increments_and_navigates() {
+fn import_evidence_stub_disabled_without_demo_seed() {
     let mut snap = UiSnapshot::default();
     snap.open_case("CASE-IMPORT", 0, 0);
     snap.import_evidence_stub();
+    assert_eq!(snap.evidence_count, 0);
+    assert_eq!(snap.active_screen, NavScreen::CaseHome);
+
+    snap.demo_seed = true;
+    snap.import_evidence_stub();
     assert_eq!(snap.evidence_count, 1);
     assert_eq!(snap.active_screen, NavScreen::Evidence);
+}
+
+#[test]
+fn intake_timeline_graph_and_ai_defaults_are_honest() {
+    let mut snap = UiSnapshot::default();
+    assert_eq!(snap.intake_status, "pending");
+    assert!(!snap.intake_accepted);
+    assert!(!snap.ai_enabled);
+    assert!(snap.live_preflight_message.contains("Acquire"));
+
+    snap.set_timeline_tz("Asia/Jakarta");
+    assert_eq!(snap.timeline_tz, "Asia/Jakarta");
+    snap.add_graph_edge("evidence:1", "hex:0x200");
+    assert_eq!(snap.graph_edges, ["evidence:1 → hex:0x200"]);
+
+    snap.accept_intake();
+    assert_eq!(snap.intake_status, "accepted");
+    assert!(snap.intake_accepted);
+    assert!(!snap
+        .report_blockers
+        .iter()
+        .any(|blocker| blocker.contains("intake_acceptance")));
+    snap.reject_intake();
+    assert_eq!(snap.intake_status, "rejected");
+    assert!(!snap.intake_accepted);
+    assert!(snap
+        .report_blockers
+        .iter()
+        .any(|blocker| blocker.contains("intake_acceptance")));
 }

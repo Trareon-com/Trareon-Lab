@@ -9,7 +9,7 @@ Foundation topics available offline:
 5. Export draft vs sealed
 6. Local AI boundary (suggestion-only, loopback)
 7. Examination shell (Case / Evidence / Search / Timeline / Bookmarks / Report)
-8. Disk images (raw/dd supported; E01 Limited)
+8. Disk images (raw/dd supported; single-segment E01 validated subset)
 9. Filesystems (synthetic NTFS/FAT/exFAT/ext4/APFS)
 10. Offline collaboration (signed transfer)
 11. Reporting (draft vs sealed)
