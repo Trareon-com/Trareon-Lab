@@ -13,7 +13,12 @@ pub struct ProgressEvent {
 }
 
 impl ProgressEvent {
-    pub fn new(stage: &'static str, done: u64, total: Option<u64>, message: impl Into<String>) -> Self {
+    pub fn new(
+        stage: &'static str,
+        done: u64,
+        total: Option<u64>,
+        message: impl Into<String>,
+    ) -> Self {
         Self {
             stage,
             done,

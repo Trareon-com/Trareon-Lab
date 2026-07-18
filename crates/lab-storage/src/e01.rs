@@ -51,9 +51,10 @@ impl E01Image {
             detail: format!("open e01 {}: {e}", path.display()),
         })?;
         let mut magic = [0u8; 8];
-        file.read_exact(&mut magic).map_err(|e| LabError::Internal {
-            detail: format!("read e01 magic: {e}"),
-        })?;
+        file.read_exact(&mut magic)
+            .map_err(|e| LabError::Internal {
+                detail: format!("read e01 magic: {e}"),
+            })?;
         if &magic != EVF_MAGIC {
             return Err(LabError::Internal {
                 detail: format!("not an EVF/E01 file: {}", path.display()),
@@ -68,9 +69,10 @@ impl E01Image {
         let mut next = 8_u64;
 
         loop {
-            file.seek(SeekFrom::Start(next)).map_err(|e| LabError::Internal {
-                detail: format!("seek section: {e}"),
-            })?;
+            file.seek(SeekFrom::Start(next))
+                .map_err(|e| LabError::Internal {
+                    detail: format!("seek section: {e}"),
+                })?;
             let mut hdr = [0u8; SECTION_HEADER_SIZE as usize];
             let nread = file.read(&mut hdr).map_err(|e| LabError::Internal {
                 detail: format!("read section header: {e}"),
@@ -126,13 +128,15 @@ impl E01Image {
         for (i, &rel) in table_entries.iter().enumerate() {
             let abs = sectors_offset + rel as u64;
             // Chunk layout we write: u32 le size | bit31=compressed, then data, then u32 crc
-            file.seek(SeekFrom::Start(abs)).map_err(|e| LabError::Internal {
-                detail: format!("seek chunk: {e}"),
-            })?;
+            file.seek(SeekFrom::Start(abs))
+                .map_err(|e| LabError::Internal {
+                    detail: format!("seek chunk: {e}"),
+                })?;
             let mut sz_buf = [0u8; 4];
-            file.read_exact(&mut sz_buf).map_err(|e| LabError::Internal {
-                detail: format!("read chunk size: {e}"),
-            })?;
+            file.read_exact(&mut sz_buf)
+                .map_err(|e| LabError::Internal {
+                    detail: format!("read chunk size: {e}"),
+                })?;
             let raw_sz = u32::from_le_bytes(sz_buf);
             let compressed = (raw_sz & 0x8000_0000) != 0;
             let comp_size = raw_sz & 0x7fff_ffff;
@@ -320,7 +324,9 @@ pub fn write_simple_e01(
     let mut file = File::create(path).map_err(|e| LabError::Internal {
         detail: format!("create e01: {e}"),
     })?;
-    file.write_all(EVF_MAGIC).map_err(|e| LabError::Internal { detail: format!("write magic: {e}") })?;
+    file.write_all(EVF_MAGIC).map_err(|e| LabError::Internal {
+        detail: format!("write magic: {e}"),
+    })?;
 
     let mut cursor = 8_u64;
 
@@ -337,7 +343,10 @@ pub fn write_simple_e01(
     let header_section_size = SECTION_HEADER_SIZE + header_zlib.len() as u64;
     let after_header = cursor + header_section_size;
     write_section_header(&mut file, "header", after_header, header_section_size)?;
-    file.write_all(&header_zlib).map_err(|e| LabError::Internal { detail: format!("write header: {e}") })?;
+    file.write_all(&header_zlib)
+        .map_err(|e| LabError::Internal {
+            detail: format!("write header: {e}"),
+        })?;
     cursor = after_header;
 
     // volume section (112 bytes typical layout — we use a compact custom layout
@@ -348,7 +357,9 @@ pub fn write_simple_e01(
     let volume_section_size = SECTION_HEADER_SIZE + volume.len() as u64;
     let after_volume = cursor + volume_section_size;
     write_section_header(&mut file, "volume", after_volume, volume_section_size)?;
-    file.write_all(&volume).map_err(|e| LabError::Internal { detail: format!("write volume: {e}") })?;
+    file.write_all(&volume).map_err(|e| LabError::Internal {
+        detail: format!("write volume: {e}"),
+    })?;
     cursor = after_volume;
 
     // Build chunks
@@ -374,7 +385,10 @@ pub fn write_simple_e01(
     let sectors_section_size = SECTION_HEADER_SIZE + sectors_blob.len() as u64;
     let after_sectors = cursor + sectors_section_size;
     write_section_header(&mut file, "sectors", after_sectors, sectors_section_size)?;
-    file.write_all(&sectors_blob).map_err(|e| LabError::Internal { detail: format!("write sectors: {e}") })?;
+    file.write_all(&sectors_blob)
+        .map_err(|e| LabError::Internal {
+            detail: format!("write sectors: {e}"),
+        })?;
     cursor = after_sectors;
 
     // table section: u32 count + entries + checksum placeholder
@@ -387,7 +401,10 @@ pub fn write_simple_e01(
     let table_section_size = SECTION_HEADER_SIZE + table_data.len() as u64;
     let after_table = cursor + table_section_size;
     write_section_header(&mut file, "table", after_table, table_section_size)?;
-    file.write_all(&table_data).map_err(|e| LabError::Internal { detail: format!("write table: {e}") })?;
+    file.write_all(&table_data)
+        .map_err(|e| LabError::Internal {
+            detail: format!("write table: {e}"),
+        })?;
     cursor = after_table;
 
     // done
@@ -412,9 +429,10 @@ fn write_section_header(file: &mut File, name: &str, next: u64, size: u64) -> La
 }
 
 fn parse_header_section(file: &mut File, off: u64, len: u64) -> LabResult<E01Metadata> {
-    file.seek(SeekFrom::Start(off)).map_err(|e| LabError::Internal {
-        detail: format!("seek header: {e}"),
-    })?;
+    file.seek(SeekFrom::Start(off))
+        .map_err(|e| LabError::Internal {
+            detail: format!("seek header: {e}"),
+        })?;
     let mut buf = vec![0u8; len as usize];
     file.read_exact(&mut buf).map_err(|e| LabError::Internal {
         detail: format!("read header: {e}"),
@@ -447,9 +465,10 @@ fn parse_header_section(file: &mut File, off: u64, len: u64) -> LabResult<E01Met
 }
 
 fn parse_volume_section(file: &mut File, off: u64, len: u64) -> LabResult<(u64, u32)> {
-    file.seek(SeekFrom::Start(off)).map_err(|e| LabError::Internal {
-        detail: format!("seek volume: {e}"),
-    })?;
+    file.seek(SeekFrom::Start(off))
+        .map_err(|e| LabError::Internal {
+            detail: format!("seek volume: {e}"),
+        })?;
     let mut buf = vec![0u8; len.min(112) as usize];
     file.read_exact(&mut buf).map_err(|e| LabError::Internal {
         detail: format!("read volume: {e}"),
@@ -467,9 +486,10 @@ fn parse_volume_section(file: &mut File, off: u64, len: u64) -> LabResult<(u64, 
 }
 
 fn parse_table_section(file: &mut File, off: u64, len: u64) -> LabResult<Vec<u32>> {
-    file.seek(SeekFrom::Start(off)).map_err(|e| LabError::Internal {
-        detail: format!("seek table: {e}"),
-    })?;
+    file.seek(SeekFrom::Start(off))
+        .map_err(|e| LabError::Internal {
+            detail: format!("seek table: {e}"),
+        })?;
     let mut buf = vec![0u8; len as usize];
     file.read_exact(&mut buf).map_err(|e| LabError::Internal {
         detail: format!("read table: {e}"),
@@ -486,7 +506,9 @@ fn parse_table_section(file: &mut File, off: u64, len: u64) -> LabResult<Vec<u32
         if start + 4 > buf.len() {
             break;
         }
-        entries.push(u32::from_le_bytes(buf[start..start + 4].try_into().unwrap()));
+        entries.push(u32::from_le_bytes(
+            buf[start..start + 4].try_into().unwrap(),
+        ));
     }
     Ok(entries)
 }

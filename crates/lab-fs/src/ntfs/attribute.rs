@@ -75,7 +75,12 @@ pub enum Attribute {
     IndexRoot(Vec<u8>),
     IndexAllocation(Vec<DataRun>),
     Bitmap(Vec<u8>),
-    Raw { ty: u32, resident: bool, data: Vec<u8>, runs: Vec<DataRun> },
+    Raw {
+        ty: u32,
+        resident: bool,
+        data: Vec<u8>,
+        runs: Vec<DataRun>,
+    },
 }
 
 /// Parse all attributes from an MFT record body (after USA fixup applied).

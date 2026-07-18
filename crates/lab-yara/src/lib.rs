@@ -47,9 +47,10 @@ impl YaraEngine {
                     if path.extension().and_then(|e| e.to_str()) == Some("yar")
                         || path.extension().and_then(|e| e.to_str()) == Some("yara")
                     {
-                        let text = std::fs::read_to_string(&path).map_err(|e| LabError::Internal {
-                            detail: format!("read rule: {e}"),
-                        })?;
+                        let text =
+                            std::fs::read_to_string(&path).map_err(|e| LabError::Internal {
+                                detail: format!("read rule: {e}"),
+                            })?;
                         rules.extend(parse_simple_rules(&text)?);
                     }
                 }

@@ -49,9 +49,11 @@ pub fn import_raw_image(
             let len = image.byte_length();
             // Hash virtual media via ImageReader
             let sha = hash_image_reader(&mut image)?;
-            let case_json = serde_json::to_string(&meta.case_number).unwrap_or_else(|_| "\"\"".into());
+            let case_json =
+                serde_json::to_string(&meta.case_number).unwrap_or_else(|_| "\"\"".into());
             let exam_json = serde_json::to_string(&meta.examiner).unwrap_or_else(|_| "\"\"".into());
-            let hashes = serde_json::to_string(&meta.hash_algorithms).unwrap_or_else(|_| "[]".into());
+            let hashes =
+                serde_json::to_string(&meta.hash_algorithms).unwrap_or_else(|_| "[]".into());
             let extra = format!(
                 ",\"e01\":{{\"case_number\":{case_json},\"examiner\":{exam_json},\"hash_algorithms\":{hashes},\"crc_errors\":{}}}",
                 image.crc_errors()

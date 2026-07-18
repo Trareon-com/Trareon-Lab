@@ -117,9 +117,12 @@ impl HashSetDb {
             detail: format!("read nsrl: {e}"),
         })?;
         let mut count = 0u64;
-        let tx = self.db.unchecked_transaction().map_err(|e| LabError::Internal {
-            detail: format!("tx: {e}"),
-        })?;
+        let tx = self
+            .db
+            .unchecked_transaction()
+            .map_err(|e| LabError::Internal {
+                detail: format!("tx: {e}"),
+            })?;
         for (i, line) in text.lines().enumerate() {
             if progress.is_cancelled() {
                 break;
