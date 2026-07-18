@@ -2,4 +2,4 @@
 
 pub mod queue;
 
-pub use queue::{JobStatus, WorkerQueue};
+pub use queue::{JobProgress, JobStatus, WorkerQueue};

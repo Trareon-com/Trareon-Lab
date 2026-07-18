@@ -13,6 +13,10 @@ members = [
   "crates/lab-artifacts",
   "crates/lab-transfer",
   "crates/lab-timeline",
+  "crates/lab-hashset",
+  "crates/lab-yara",
+  "crates/lab-carving",
+  "crates/lab-antiforensics",
   "apps/lab-slint",
 ]
 
@@ -34,3 +38,7 @@ lab-fs = { path = "crates/lab-fs" }
 lab-artifacts = { path = "crates/lab-artifacts" }
 lab-transfer = { path = "crates/lab-transfer" }
 lab-timeline = { path = "crates/lab-timeline" }
+lab-hashset = { path = "crates/lab-hashset" }
+lab-yara = { path = "crates/lab-yara" }
+lab-carving = { path = "crates/lab-carving" }
+lab-antiforensics = { path = "crates/lab-antiforensics" }

@@ -2779,12 +2779,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "lab-antiforensics"
+version = "0.1.0"
+dependencies = [
+ "lab-core",
+ "lab-fs",
+ "lab-storage",
+ "tempfile",
+]
+
+[[package]]
 name = "lab-artifacts"
 version = "0.1.0"
 dependencies = [
  "lab-core",
+ "rusqlite",
  "serde",
  "serde_json",
+ "tempfile",
+]
+
+[[package]]
+name = "lab-carving"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "lab-core",
+ "lab-storage",
+ "sha2",
  "tempfile",
 ]
 
@@ -2826,6 +2848,7 @@ version = "0.1.0"
 dependencies = [
  "hex",
  "lab-core",
+ "lab-storage",
  "lab-store",
  "sha2",
  "tempfile",
@@ -2839,6 +2862,17 @@ dependencies = [
  "lab-core",
  "serde",
  "serde_json",
+ "sha2",
+ "tempfile",
+]
+
+[[package]]
+name = "lab-hashset"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "lab-core",
+ "rusqlite",
  "sha2",
  "tempfile",
 ]
@@ -2871,6 +2905,7 @@ dependencies = [
 name = "lab-storage"
 version = "0.1.0"
 dependencies = [
+ "flate2",
  "hex",
  "lab-case",
  "lab-core",
@@ -2920,6 +2955,14 @@ dependencies = [
  "lab-core",
  "lab-store",
  "sha2",
+ "tempfile",
+]
+
+[[package]]
+name = "lab-yara"
+version = "0.1.0"
+dependencies = [
+ "lab-core",
  "tempfile",
 ]
 

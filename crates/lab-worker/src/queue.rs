@@ -1,4 +1,4 @@
-//! Bounded worker queue with cooperative cancellation.
+//! Bounded worker queue with cooperative cancellation and progress.
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -6,7 +6,7 @@ use std::sync::{Arc, Condvar, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::{Duration, Instant};
 
-use lab_core::{LabError, LabResult};
+use lab_core::{LabError, LabResult, ProgressEvent};
 use lab_store::CasStore;
 
 /// Terminal / observable job status.
@@ -20,12 +20,33 @@ pub enum JobStatus {
     Failed,
 }
 
+/// Latest progress snapshot for a job.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JobProgress {
+    pub stage: String,
+    pub done: u64,
+    pub total: Option<u64>,
+    pub message: String,
+}
+
+impl From<ProgressEvent> for JobProgress {
+    fn from(ev: ProgressEvent) -> Self {
+        Self {
+            stage: ev.stage.to_string(),
+            done: ev.done,
+            total: ev.total,
+            message: ev.message,
+        }
+    }
+}
+
 struct Job {
     id: String,
     payload: Vec<u8>,
     delay: Duration,
     cancel: Arc<AtomicBool>,
     status: JobStatus,
+    progress: Option<JobProgress>,
 }
 
 struct QueueInner {
@@ -33,7 +54,7 @@ struct QueueInner {
     next_id: u64,
 }
 
-/// Single-case bounded worker (Foundation stub).
+/// Single-case bounded worker.
 pub struct WorkerQueue {
     inner: Arc<Mutex<QueueInner>>,
     wake: Arc<Condvar>,
@@ -89,6 +110,7 @@ impl WorkerQueue {
                 delay,
                 cancel: Arc::new(AtomicBool::new(false)),
                 status: JobStatus::Queued,
+                progress: None,
             },
         );
         self.wake.notify_one();
@@ -110,6 +132,35 @@ impl WorkerQueue {
             job.status = JobStatus::Cancelled;
         }
         self.wake.notify_all();
+        Ok(())
+    }
+
+    /// Status plus optional latest progress.
+    pub fn status(&self, job_id: &str) -> LabResult<(JobStatus, Option<JobProgress>)> {
+        let guard = self.inner.lock().map_err(|_| LabError::Internal {
+            detail: "worker queue poisoned".into(),
+        })?;
+        let job = guard
+            .jobs
+            .get(job_id)
+            .ok_or_else(|| LabError::Internal {
+                detail: format!("unknown job {job_id}"),
+            })?;
+        Ok((job.status, job.progress.clone()))
+    }
+
+    /// Update progress for a running job (used by analysis drivers).
+    pub fn report_progress(&self, job_id: &str, progress: JobProgress) -> LabResult<()> {
+        let mut guard = self.inner.lock().map_err(|_| LabError::Internal {
+            detail: "worker queue poisoned".into(),
+        })?;
+        let job = guard
+            .jobs
+            .get_mut(job_id)
+            .ok_or_else(|| LabError::Internal {
+                detail: format!("unknown job {job_id}"),
+            })?;
+        job.progress = Some(progress);
         Ok(())
     }
 
@@ -170,6 +221,12 @@ fn worker_loop(
                 .find(|j| j.status == JobStatus::Queued);
             if let Some(job) = queued {
                 job.status = JobStatus::Running;
+                job.progress = Some(JobProgress {
+                    stage: "worker.put".into(),
+                    done: 0,
+                    total: Some(1),
+                    message: "starting".into(),
+                });
                 Some((
                     job.id.clone(),
                     job.payload.clone(),
@@ -191,9 +248,10 @@ fn worker_loop(
             continue;
         }
 
-        // Cooperative cancel during delay slices.
         let slice = Duration::from_millis(25);
         let mut remaining = delay;
+        let total_delay_ms = delay.as_millis() as u64;
+        let mut elapsed_ms = 0_u64;
         while remaining > Duration::ZERO {
             if cancel.load(Ordering::SeqCst) {
                 set_status(&inner, &id, JobStatus::Cancelled);
@@ -202,11 +260,33 @@ fn worker_loop(
             let step = remaining.min(slice);
             thread::sleep(step);
             remaining = remaining.saturating_sub(step);
+            elapsed_ms = elapsed_ms.saturating_add(step.as_millis() as u64);
+            set_progress(
+                &inner,
+                &id,
+                JobProgress {
+                    stage: "worker.delay".into(),
+                    done: elapsed_ms,
+                    total: Some(total_delay_ms.max(1)),
+                    message: "waiting".into(),
+                },
+            );
         }
         if cancel.load(Ordering::SeqCst) {
             set_status(&inner, &id, JobStatus::Cancelled);
             continue;
         }
+
+        set_progress(
+            &inner,
+            &id,
+            JobProgress {
+                stage: "worker.put".into(),
+                done: 1,
+                total: Some(1),
+                message: "writing CAS".into(),
+            },
+        );
 
         let status = match store.put(&payload) {
             Ok(_) => JobStatus::Completed,
@@ -221,6 +301,14 @@ fn set_status(inner: &Mutex<QueueInner>, id: &str, status: JobStatus) {
     if let Ok(mut guard) = inner.lock() {
         if let Some(job) = guard.jobs.get_mut(id) {
             job.status = status;
+        }
+    }
+}
+
+fn set_progress(inner: &Mutex<QueueInner>, id: &str, progress: JobProgress) {
+    if let Ok(mut guard) = inner.lock() {
+        if let Some(job) = guard.jobs.get_mut(id) {
+            job.progress = Some(progress);
         }
     }
 }
