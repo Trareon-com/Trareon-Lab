@@ -50,6 +50,7 @@ impl NavScreen {
 
     pub fn from_label(label: &str) -> Self {
         match label {
+            "Home" | "Case" | "CaseHome" => Self::CaseHome,
             "Evidence" => Self::Evidence,
             "Hex" => Self::Hex,
             "Artifacts" => Self::Artifacts,

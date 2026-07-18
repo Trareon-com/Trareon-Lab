@@ -638,6 +638,27 @@ fn main() -> Result<(), slint::PlatformError> {
     apply(&ui, &snapshot.borrow());
 
     ui.invoke_focus_open_case();
+
+    // Docs / screenshot automation (no picker when TRAREON_CASE_DIR is set).
+    if std::env::var_os("TRAREON_AUTO_OPEN").is_some() && std::env::var_os("TRAREON_CASE_DIR").is_some()
+    {
+        ui.invoke_open_case_clicked();
+    }
+    if std::env::var_os("TRAREON_IMPORT_AUTO").is_some()
+        && std::env::var_os("TRAREON_IMPORT_PATH").is_some()
+    {
+        ui.invoke_import_evidence_clicked();
+    }
+    if let Ok(screen) = std::env::var("TRAREON_START_SCREEN") {
+        let mut snap = snapshot.borrow_mut();
+        snap.navigate_to(NavScreen::from_label(screen.trim()));
+        if std::env::var_os("TRAREON_PALETTE").is_some() {
+            snap.palette_open = true;
+            snap.filter_palette("");
+        }
+        apply(&ui, &snap);
+    }
+
     ui.run()
 }
 
