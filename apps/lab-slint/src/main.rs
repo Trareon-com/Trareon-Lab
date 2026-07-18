@@ -153,26 +153,31 @@ fn main() -> Result<(), slint::PlatformError> {
     ui.on_open_case_clicked(move || {
         if let Some(ui) = ui_weak.upgrade() {
             let mut snap = snap_open.borrow_mut();
-            let case_dir = std::env::var("TRAREON_CASE_DIR")
+            // Prefer folder picker; TRAREON_CASE_DIR remains for headless/automation.
+            let case_dir = std::env::var_os("TRAREON_CASE_DIR")
                 .map(PathBuf::from)
-                .unwrap_or_else(|_| {
-                    std::env::temp_dir().join(format!("trareon-lab-case-{}", std::process::id()))
+                .or_else(|| {
+                    rfd::FileDialog::new()
+                        .set_title("Open or create case folder")
+                        .pick_folder()
                 });
-            let case_uuid = "00000000-0000-4000-8000-000000000001";
-            match LabSession::create(&case_dir, case_uuid, "Untitled Case")
-                .or_else(|_| LabSession::open(&case_dir, case_uuid, "Untitled Case"))
-            {
+            let Some(case_dir) = case_dir else {
+                snap.hex_status = "Open case cancelled".into();
+                apply(&ui, &snap);
+                return;
+            };
+            match LabSession::open_or_create(&case_dir) {
                 Ok(sess) => {
                     let _ = sess.sync_snapshot(&mut snap);
                     snap.intake_accepted = false;
                     *sess_open.borrow_mut() = Some(sess);
+                    snap.hex_status = format!("Case open · {}", case_dir.display());
                 }
                 Err(e) => {
                     snap.open_case("Untitled Case", 0, 0);
                     snap.hex_status = format!("Case open Limited: {e:?}");
                 }
             }
-            snap.coverage_status = lab_core::CoverageStatus::NotRun;
             snap.recompute_report_gate();
             apply(&ui, &snap);
         }
@@ -198,33 +203,41 @@ fn main() -> Result<(), slint::PlatformError> {
                 snap.set_progress("import", 0, Some(1), "demo_seed import");
                 snap.import_evidence_stub();
                 snap.set_progress("import", 1, Some(1), "demo import complete");
-            } else if let Some(path) = std::env::var_os("TRAREON_IMPORT_PATH") {
-                let path = PathBuf::from(path);
-                snap.set_progress("import", 0, Some(1), "importing…");
-                if let Some(sess) = sess_import.borrow_mut().as_mut() {
-                    match sess.import_image(&path) {
-                        Ok(()) => {
-                            let _ = sess.sync_snapshot(&mut snap);
-                            snap.set_progress("import", 1, Some(1), "import complete");
-                        }
-                        Err(e) => {
-                            snap.hex_status = format!("Import failed: {e:?}");
-                            snap.clear_progress();
-                        }
-                    }
-                } else {
-                    snap.hex_status = "Import: open a case first".into();
-                    snap.clear_progress();
-                }
-            } else {
-                snap.set_progress(
-                    "import",
-                    0,
-                    None,
-                    "Set TRAREON_IMPORT_PATH to a .dd/.e01 file (stub disabled)",
-                );
-                snap.hex_status = "Import: TRAREON_IMPORT_PATH required (demo_seed off)".into();
+                apply(&ui, &snap);
+                return;
+            }
+            if sess_import.borrow().is_none() {
+                snap.hex_status = "Import: open a case first".into();
                 snap.clear_progress();
+                apply(&ui, &snap);
+                return;
+            }
+            let path = std::env::var_os("TRAREON_IMPORT_PATH")
+                .map(PathBuf::from)
+                .or_else(|| {
+                    rfd::FileDialog::new()
+                        .set_title("Import disk image")
+                        .add_filter("Disk image", &["raw", "dd", "img", "bin", "e01"])
+                        .pick_file()
+                });
+            let Some(path) = path else {
+                snap.hex_status = "Import cancelled".into();
+                snap.clear_progress();
+                apply(&ui, &snap);
+                return;
+            };
+            snap.set_progress("import", 0, Some(1), "importing…");
+            if let Some(sess) = sess_import.borrow_mut().as_mut() {
+                match sess.import_image(&path) {
+                    Ok(()) => {
+                        let _ = sess.sync_snapshot(&mut snap);
+                        snap.set_progress("import", 1, Some(1), "import complete");
+                    }
+                    Err(e) => {
+                        snap.hex_status = format!("Import failed: {e:?}");
+                        snap.clear_progress();
+                    }
+                }
             }
             apply(&ui, &snap);
         }

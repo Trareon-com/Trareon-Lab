@@ -85,7 +85,42 @@ fn json_str(s: &str) -> String {
     format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
 }
 
+const CASE_ID_NAME: &str = "case_uuid.txt";
+
+fn read_or_write_case_uuid(case_dir: &Path) -> LabResult<String> {
+    std::fs::create_dir_all(case_dir).map_err(|e| lab_core::LabError::Internal {
+        detail: format!("mkdir case: {e}"),
+    })?;
+    let path = case_dir.join(CASE_ID_NAME);
+    if let Ok(existing) = std::fs::read_to_string(&path) {
+        let trimmed = existing.trim();
+        if !trimmed.is_empty() {
+            return Ok(trimmed.to_string());
+        }
+    }
+    let uuid = uuid_v4_like("case");
+    std::fs::write(&path, format!("{uuid}\n")).map_err(|e| lab_core::LabError::Internal {
+        detail: format!("write case_uuid: {e}"),
+    })?;
+    Ok(uuid)
+}
+
 impl LabSession {
+    /// Open an existing case folder, or create one if `case.sqlite` is missing.
+    pub fn open_or_create(case_dir: &Path) -> LabResult<Self> {
+        let title = case_dir
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("case")
+            .to_string();
+        let case_uuid = read_or_write_case_uuid(case_dir)?;
+        if case_dir.join("case.sqlite").exists() {
+            Self::open(case_dir, &case_uuid, &title)
+        } else {
+            Self::create(case_dir, &case_uuid, &title)
+        }
+    }
+
     /// Create a new case directory with empty CaseDb + lock.
     pub fn create(case_dir: &Path, case_uuid: &str, title: &str) -> LabResult<Self> {
         std::fs::create_dir_all(case_dir).map_err(|e| lab_core::LabError::Internal {

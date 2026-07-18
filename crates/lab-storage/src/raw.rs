@@ -206,7 +206,7 @@ pub fn detect_image_kind(path: &Path) -> LabResult<ImageKind> {
         .unwrap_or("")
         .to_ascii_lowercase();
     match ext.as_str() {
-        "dd" | "raw" | "img" | "" => Ok(ImageKind::RawDd),
+        "dd" | "raw" | "img" | "bin" | "" => Ok(ImageKind::RawDd),
         // Part 1 will open E01; detection succeeds so callers can dispatch.
         "e01" => Ok(ImageKind::E01),
         "ex01" => Err(lab_core::LabError::Internal {
