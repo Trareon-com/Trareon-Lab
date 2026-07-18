@@ -140,12 +140,9 @@ impl WorkerQueue {
         let guard = self.inner.lock().map_err(|_| LabError::Internal {
             detail: "worker queue poisoned".into(),
         })?;
-        let job = guard
-            .jobs
-            .get(job_id)
-            .ok_or_else(|| LabError::Internal {
-                detail: format!("unknown job {job_id}"),
-            })?;
+        let job = guard.jobs.get(job_id).ok_or_else(|| LabError::Internal {
+            detail: format!("unknown job {job_id}"),
+        })?;
         Ok((job.status, job.progress.clone()))
     }
 

@@ -167,12 +167,7 @@ pub fn analyze(
     usn: &[UsnRecord],
     progress: &mut dyn ProgressSink,
 ) -> LabResult<AntiForensicsResult> {
-    progress.report(ProgressEvent::new(
-        "antiforensics",
-        0,
-        Some(3),
-        "timestomp",
-    ));
+    progress.report(ProgressEvent::new("antiforensics", 0, Some(3), "timestomp"));
     let timestomping_hits = detect_timestomping(records);
     progress.report(ProgressEvent::new("antiforensics", 1, Some(3), "usn"));
     let usn_anomalies = detect_usn_journal_manipulation(usn);

@@ -14,10 +14,15 @@ fn carve_jpeg_and_pdf() {
     // PDF
     let pdf = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n1 0 obj\n<<>>\nendobj\n%%EOF\n";
     blob[500..500 + pdf.len()].copy_from_slice(pdf);
-    std::fs::File::create(&path).unwrap().write_all(&blob).unwrap();
+    std::fs::File::create(&path)
+        .unwrap()
+        .write_all(&blob)
+        .unwrap();
 
     let mut img = RawImage::open_raw(&path).unwrap();
-    let carved = Carver::default().carve(&mut img, &mut NullProgress).unwrap();
+    let carved = Carver::default()
+        .carve(&mut img, &mut NullProgress)
+        .unwrap();
     assert!(carved.iter().any(|c| c.signature_name == "jpg"));
     assert!(carved.iter().any(|c| c.signature_name == "pdf"));
 }
