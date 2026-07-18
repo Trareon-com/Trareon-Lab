@@ -37,6 +37,7 @@ pub fn enumerate_fat32(
     Ok(entries)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn walk_fat32_dir(
     image: &mut dyn ImageReader,
     boot: &crate::fat::bpb::Fat32Boot,
@@ -126,73 +127,67 @@ pub fn enumerate_exfat(
 ) -> LabResult<Vec<FatFsEntry>> {
     let boot = parse_exfat_boot(image)?;
     progress.report(ProgressEvent::new("exfat.dir", 0, Some(1), "root"));
-    // Minimal: read root directory cluster stream of file-name entries (simplified)
+    // Minimal: read one root directory cluster of file-name entries (fixture-sized).
     let mut out = Vec::new();
-    let mut cluster = boot.root_cluster;
-    let mut guard = 0;
-    while cluster >= 2 && cluster < 0xFFFFFFF8 && guard < 64 {
-        let off = boot.cluster_heap_offset as u64 * boot.bytes_per_sector()
-            + (cluster as u64 - 2) * boot.cluster_size();
-        let mut buf = vec![0u8; boot.cluster_size() as usize];
-        image.read_at(off, &mut buf)?;
-        let mut i = 0;
-        while i + 32 <= buf.len() {
-            let entry_type = buf[i];
-            if entry_type == 0x00 {
-                break;
-            }
-            if entry_type == 0x85 {
-                // File directory entry — next secondary for name
-                let mut name = String::new();
-                let mut size = 0u64;
-                let mut first = 0u32;
-                let mut deleted = entry_type & 0x80 == 0;
-                let secondary = buf[i + 1] as usize;
-                let mut j = i + 32;
-                for _ in 0..secondary {
-                    if j + 32 > buf.len() {
-                        break;
+    let cluster = boot.root_cluster;
+    if !(2..0xFFFFFFF8).contains(&cluster) {
+        return Ok(out);
+    }
+    let off = boot.cluster_heap_offset as u64 * boot.bytes_per_sector()
+        + (cluster as u64 - 2) * boot.cluster_size();
+    let mut buf = vec![0u8; boot.cluster_size() as usize];
+    image.read_at(off, &mut buf)?;
+    let mut i = 0;
+    while i + 32 <= buf.len() {
+        let entry_type = buf[i];
+        if entry_type == 0x00 {
+            break;
+        }
+        if entry_type == 0x85 {
+            let mut name = String::new();
+            let mut size = 0u64;
+            let mut first = 0u32;
+            let secondary = buf[i + 1] as usize;
+            let mut j = i + 32;
+            for _ in 0..secondary {
+                if j + 32 > buf.len() {
+                    break;
+                }
+                match buf[j] {
+                    0xC0 => {
+                        size = u64::from_le_bytes(buf[j + 8..j + 16].try_into().unwrap());
+                        first = u32::from_le_bytes(buf[j + 20..j + 24].try_into().unwrap());
                     }
-                    match buf[j] {
-                        0xC0 => {
-                            // Stream extension
-                            size = u64::from_le_bytes(buf[j + 8..j + 16].try_into().unwrap());
-                            first = u32::from_le_bytes(buf[j + 20..j + 24].try_into().unwrap());
-                        }
-                        0xC1 => {
-                            let chars = &buf[j + 2..j + 32];
-                            for ch in chars.chunks_exact(2) {
-                                let u = u16::from_le_bytes([ch[0], ch[1]]);
-                                if u == 0 {
-                                    break;
-                                }
-                                if let Some(c) = char::from_u32(u as u32) {
-                                    name.push(c);
-                                }
+                    0xC1 => {
+                        let chars = &buf[j + 2..j + 32];
+                        for ch in chars.chunks_exact(2) {
+                            let u = u16::from_le_bytes([ch[0], ch[1]]);
+                            if u == 0 {
+                                break;
+                            }
+                            if let Some(c) = char::from_u32(u as u32) {
+                                name.push(c);
                             }
                         }
-                        _ => {}
                     }
-                    j += 32;
+                    _ => {}
                 }
-                deleted = false;
-                if !name.is_empty() {
-                    out.push(FatFsEntry {
-                        name: name.clone(),
-                        path: format!("\\{name}"),
-                        kind: FsEntryKind::File,
-                        deleted,
-                        size,
-                        first_cluster: first,
-                    });
-                }
-                i = j;
-                continue;
+                j += 32;
             }
-            i += 32;
+            if !name.is_empty() {
+                out.push(FatFsEntry {
+                    name: name.clone(),
+                    path: format!("\\{name}"),
+                    kind: FsEntryKind::File,
+                    deleted: false,
+                    size,
+                    first_cluster: first,
+                });
+            }
+            i = j;
+            continue;
         }
-        // Follow FAT for next cluster (simplified: stop after one cluster for fixture)
-        break;
+        i += 32;
     }
     Ok(out)
 }
@@ -205,7 +200,7 @@ fn chain(fat: &[u8], start: u32) -> Vec<u32> {
     let mut out = Vec::new();
     let mut c = start;
     for _ in 0..4096 {
-        if c < 2 || c >= 0x0FFF_FFF8 {
+        if !(2..0x0FFF_FFF8).contains(&c) {
             break;
         }
         out.push(c);

@@ -1,6 +1,5 @@
 //! Real NTFS volume enumeration tests.
 
-use lab_core::NullProgress;
 use lab_fs::{
     enumerate_ntfs, parse_usn_journal, write_minimal_ntfs_image, FsEntryKind, NtfsEnumerateOptions,
     NtfsVolume,
