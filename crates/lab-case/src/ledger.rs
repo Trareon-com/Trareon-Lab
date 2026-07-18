@@ -156,22 +156,21 @@ impl CaseDb {
         self.count_table("evidence_object", case_uuid)
     }
 
-    /// List evidence objects for a case (newest first).
+    /// List evidence objects for a case (oldest first).
     pub fn list_evidence_objects(&self, case_uuid: &str) -> LabResult<Vec<EvidenceObject>> {
         let mut stmt = self
             .connection()
             .prepare(
                 "SELECT evidence_uuid, case_uuid, created_at_utc, display_name,
                         evidence_class, validation_state
-                 FROM evidence_object
-                 WHERE case_uuid = ?1
-                 ORDER BY created_at_utc DESC",
+                 FROM evidence_object WHERE case_uuid = ?1
+                 ORDER BY created_at_utc ASC",
             )
             .map_err(|e| LabError::Internal {
-                detail: format!("prepare list evidence_object: {e}"),
+                detail: format!("list evidence_object prepare: {e}"),
             })?;
         let rows = stmt
-            .query_map([case_uuid], |row| {
+            .query_map(params![case_uuid], |row| {
                 Ok(EvidenceObject {
                     evidence_uuid: row.get(0)?,
                     case_uuid: row.get(1)?,
@@ -182,15 +181,84 @@ impl CaseDb {
                 })
             })
             .map_err(|e| LabError::Internal {
-                detail: format!("query evidence_object: {e}"),
+                detail: format!("list evidence_object query: {e}"),
             })?;
         let mut out = Vec::new();
-        for row in rows {
-            out.push(row.map_err(|e| LabError::Internal {
-                detail: format!("row evidence_object: {e}"),
+        for r in rows {
+            out.push(r.map_err(|e| LabError::Internal {
+                detail: format!("list evidence_object row: {e}"),
             })?);
         }
         Ok(out)
+    }
+
+    /// List coverage records for a case (oldest first).
+    pub fn list_coverage_records(&self, case_uuid: &str) -> LabResult<Vec<CoverageRecord>> {
+        let mut stmt = self
+            .connection()
+            .prepare(
+                "SELECT coverage_uuid, case_uuid, created_at_utc, scope, status, detail_json
+                 FROM coverage_record WHERE case_uuid = ?1
+                 ORDER BY created_at_utc ASC",
+            )
+            .map_err(|e| LabError::Internal {
+                detail: format!("list coverage_record prepare: {e}"),
+            })?;
+        let rows = stmt
+            .query_map(params![case_uuid], |row| {
+                Ok(CoverageRecord {
+                    coverage_uuid: row.get(0)?,
+                    case_uuid: row.get(1)?,
+                    created_at_utc: row.get(2)?,
+                    scope: row.get(3)?,
+                    status: row.get(4)?,
+                    detail_json: row.get(5)?,
+                })
+            })
+            .map_err(|e| LabError::Internal {
+                detail: format!("list coverage_record query: {e}"),
+            })?;
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r.map_err(|e| LabError::Internal {
+                detail: format!("list coverage_record row: {e}"),
+            })?);
+        }
+        Ok(out)
+    }
+
+    /// Latest provenance path for an evidence uuid, if present in detail_json.
+    pub fn evidence_source_path(
+        &self,
+        case_uuid: &str,
+        evidence_uuid: &str,
+    ) -> LabResult<Option<String>> {
+        let mut stmt = self
+            .connection()
+            .prepare(
+                "SELECT detail_json FROM provenance_event
+                 WHERE case_uuid = ?1 AND evidence_uuid = ?2
+                 ORDER BY created_at_utc DESC LIMIT 1",
+            )
+            .map_err(|e| LabError::Internal {
+                detail: format!("provenance path prepare: {e}"),
+            })?;
+        let mut rows =
+            stmt.query(params![case_uuid, evidence_uuid])
+                .map_err(|e| LabError::Internal {
+                    detail: format!("provenance path query: {e}"),
+                })?;
+        if let Some(row) = rows.next().map_err(|e| LabError::Internal {
+            detail: format!("provenance path next: {e}"),
+        })? {
+            let detail: String = row.get(0).map_err(|e| LabError::Internal {
+                detail: format!("provenance path get: {e}"),
+            })?;
+            Ok(extract_json_string_field(&detail, "path")
+                .or_else(|| extract_json_string_field(&detail, "source_path")))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Reject mutation helpers — append-only surface has no update/delete API.
@@ -226,4 +294,13 @@ impl CaseDb {
             })?;
         Ok(count as u64)
     }
+}
+
+/// Minimal JSON string-field extractor (avoids a serde_json dependency here).
+fn extract_json_string_field(detail: &str, key: &str) -> Option<String> {
+    let needle = format!("\"{key}\":\"");
+    let i = detail.find(&needle)?;
+    let rest = &detail[i + needle.len()..];
+    let end = rest.find('"')?;
+    Some(rest[..end].to_string())
 }

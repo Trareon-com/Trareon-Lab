@@ -16,6 +16,8 @@ pub enum LabError {
     IntegrityFailed { detail: String },
     /// Schema validation failed for a foundation record.
     SchemaInvalid { schema: String, detail: String },
+    /// Scope policy denied an action (FR-CASE-004).
+    ScopeDenied { detail: String },
     /// Internal invariant broken; treat as fail-closed.
     Internal { detail: String },
 }
@@ -29,6 +31,7 @@ impl LabError {
             Self::CaseLockConflict { .. } => "CASE_LOCK_CONFLICT",
             Self::IntegrityFailed { .. } => "INTEGRITY_FAILED",
             Self::SchemaInvalid { .. } => "SCHEMA_INVALID",
+            Self::ScopeDenied { .. } => "SCOPE_DENY",
             Self::Internal { .. } => "INTERNAL",
         }
     }
@@ -45,6 +48,7 @@ impl fmt::Display for LabError {
             }
             Self::CaseLockConflict { detail }
             | Self::IntegrityFailed { detail }
+            | Self::ScopeDenied { detail }
             | Self::Internal { detail } => {
                 write!(f, "{}: {detail}", self.code())
             }

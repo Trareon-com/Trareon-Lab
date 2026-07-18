@@ -7,26 +7,20 @@ export component StatusBadge inherits Rectangle {
 
     border-radius: 4px;
     height: 22px;
-    border-width: kind == "neutral" ? 1px : 0px;
-    border-color: Theme.border;
     background: kind == "ok" ? Theme.success
         : kind == "warn" ? Theme.warning
         : kind == "danger" ? Theme.danger
         : kind == "info" ? Theme.info
-        : Theme.surface-raised;
-    horizontal-stretch: 0;
-    vertical-stretch: 0;
+        : Theme.accent-muted;
 
     HorizontalLayout {
         padding-left: 8px;
         padding-right: 8px;
         Text {
             text: root.label;
-            color: kind == "warn" ? #1A1400
-                : kind == "neutral" ? Theme.text-secondary
-                : Theme.on-accent;
-            font-size: 10px;
-            font-weight: 700;
+            color: kind == "warn" ? #1A1400 : Theme.on-accent;
+            font-size: 11px;
+            font-weight: 600;
             vertical-alignment: center;
         }
     }

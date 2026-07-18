@@ -1,5 +1,7 @@
 //! Filesystem enumeration for Trareon Lab (Day 16+).
 
+pub mod apfs;
+pub mod apfs_synth;
 mod content;
 pub mod ext4;
 pub mod fat;
@@ -8,6 +10,10 @@ pub mod ntfs;
 mod ntfs_synth;
 mod unix_synth;
 
+pub use apfs::{
+    detect_apfs, enumerate_apfs, parse_apfs_container, write_minimal_apfs_image,
+    ApfsContainerSuperblock, ApfsFileEntry, ApfsVolume, APFS_NX_MAGIC, APFS_VOLUME_MAGIC,
+};
 pub use content::{
     ingest_synth_file_to_cas, load_fs_content_synthetic, read_synth_file_bytes,
     write_fs_content_synthetic, CasIngestResult, SynthFileContent, FS_CONTENT_SYNTH_MAGIC,

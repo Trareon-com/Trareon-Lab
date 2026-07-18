@@ -1,5 +1,6 @@
 //! Days 29/35/39 UI coverage.
 
+use lab_core::ClaimType;
 use lab_slint::{ArtifactHitRow, FindingRow, NavScreen, UiSnapshot};
 
 #[test]
@@ -9,7 +10,10 @@ fn artifacts_timeline_findings_report_transfer() {
         kind: "windows.prefetch".into(),
         summary: "NOTEPAD".into(),
         provenance_ref: "prefetch:NOTEPAD".into(),
+        claim_type: ClaimType::Indication,
+        uncertainty: "complete".into(),
     }]);
+    assert_eq!(snap.artifact_hits[0].claim_type, ClaimType::Indication);
     snap.open_provenance("prefetch:NOTEPAD");
     assert_eq!(snap.provenance_open.as_deref(), Some("prefetch:NOTEPAD"));
     snap.set_timeline(vec!["2026-01-01 NOTEPAD".into()]);
@@ -17,6 +21,7 @@ fn artifacts_timeline_findings_report_transfer() {
     snap.set_findings(vec![FindingRow {
         claim: "ran".into(),
         bookmark_uuid: "b1".into(),
+        claim_type: ClaimType::Observation,
     }]);
     snap.set_report_state("draft");
     assert_eq!(snap.report_state, "draft");

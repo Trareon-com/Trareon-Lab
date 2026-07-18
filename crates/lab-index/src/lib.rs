@@ -3,7 +3,8 @@
 use std::path::{Path, PathBuf};
 
 use lab_core::{LabError, LabResult};
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{params, params_from_iter, types::Value, Connection, OptionalExtension};
+use serde::{Deserialize, Serialize};
 
 const CURRENT_SCHEMA_VERSION: i32 = 1;
 
@@ -16,6 +17,172 @@ pub struct IndexEntry {
     pub display_text: String,
     pub sort_key: String,
     pub created_at_utc: String,
+}
+
+/// One parsed search operand.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SearchTerm {
+    Phrase(String),
+    Text {
+        value: String,
+        wildcard_prefix: bool,
+        wildcard_suffix: bool,
+    },
+    Hex(String),
+}
+
+/// Search expression represented as OR groups containing AND operands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SearchQuery {
+    pub query: String,
+    pub clauses: Vec<Vec<SearchTerm>>,
+}
+
+impl SearchQuery {
+    /// Parse phrases, `AND`/`OR` (AND has precedence), wildcards, and `hex:` operands.
+    pub fn parse(input: &str) -> LabResult<Self> {
+        enum Token {
+            Term(SearchTerm),
+            And,
+            Or,
+        }
+
+        let invalid = |detail: String| LabError::SchemaInvalid {
+            schema: "search_query".into(),
+            detail,
+        };
+        let parse_term = |raw: String, phrase: bool| -> LabResult<SearchTerm> {
+            if raw.is_empty() {
+                return Err(invalid("empty search operand".into()));
+            }
+            if phrase {
+                return Ok(SearchTerm::Phrase(raw));
+            }
+            if raw
+                .get(..4)
+                .is_some_and(|prefix| prefix.eq_ignore_ascii_case("hex:"))
+            {
+                let hex = &raw[4..];
+                if hex.is_empty()
+                    || !hex.len().is_multiple_of(2)
+                    || !hex.bytes().all(|b| b.is_ascii_hexdigit())
+                {
+                    return Err(invalid(
+                        "hex: requires a non-empty, even number of hexadecimal digits".into(),
+                    ));
+                }
+                return Ok(SearchTerm::Hex(hex.to_ascii_lowercase()));
+            }
+            let wildcard_prefix = raw.starts_with('*');
+            let wildcard_suffix = raw.ends_with('*');
+            let value = raw.trim_matches('*').to_string();
+            Ok(SearchTerm::Text {
+                value,
+                wildcard_prefix,
+                wildcard_suffix,
+            })
+        };
+
+        let mut tokens = Vec::new();
+        let mut chars = input.chars().peekable();
+        while let Some(ch) = chars.next() {
+            if ch.is_whitespace() {
+                continue;
+            }
+            if ch == '"' {
+                let mut phrase = String::new();
+                let mut closed = false;
+                while let Some(next) = chars.next() {
+                    match next {
+                        '"' => {
+                            closed = true;
+                            break;
+                        }
+                        '\\' => match chars.next() {
+                            Some(escaped @ ('"' | '\\')) => phrase.push(escaped),
+                            Some(other) => {
+                                phrase.push('\\');
+                                phrase.push(other);
+                            }
+                            None => phrase.push('\\'),
+                        },
+                        other => phrase.push(other),
+                    }
+                }
+                if !closed {
+                    return Err(invalid("unterminated quoted phrase".into()));
+                }
+                tokens.push(Token::Term(parse_term(phrase, true)?));
+                continue;
+            }
+
+            let mut word = String::from(ch);
+            while let Some(next) = chars.peek() {
+                if next.is_whitespace() {
+                    break;
+                }
+                word.push(chars.next().expect("peeked character"));
+            }
+            if word.eq_ignore_ascii_case("AND") {
+                tokens.push(Token::And);
+            } else if word.eq_ignore_ascii_case("OR") {
+                tokens.push(Token::Or);
+            } else {
+                tokens.push(Token::Term(parse_term(word, false)?));
+            }
+        }
+
+        let mut clauses = vec![Vec::new()];
+        let mut expecting_term = true;
+        for token in tokens {
+            match token {
+                Token::Term(term) => {
+                    clauses.last_mut().expect("initial clause").push(term);
+                    expecting_term = false;
+                }
+                Token::And => {
+                    if expecting_term {
+                        return Err(invalid("AND requires an operand on each side".into()));
+                    }
+                    expecting_term = true;
+                }
+                Token::Or => {
+                    if expecting_term {
+                        return Err(invalid("OR requires an operand on each side".into()));
+                    }
+                    clauses.push(Vec::new());
+                    expecting_term = true;
+                }
+            }
+        }
+        if expecting_term && clauses.iter().any(|clause| !clause.is_empty()) {
+            return Err(invalid("query cannot end with a boolean operator".into()));
+        }
+
+        Ok(Self {
+            query: input.to_string(),
+            clauses,
+        })
+    }
+}
+
+/// A bounded search page with explicit coverage status.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SearchResult {
+    pub entries: Vec<IndexEntry>,
+    pub truncated: bool,
+    pub truncation_reason: Option<String>,
+}
+
+/// Persistable record of the search inputs and observed result counts.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SearchPlan {
+    pub query: String,
+    pub scope: String,
+    pub encodings: Vec<String>,
+    pub error_count: u64,
+    pub hit_count: u64,
+    pub tags: Vec<String>,
 }
 
 /// Versioned forensic index database.
@@ -268,6 +435,87 @@ pub fn index_fs_entries(
 }
 
 impl IndexDb {
+    /// Execute a parsed search and fetch at most `limit` rows.
+    ///
+    /// Paths and names are stored as UTF-8 SQLite `TEXT`. Hex operands search the
+    /// ASCII-hex representation in `target_ref` and `display_text`; schema v1 has
+    /// no separate content column.
+    pub fn search(
+        &self,
+        case_uuid: &str,
+        query: &SearchQuery,
+        limit: usize,
+    ) -> LabResult<SearchResult> {
+        let mut sql = String::from(
+            "SELECT case_uuid, entry_kind, target_ref, display_text, sort_key, created_at_utc
+             FROM index_entry WHERE case_uuid = ?",
+        );
+        let mut bindings = vec![Value::Text(case_uuid.to_string())];
+
+        if query.clauses.iter().any(|clause| !clause.is_empty()) {
+            sql.push_str(" AND (");
+            for (clause_index, clause) in query.clauses.iter().enumerate() {
+                if clause_index > 0 {
+                    sql.push_str(" OR ");
+                }
+                sql.push('(');
+                for (term_index, term) in clause.iter().enumerate() {
+                    if term_index > 0 {
+                        sql.push_str(" AND ");
+                    }
+                    sql.push_str(
+                        "(LOWER(target_ref) LIKE ? ESCAPE '\\' OR \
+                         LOWER(display_text) LIKE ? ESCAPE '\\')",
+                    );
+                    let pattern = search_like_pattern(term);
+                    bindings.push(Value::Text(pattern.clone()));
+                    bindings.push(Value::Text(pattern));
+                }
+                sql.push(')');
+            }
+            sql.push(')');
+        }
+        sql.push_str(" ORDER BY sort_key ASC LIMIT ?");
+        let fetch_limit = limit.saturating_add(1).min(i64::MAX as usize);
+        bindings.push(Value::Integer(fetch_limit as i64));
+
+        let mut stmt = self.conn.prepare(&sql).map_err(|e| LabError::Internal {
+            detail: format!("prepare search query: {e}"),
+        })?;
+        let rows = stmt
+            .query_map(params_from_iter(bindings), |row| {
+                Ok(IndexEntry {
+                    case_uuid: row.get(0)?,
+                    entry_kind: row.get(1)?,
+                    target_ref: row.get(2)?,
+                    display_text: row.get(3)?,
+                    sort_key: row.get(4)?,
+                    created_at_utc: row.get(5)?,
+                })
+            })
+            .map_err(|e| LabError::Internal {
+                detail: format!("execute search query: {e}"),
+            })?;
+        let mut entries = Vec::new();
+        for row in rows {
+            entries.push(row.map_err(|e| LabError::Internal {
+                detail: format!("read search result: {e}"),
+            })?);
+        }
+
+        let truncated = entries.len() > limit;
+        entries.truncate(limit);
+        Ok(SearchResult {
+            entries,
+            truncated,
+            truncation_reason: truncated.then(|| {
+                format!(
+                    "result limit {limit} reached; coverage is partial—raise the limit or narrow the query"
+                )
+            }),
+        })
+    }
+
     /// Day 41: search by path/name substring (hash treated as target_ref match).
     pub fn query_path_name_hash(
         &self,
@@ -308,5 +556,27 @@ impl IndexDb {
             })?);
         }
         Ok(out)
+    }
+}
+
+fn search_like_pattern(term: &SearchTerm) -> String {
+    let (value, wildcard_prefix, wildcard_suffix) = match term {
+        SearchTerm::Phrase(value) | SearchTerm::Hex(value) => (value.as_str(), true, true),
+        SearchTerm::Text {
+            value,
+            wildcard_prefix,
+            wildcard_suffix,
+        } => (value.as_str(), *wildcard_prefix, *wildcard_suffix),
+    };
+    let escaped = value
+        .to_lowercase()
+        .replace('\\', "\\\\")
+        .replace('%', "\\%")
+        .replace('_', "\\_");
+    match (wildcard_prefix, wildcard_suffix) {
+        (true, true) => format!("%{escaped}%"),
+        (true, false) => format!("%{escaped}"),
+        (false, true) => format!("{escaped}%"),
+        (false, false) => format!("%{escaped}%"),
     }
 }

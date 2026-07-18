@@ -10,6 +10,10 @@ bash scripts/check-fr-doc-002.sh
 
 ## Current posture (2026-07-17)
 
-- Engineering Alpha methods: `UNIT_VERIFIED` / `Limited` where dossiers say so.
-- Official `Validated` promotions: **not performed** — wait for corpora under `release-evidence/OFFICIAL-1.0.0/corpora/` plus guide inventory in the Official manifest.
+- Engineering Alpha methods use dossier-scoped levels, including
+  `CORPUS_VALIDATED` / `Validated` only for the exact frozen subsets named in
+  APFS, E01, YARA/hash-set, search, and export dossiers.
+- These subset promotions are not an Official release claim. Official status
+  still requires the frozen release-evidence corpora and guide inventory in
+  the Official manifest.
 - Package intake may remain `CORPUS_VALIDATED` only for `.fsnap` synthetic + Acquire fixtures already covered by Foundation/R1 intake tests.

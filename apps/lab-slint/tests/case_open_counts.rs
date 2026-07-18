@@ -54,5 +54,7 @@ fn open_case_reads_evidence_and_coverage_counts_from_db() {
 
     let listed = db.list_evidence_objects(case_uuid).expect("list");
     assert_eq!(listed.len(), 2);
-    assert_eq!(listed[0].display_name, "logical.zip");
+    // Oldest-first ordering (Lab Core Perfect list API).
+    assert_eq!(listed[0].display_name, "evidence.raw");
+    assert_eq!(listed[1].display_name, "logical.zip");
 }

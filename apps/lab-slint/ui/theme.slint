@@ -1,63 +1,69 @@
-// Institutional Dark Lab color tokens (spec §4.2).
+// Trareon Forensic Family tokens — copper brand accent; teal = lab-accent.
 
 export global Theme {
-    in-out property <bool> dark: true;
-    in-out property <color> canvas: #0F1218;
-    in-out property <color> surface: #171B24;
-    in-out property <color> surface-raised: #1E2430;
-    in-out property <color> border: #2A3140;
-    in-out property <color> text-primary: #E8ECF2;
-    in-out property <color> text-secondary: #9AA3B5;
-    in-out property <color> accent: #3D9B8F;
-    in-out property <color> accent-muted: #2A6B63;
-    in-out property <color> danger: #C45C5C;
+    in-out property <bool> dark: false;
+    in-out property <color> canvas: #E8EDF2;
+    in-out property <color> surface: #FFFFFF;
+    in-out property <color> surface-raised: #F0F3F7;
+    in-out property <color> border: #D0D8E0;
+    in-out property <color> text-primary: #121820;
+    in-out property <color> text-secondary: #5A6A78;
+    in-out property <color> accent: #A86B3E;
+    in-out property <color> accent-muted: #E8D5C4;
+    in-out property <color> lab-accent: #2F7F75;
+    in-out property <color> danger: #B04040;
     in-out property <color> warning: #C9A227;
     in-out property <color> success: #4F9F6A;
     in-out property <color> info: #5B8FD9;
-    in-out property <color> row-hover: #222836;
-    in-out property <color> nav-active-bar: #3D9B8F;
-    in-out property <color> mono-fg: #B8C0D0;
-    in-out property <color> status-bar-bg: #12161E;
-    in-out property <color> on-accent: #F4FFFC;
+    in-out property <color> row-hover: #F3EAE3;
+    in-out property <color> nav-active-bar: #A86B3E;
+    in-out property <color> mono-fg: #3A4254;
+    in-out property <color> status-bar-bg: #F0F3F7;
+    in-out property <color> on-accent: #FFFFFF;
+    in-out property <color> focus-ring: #A86B3E;
 
     public function apply(is-dark: bool) {
         dark = is-dark;
         if is-dark {
-            canvas = #0F1218;
-            surface = #171B24;
-            surface-raised = #1E2430;
-            border = #2A3140;
-            text-primary = #E8ECF2;
-            text-secondary = #9AA3B5;
-            accent = #3D9B8F;
-            accent-muted = #2A6B63;
-            danger = #C45C5C;
+            canvas = #080C10;
+            surface = #121A22;
+            surface-raised = #1A2430;
+            border = #2A3848;
+            text-primary = #EEF3F7;
+            text-secondary = #93A3B4;
+            accent = #D09262;
+            accent-muted = #2A1F16;
+            lab-accent = #3D9B8F;
+            danger = #D16B6B;
             warning = #C9A227;
             success = #4F9F6A;
             info = #5B8FD9;
-            row-hover = #222836;
-            nav-active-bar = #3D9B8F;
+            row-hover = #22303B;
+            nav-active-bar = #D09262;
             mono-fg = #B8C0D0;
-            status-bar-bg = #12161E;
+            status-bar-bg = #0E151C;
             on-accent = #F4FFFC;
+            focus-ring = #D09262;
         } else {
-            canvas = #F4F6F9;
+            canvas = #E8EDF2;
             surface = #FFFFFF;
-            surface-raised = #EEF1F6;
-            border = #D8DEE8;
-            text-primary = #12151C;
-            text-secondary = #5A6478;
-            accent = #2F7F75;
-            accent-muted = #C5E4DF;
+            surface-raised = #F0F3F7;
+            border = #D0D8E0;
+            text-primary = #121820;
+            text-secondary = #5A6A78;
+            accent = #A86B3E;
+            accent-muted = #E8D5C4;
+            lab-accent = #2F7F75;
             danger = #B04040;
-            warning = #A8841A;
-            success = #2F7A4A;
-            info = #3A6FB5;
-            row-hover = #E4E9F1;
-            nav-active-bar = #2F7F75;
+            warning = #C9A227;
+            success = #4F9F6A;
+            info = #5B8FD9;
+            row-hover = #F3EAE3;
+            nav-active-bar = #A86B3E;
             mono-fg = #3A4254;
-            status-bar-bg = #E8ECF2;
+            status-bar-bg = #F0F3F7;
             on-accent = #FFFFFF;
+            focus-ring = #A86B3E;
         }
     }
 }

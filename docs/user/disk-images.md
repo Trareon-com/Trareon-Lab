@@ -7,7 +7,8 @@
 | Format | Status |
 |---|---|
 | Raw / dd / `.img` | Supported — open, SHA-256, import to case registry |
-| E01 / Ex01 | **Limited** — fail closed until Day 14+ reader lands |
+| E01 | **Validated subset** — single-segment EWF v1; see `E01-DOSSIER.md` |
+| Ex01 / EWF2 | Unsupported — fail closed |
 | Other extensions | Unsupported — fail closed |
 
 ## Import flow
@@ -23,5 +24,5 @@ Missing, empty, truncated, or unsupported containers must fail closed. Lab never
 
 ## What this is not
 
-- Not a claim of E01 completeness.
+- Not a claim of complete E01 producer compatibility or multi-segment support.
 - Not court-ready packaging or ISO accreditation.

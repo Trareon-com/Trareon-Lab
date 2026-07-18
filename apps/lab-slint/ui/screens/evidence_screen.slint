@@ -1,50 +1,32 @@
 import { LineEdit } from "std-widgets.slint";
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
+import { SectionCard } from "../components/section_card.slint";
 import { EmptyState } from "../components/empty_state.slint";
+import { LabButton } from "../components/lab_button.slint";
 import { StatusBadge } from "../components/status_badge.slint";
 
 export component EvidenceRow inherits Rectangle {
     in-out property <string> name;
-    in-out property <string> path;
-    in-out property <string> size-label;
     in-out property <bool> deleted: false;
     in-out property <bool> selected: false;
     callback clicked();
 
-    height: 26px;
+    height: 30px;
     background: selected ? Theme.surface-raised : transparent;
-    border-radius: 3px;
+    border-radius: 4px;
 
     HorizontalLayout {
-        padding-left: 6px;
-        padding-right: 6px;
+        padding-left: 8px;
+        padding-right: 8px;
         spacing: 8px;
         Text {
             text: root.name;
             color: Theme.text-primary;
             font-size: 12px;
             vertical-alignment: center;
-            horizontal-stretch: 2;
+            horizontal-stretch: 1;
             overflow: elide;
-        }
-        Text {
-            text: root.path;
-            color: Theme.mono-fg;
-            font-family: "monospace";
-            font-size: 11px;
-            vertical-alignment: center;
-            horizontal-stretch: 3;
-            overflow: elide;
-        }
-        Text {
-            text: root.size-label;
-            color: Theme.mono-fg;
-            font-family: "monospace";
-            font-size: 11px;
-            vertical-alignment: center;
-            width: 72px;
-            horizontal-alignment: right;
         }
         if root.deleted: StatusBadge {
             label: Strings.deleted;
@@ -60,7 +42,6 @@ export component EvidenceRow inherits Rectangle {
     ]
 }
 
-/// Dense evidence table — detail lives in chrome Inspector.
 export component EvidenceScreen inherits Rectangle {
     in-out property <[string]> evidence-names;
     in-out property <[string]> evidence-paths;
@@ -70,51 +51,27 @@ export component EvidenceScreen inherits Rectangle {
     in-out property <string> filter-text: "";
     callback import-evidence-clicked();
     callback evidence-row-selected(int);
-    callback drop-import-clicked();
+    callback bookmark-selection-clicked();
+    callback find-related-clicked();
 
     background: transparent;
     property <bool> has-files: evidence-names.length > 0;
+    property <bool> has-selection: selected-file-index >= 0 && selected-file-index < evidence-names.length;
 
-    if !has-files: VerticalLayout {
-        padding: 8px;
-        spacing: 8px;
-        EmptyState {
-            title: Strings.empty-no-evidence;
-            body: Strings.empty-hint-evidence;
-            show-cta: true;
-            cta-label: Strings.import-evidence;
-            cta-clicked => { root.import-evidence-clicked(); }
-            vertical-stretch: 1;
-        }
-        Rectangle {
-            height: 36px;
-            border-width: 1px;
-            border-color: Theme.border;
-            border-radius: 4px;
-            background: Theme.surface;
-            HorizontalLayout {
-                padding-left: 10px;
-                padding-right: 10px;
-                Text {
-                    text: Strings.drop-import-hint;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                    vertical-alignment: center;
-                    overflow: elide;
-                }
-            }
-            TouchArea {
-                clicked => { root.drop-import-clicked(); }
-            }
-        }
+    if !has-files: EmptyState {
+        title: Strings.empty-no-evidence;
+        body: Strings.empty-hint-evidence;
+        show-cta: true;
+        cta-label: Strings.import-evidence;
+        cta-clicked => { root.import-evidence-clicked(); }
     }
 
     if has-files: VerticalLayout {
-        padding: 8px;
-        spacing: 6px;
+        padding: 12px;
+        spacing: 10px;
 
         HorizontalLayout {
-            spacing: 6px;
+            spacing: 8px;
             LineEdit {
                 text <=> root.filter-text;
                 placeholder-text: Strings.filter-placeholder;
@@ -128,56 +85,90 @@ export component EvidenceScreen inherits Rectangle {
             }
         }
 
-        // Header
-        Rectangle {
-            height: 24px;
-            background: Theme.surface;
-            border-radius: 3px;
-            HorizontalLayout {
-                padding-left: 6px;
-                padding-right: 6px;
-                spacing: 8px;
-                Text {
-                    text: Strings.col-name;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                    font-weight: 700;
-                    vertical-alignment: center;
-                    horizontal-stretch: 2;
-                }
-                Text {
-                    text: Strings.col-path;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                    font-weight: 700;
-                    vertical-alignment: center;
-                    horizontal-stretch: 3;
-                }
-                Text {
-                    text: Strings.col-size;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                    font-weight: 700;
-                    vertical-alignment: center;
-                    width: 72px;
-                    horizontal-alignment: right;
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+
+            SectionCard {
+                title: Strings.files-title;
+                horizontal-stretch: 2;
+                Flickable {
+                    vertical-stretch: 1;
+                    viewport-width: parent.width - 28px;
+                    VerticalLayout {
+                        spacing: 2px;
+                        width: parent.width - 28px;
+                        for name[index] in root.evidence-names: EvidenceRow {
+                            name: name;
+                            deleted: index < root.evidence-deleted.length ? root.evidence-deleted[index] : false;
+                            selected: root.selected-file-index == index;
+                            clicked => { root.evidence-row-selected(index); }
+                        }
+                    }
                 }
             }
-        }
 
-        Flickable {
-            vertical-stretch: 1;
-            viewport-width: parent.width - 16px;
-            VerticalLayout {
-                spacing: 1px;
-                width: parent.width - 16px;
-                for name[index] in root.evidence-names: EvidenceRow {
-                    name: name;
-                    path: index < root.evidence-paths.length ? root.evidence-paths[index] : "";
-                    size-label: index < root.evidence-sizes.length ? root.evidence-sizes[index] : "";
-                    deleted: index < root.evidence-deleted.length ? root.evidence-deleted[index] : false;
-                    selected: root.selected-file-index == index;
-                    clicked => { root.evidence-row-selected(index); }
+            SectionCard {
+                title: Strings.detail-title;
+                horizontal-stretch: 3;
+                if !root.has-selection: Text {
+                    text: Strings.empty-no-selection;
+                    color: Theme.text-secondary;
+                    font-size: 12px;
+                }
+                if root.has-selection: VerticalLayout {
+                    spacing: 10px;
+                    Text {
+                        text: Strings.col-name;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                    }
+                    Text {
+                        text: root.evidence-names[root.selected-file-index];
+                        color: Theme.text-primary;
+                        font-size: 13px;
+                        font-weight: 600;
+                    }
+                    Text {
+                        text: Strings.col-path;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                    }
+                    Text {
+                        text: root.selected-file-index < root.evidence-paths.length ? root.evidence-paths[root.selected-file-index] : "";
+                        color: Theme.mono-fg;
+                        font-family: "monospace";
+                        font-size: 12px;
+                        wrap: word-wrap;
+                    }
+                    Text {
+                        text: Strings.col-size;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                    }
+                    Text {
+                        text: root.selected-file-index < root.evidence-sizes.length ? root.evidence-sizes[root.selected-file-index] : "";
+                        color: Theme.mono-fg;
+                        font-family: "monospace";
+                        font-size: 12px;
+                    }
+                    if root.selected-file-index < root.evidence-deleted.length && root.evidence-deleted[root.selected-file-index]: StatusBadge {
+                        label: Strings.deleted;
+                        kind: "warn";
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        LabButton {
+                            primary: true;
+                            label: Strings.add-bookmark;
+                            clicked => { root.bookmark-selection-clicked(); }
+                        }
+                        LabButton {
+                            primary: false;
+                            label: Strings.find-related;
+                            clicked => { root.find-related-clicked(); }
+                        }
+                    }
                 }
             }
         }
