@@ -10,6 +10,11 @@ export component ReportScreen inherits Rectangle {
     in-out property <[string]> finding-claims;
     in-out property <[string]> finding-uuids;
     in-out property <string> about-line;
+    in-out property <bool> report-finalizable: false;
+    in-out property <[string]> report-blockers: [];
+    in-out property <string> export-status: "";
+    callback export-clicked();
+    callback transfer-export-clicked();
 
     background: transparent;
     property <bool> empty: finding-claims.length == 0;
@@ -31,11 +36,46 @@ export component ReportScreen inherits Rectangle {
                 label: root.report-state;
                 kind: root.report-state == "draft" ? "warn" : "ok";
             }
+            StatusBadge {
+                label: root.report-finalizable ? "finalizable" : "blocked";
+                kind: root.report-finalizable ? "ok" : "danger";
+            }
             Rectangle { horizontal-stretch: 1; }
             LabButton {
+                primary: true;
+                label: Strings.export-action;
+                clicked => { root.export-clicked(); }
+            }
+            LabButton {
                 primary: false;
-                label: Strings.export-soon;
-                clicked => { }
+                label: Strings.transfer-export;
+                clicked => { root.transfer-export-clicked(); }
+            }
+        }
+
+        Text {
+            text: Strings.sod-hint;
+            color: Theme.text-secondary;
+            font-size: 11px;
+        }
+
+        if root.export-status != "": Text {
+            text: root.export-status;
+            color: Theme.mono-fg;
+            font-family: "monospace";
+            font-size: 11px;
+            wrap: word-wrap;
+        }
+
+        if root.report-blockers.length > 0: SectionCard {
+            title: Strings.report-blockers-title;
+            VerticalLayout {
+                spacing: 4px;
+                for b in root.report-blockers: Text {
+                    text: "·  " + b;
+                    color: Theme.danger;
+                    font-size: 12px;
+                }
             }
         }
 

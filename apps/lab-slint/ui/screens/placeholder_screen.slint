@@ -1,0 +1,29 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { EmptyState } from "../components/empty_state.slint";
+import { SectionCard } from "../components/section_card.slint";
+
+/// Honest destination for nav items without a full screen yet.
+export component PlaceholderScreen inherits Rectangle {
+    in-out property <string> title: "";
+    in-out property <string> body: "";
+    background: transparent;
+
+    if root.body == "": EmptyState {
+        title: Strings.empty-not-in-build;
+        body: Strings.empty-hint-case;
+        show-cta: false;
+    }
+    if root.body != "": VerticalLayout {
+        padding: 12px;
+        SectionCard {
+            title: root.title;
+            Text {
+                text: root.body;
+                color: Theme.text-primary;
+                font-size: 13px;
+                wrap: word-wrap;
+            }
+        }
+    }
+}

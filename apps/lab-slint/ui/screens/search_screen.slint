@@ -12,6 +12,9 @@ export component SearchScreen inherits Rectangle {
     in-out property <[string]> artifact-summaries;
     in-out property <[string]> artifact-provenances;
     in-out property <bool> search-attempted: false;
+    in-out property <string> search-coverage-label: "";
+    in-out property <[string]> yara-hit-lines: [];
+    in-out property <[string]> hashset-hit-lines: [];
     callback search-submitted();
     callback query-changed(string);
     callback open-in-evidence-clicked();
@@ -44,6 +47,50 @@ export component SearchScreen inherits Rectangle {
                 clicked => {
                     root.search-attempted = true;
                     root.search-submitted();
+                }
+            }
+        }
+
+        if root.search-coverage-label != "": Rectangle {
+            height: 28px;
+            border-radius: 4px;
+            background: Theme.surface-raised;
+            border-width: 1px;
+            border-color: Theme.border;
+            HorizontalLayout {
+                padding-left: 10px;
+                padding-right: 10px;
+                Text {
+                    text: Strings.search-coverage + ": " + root.search-coverage-label;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    vertical-alignment: center;
+                    overflow: elide;
+                }
+            }
+        }
+
+        if root.yara-hit-lines.length > 0: SectionCard {
+            title: Strings.yara-hits;
+            VerticalLayout {
+                spacing: 2px;
+                for line in root.yara-hit-lines: Text {
+                    text: line;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                }
+            }
+        }
+        if root.hashset-hit-lines.length > 0: SectionCard {
+            title: Strings.hashset-hits;
+            VerticalLayout {
+                spacing: 2px;
+                for line in root.hashset-hit-lines: Text {
+                    text: line;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
                 }
             }
         }

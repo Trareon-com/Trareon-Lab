@@ -8,8 +8,13 @@ export component InspectorPanel inherits Rectangle {
     in-out property <string> title: "";
     in-out property <string> path: "";
     in-out property <string> size-label: "";
+    in-out property <string> designation-label: "";
+    in-out property <string> integrity-label: "";
     in-out property <bool> deleted: false;
     in-out property <bool> has-selection: false;
+    in-out property <bool> tagged: false;
+    in-out property <string> hex-status: "";
+    in-out property <[string]> hex-lines: [];
     callback bookmark-clicked();
     callback find-related-clicked();
     callback close-clicked();
@@ -88,9 +93,34 @@ export component InspectorPanel inherits Rectangle {
                     font-family: "monospace";
                     font-size: 11px;
                 }
+                Text {
+                    text: Strings.designation;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                }
+                Text {
+                    text: root.designation-label;
+                    color: Theme.text-primary;
+                    font-size: 12px;
+                }
+                Text {
+                    text: Strings.integrity;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                }
+                StatusBadge {
+                    label: root.integrity-label;
+                    kind: root.integrity-label == "VerifiedMatch" ? "ok"
+                        : root.integrity-label == "VerifiedMismatch" ? "danger"
+                        : "info";
+                }
                 if root.deleted: StatusBadge {
                     label: Strings.deleted;
                     kind: "warn";
+                }
+                if root.tagged: StatusBadge {
+                    label: Strings.tagged;
+                    kind: "ok";
                 }
                 HorizontalLayout {
                     spacing: 6px;
@@ -104,6 +134,31 @@ export component InspectorPanel inherits Rectangle {
                     primary: false;
                     label: Strings.find-related;
                     clicked => { root.find-related-clicked(); }
+                }
+                Text {
+                    text: Strings.hex-title;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 700;
+                }
+                Text {
+                    text: root.hex-status;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    wrap: word-wrap;
+                }
+                Flickable {
+                    height: 120px;
+                    viewport-width: parent.width;
+                    VerticalLayout {
+                        spacing: 1px;
+                        for line in root.hex-lines: Text {
+                            text: line;
+                            color: Theme.mono-fg;
+                            font-family: "monospace";
+                            font-size: 10px;
+                        }
+                    }
                 }
             }
 

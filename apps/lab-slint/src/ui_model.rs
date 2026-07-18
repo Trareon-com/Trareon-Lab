@@ -50,6 +50,7 @@ impl NavScreen {
 
     pub fn from_label(label: &str) -> Self {
         match label {
+            "Home" | "Case" | "CaseHome" => Self::CaseHome,
             "Evidence" => Self::Evidence,
             "Hex" => Self::Hex,
             "Artifacts" => Self::Artifacts,
@@ -201,6 +202,27 @@ pub struct UiSnapshot {
     pub log_open: bool,
     pub palette_open: bool,
     pub log_lines: Vec<String>,
+    /// Coverage / parser failures for Case Home Exceptions inbox.
+    pub exception_lines: Vec<String>,
+    /// RunManifest compare lines for Runs screen.
+    pub run_compare_lines: Vec<String>,
+    /// Honest search coverage banner (e.g. "partial · first page").
+    pub search_coverage_label: String,
+    /// Palette command ids currently shown.
+    pub palette_commands: Vec<String>,
+    /// YARA / hash-set hit summaries (Validated engine → UI).
+    pub yara_hit_lines: Vec<String>,
+    pub hashset_hit_lines: Vec<String>,
+    /// Transfer / export honesty labels.
+    pub export_status: String,
+    pub transfer_trust_label: String,
+    /// Placeholder body for nav destinations without a dedicated screen.
+    pub placeholder_title: String,
+    pub placeholder_body: String,
+    /// Prefs path last used (persisted when available).
+    pub prefs_last_case: String,
+    /// Keyboard cheat-sheet overlay.
+    pub cheatsheet_open: bool,
 }
 
 impl Default for UiSnapshot {
@@ -228,7 +250,7 @@ impl Default for UiSnapshot {
             second_method_count: 0,
             blind_pt_status: "none".into(),
             about_disclosure: "SBOM: release-evidence/sbom/; UNSIGNED — Lab use only; NOT court-ready / NOT ISO-certified".into(),
-            dark_mode: false,
+            dark_mode: true,
             locale: "en".into(),
             progress_ratio: 0.0,
             progress_stage: String::new(),
@@ -268,11 +290,178 @@ impl Default for UiSnapshot {
             log_open: false,
             palette_open: false,
             log_lines: Vec::new(),
+            exception_lines: Vec::new(),
+            run_compare_lines: Vec::new(),
+            search_coverage_label: String::new(),
+            palette_commands: Self::default_palette_commands(),
+            yara_hit_lines: Vec::new(),
+            hashset_hit_lines: Vec::new(),
+            export_status: String::new(),
+            transfer_trust_label: String::new(),
+            placeholder_title: String::new(),
+            placeholder_body: String::new(),
+            prefs_last_case: String::new(),
+            cheatsheet_open: false,
         }
     }
 }
 
 impl UiSnapshot {
+    pub fn default_palette_commands() -> Vec<String> {
+        vec![
+            "Open Case".into(),
+            "Import Evidence".into(),
+            "Go Case".into(),
+            "Go Evidence".into(),
+            "Go Search".into(),
+            "Go Timeline".into(),
+            "Go Bookmarks".into(),
+            "Go Report".into(),
+            "Go Runs".into(),
+            "Go Transfer".into(),
+            "Toggle Inspector".into(),
+            "Toggle Log".into(),
+            "Toggle Nav".into(),
+            "Toggle Cheatsheet".into(),
+        ]
+    }
+
+    pub fn selected_file(&self) -> Option<&EvidenceFileRow> {
+        self.selected_file_index
+            .and_then(|i| self.evidence_files.get(i))
+    }
+
+    pub fn set_exceptions(&mut self, lines: Vec<String>) {
+        self.exception_lines = lines;
+    }
+
+    pub fn set_run_compare(&mut self, lines: Vec<String>) {
+        self.run_compare_lines = lines;
+        self.active_screen = NavScreen::Runs;
+    }
+
+    pub fn set_search_coverage(&mut self, label: impl Into<String>) {
+        self.search_coverage_label = label.into();
+    }
+
+    pub fn activate_palette_command(&mut self, cmd: &str) {
+        self.palette_open = false;
+        self.push_log(format!("palette · {cmd}"));
+        match cmd {
+            "Open Case" => {
+                self.open_case_focused = true;
+                self.navigate_to(NavScreen::CaseHome);
+            }
+            "Import Evidence" => self.navigate_to(NavScreen::Evidence),
+            "Go Case" => self.navigate_to(NavScreen::CaseHome),
+            "Go Evidence" => self.navigate_to(NavScreen::Evidence),
+            "Go Search" => self.navigate_to(NavScreen::Search),
+            "Go Timeline" => self.navigate_to(NavScreen::Timeline),
+            "Go Bookmarks" => self.navigate_to(NavScreen::Bookmarks),
+            "Go Report" => self.navigate_to(NavScreen::Report),
+            "Go Runs" => self.navigate_to(NavScreen::Runs),
+            "Go Transfer" => self.navigate_to(NavScreen::Transfer),
+            "Toggle Inspector" => self.inspector_open = !self.inspector_open,
+            "Toggle Log" => self.log_open = !self.log_open,
+            "Toggle Nav" => self.nav_collapsed = !self.nav_collapsed,
+            "Toggle Cheatsheet" => self.cheatsheet_open = !self.cheatsheet_open,
+            _ => {}
+        }
+    }
+
+    pub fn filter_palette(&mut self, filter: &str) {
+        let f = filter.trim().to_ascii_lowercase();
+        if f.is_empty() {
+            self.palette_commands = Self::default_palette_commands();
+            return;
+        }
+        self.palette_commands = Self::default_palette_commands()
+            .into_iter()
+            .filter(|c| c.to_ascii_lowercase().contains(&f))
+            .collect();
+    }
+
+    pub fn update_placeholder_for_screen(&mut self) {
+        let (title, body) = match self.active_screen {
+            NavScreen::Hex => (
+                "Hex".into(),
+                "Hex lives in the Inspector when a file is selected. Open Evidence, select a row."
+                    .into(),
+            ),
+            NavScreen::Artifacts => (
+                "Artifacts".into(),
+                "Artifact parsers run via Search / intake. No fabricated hits.".into(),
+            ),
+            NavScreen::Graph => {
+                if self.graph_edges.is_empty() {
+                    (
+                        "Graph".into(),
+                        "No correlation edges yet. Edges appear when session records them.".into(),
+                    )
+                } else {
+                    ("Graph".into(), self.graph_edges.join("\n"))
+                }
+            }
+            NavScreen::Hypotheses => (
+                "Hypotheses".into(),
+                "Hypothesis register is not in this build.".into(),
+            ),
+            NavScreen::SecondMethod => (
+                "Second method".into(),
+                "Record second-method validation from Runs / validation hooks.".into(),
+            ),
+            NavScreen::Pt => (
+                "Blind PT".into(),
+                format!("Status: {}", self.blind_pt_status),
+            ),
+            NavScreen::Capabilities => (
+                "Capabilities".into(),
+                if self.capabilities.is_empty() {
+                    "See docs/validation dossiers for Validated subsets.".into()
+                } else {
+                    self.capabilities
+                        .iter()
+                        .map(|(id, status, note)| format!("{id} · {status} · {note}"))
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                },
+            ),
+            NavScreen::About => ("About".into(), self.about_disclosure.clone()),
+            NavScreen::Transfer => (
+                "Transfer".into(),
+                if self.transfer_status.is_empty() {
+                    "Export a signed package from an open case (Ed25519). Tamper → Invalid.".into()
+                } else {
+                    format!(
+                        "{}\nTrust: {}",
+                        self.transfer_status, self.transfer_trust_label
+                    )
+                },
+            ),
+            NavScreen::Runs => (
+                "Runs".into(),
+                if self.run_compare_lines.is_empty() {
+                    "No run manifests compared yet.".into()
+                } else {
+                    self.run_compare_lines.join("\n")
+                },
+            ),
+            _ => (String::new(), String::new()),
+        };
+        self.placeholder_title = title;
+        self.placeholder_body = body;
+    }
+
+    /// Import Plaso/Hayabusa-style CSV lines into timeline (honest adapter; no sidecar spawn).
+    pub fn import_timeline_csv_lines(&mut self, lines: Vec<String>) {
+        self.timeline_labels = lines;
+        self.active_screen = NavScreen::Timeline;
+        self.push_log(format!(
+            "timeline import · {} event label(s)",
+            self.timeline_labels.len()
+        ));
+    }
+
     pub fn open_case(&mut self, title: impl Into<String>, evidence: i32, coverage: i32) {
         self.case_title = title.into();
         self.case_state = CaseState::Open;
@@ -291,6 +480,7 @@ impl UiSnapshot {
     pub fn navigate_to(&mut self, screen: NavScreen) {
         self.active_screen = screen;
         self.open_case_focused = screen == NavScreen::CaseHome;
+        self.update_placeholder_for_screen();
     }
 
     pub fn set_bookmark_count(&mut self, count: i32) {
@@ -348,6 +538,8 @@ impl UiSnapshot {
             "Escape" => {
                 if self.palette_open {
                     self.palette_open = false;
+                } else if self.cheatsheet_open {
+                    self.cheatsheet_open = false;
                 } else {
                     self.selected_file_index = None;
                     self.provenance_open = None;
@@ -359,6 +551,7 @@ impl UiSnapshot {
             "4" => self.navigate_to(NavScreen::Timeline),
             "5" => self.navigate_to(NavScreen::Bookmarks),
             "6" => self.navigate_to(NavScreen::Report),
+            "?" => self.cheatsheet_open = !self.cheatsheet_open,
             "palette" => self.palette_open = !self.palette_open,
             "inspector" => self.inspector_open = !self.inspector_open,
             "log" => self.log_open = !self.log_open,

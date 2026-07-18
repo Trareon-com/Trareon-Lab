@@ -9,9 +9,11 @@ export component TimelineScreen inherits Rectangle {
     in-out property <[string]> timeline-labels;
     callback jump-evidence-clicked();
     callback bookmark-hit-clicked();
+    callback import-timeline-clicked();
 
     background: transparent;
     property <bool> empty: timeline-labels.length == 0;
+    property <int> event-count: timeline-labels.length;
 
     VerticalLayout {
         padding: 12px;
@@ -24,6 +26,11 @@ export component TimelineScreen inherits Rectangle {
                 enabled: false;
                 horizontal-stretch: 1;
             }
+            LabButton {
+                primary: false;
+                label: Strings.import-timeline;
+                clicked => { root.import-timeline-clicked(); }
+            }
             if !empty: LabButton {
                 primary: false;
                 label: Strings.jump-evidence;
@@ -33,6 +40,37 @@ export component TimelineScreen inherits Rectangle {
                 primary: false;
                 label: Strings.add-bookmark;
                 clicked => { root.bookmark-hit-clicked(); }
+            }
+        }
+
+        if !empty: Rectangle {
+            height: 36px;
+            border-radius: 4px;
+            background: Theme.surface-raised;
+            border-width: 1px;
+            border-color: Theme.border;
+            HorizontalLayout {
+                padding-left: 8px;
+                padding-right: 8px;
+                spacing: 4px;
+                Text {
+                    text: "\{root.event-count}";
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    vertical-alignment: center;
+                }
+                Rectangle {
+                    horizontal-stretch: 1;
+                    height: 12px;
+                    background: Theme.accent-muted;
+                    border-radius: 2px;
+                }
+                Text {
+                    text: "CFTL-lite overview";
+                    color: Theme.text-secondary;
+                    font-size: 10px;
+                    vertical-alignment: center;
+                }
             }
         }
 

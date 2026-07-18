@@ -4,12 +4,16 @@ import { ProgressIndicator } from "std-widgets.slint";
 import { NavItem } from "components/nav_item.slint";
 import { NavGroupLabel } from "components/nav_group_label.slint";
 import { StatusBadge } from "components/status_badge.slint";
+import { InspectorPanel } from "components/inspector_panel.slint";
+import { CommandPalette } from "components/command_palette.slint";
 import { CaseScreen } from "screens/case_screen.slint";
 import { EvidenceScreen } from "screens/evidence_screen.slint";
 import { SearchScreen } from "screens/search_screen.slint";
 import { TimelineScreen } from "screens/timeline_screen.slint";
 import { BookmarksScreen } from "screens/bookmarks_screen.slint";
 import { ReportScreen } from "screens/report_screen.slint";
+import { PlaceholderScreen } from "screens/placeholder_screen.slint";
+import { RunsScreen } from "screens/runs_screen.slint";
 
 component SegmentBtn inherits Rectangle {
     in-out property <string> label;
@@ -77,6 +81,39 @@ component HeaderSearchChip inherits Rectangle {
     ]
 }
 
+component ChromeToggleChip inherits Rectangle {
+    in-out property <string> label;
+    in-out property <bool> active: false;
+    callback clicked();
+
+    height: 28px;
+    min-width: 36px;
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: active ? Theme.accent : Theme.border;
+    background: active ? Theme.surface-raised : Theme.surface;
+
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        Text {
+            text: root.label;
+            color: active ? Theme.accent : Theme.text-secondary;
+            font-size: 10px;
+            font-weight: 600;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+        }
+    }
+
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+    states [
+        hover when ta.has-hover && !root.active: { background: Theme.row-hover; }
+    ]
+}
+
 export component AppWindow inherits Window {
     title: Strings.brand;
     preferred-width: 1280px;
@@ -93,13 +130,20 @@ export component AppWindow inherits Window {
     in-out property <bool> open-case-focused: true;
     in-out property <string> active-screen: "Case";
     in-out property <string> about-line: "";
-    in-out property <bool> dark-mode: false;
+    in-out property <bool> dark-mode: true;
     in-out property <string> locale: "en";
     in-out property <bool> prefs-open: false;
+
+    in-out property <bool> nav-collapsed: false;
+    in-out property <bool> inspector-open: true;
+    in-out property <bool> log-open: false;
+    in-out property <bool> palette-open: false;
+    in-out property <bool> cheatsheet-open: false;
 
     in-out property <[string]> evidence-names: [];
     in-out property <[string]> evidence-paths: [];
     in-out property <[string]> evidence-sizes: [];
+    in-out property <[string]> evidence-designations: [];
     in-out property <[bool]> evidence-deleted: [];
     in-out property <[string]> evidence-integrity: [];
     in-out property <int> selected-file-index: -1;
@@ -111,12 +155,18 @@ export component AppWindow inherits Window {
     in-out property <[string]> artifact-summaries: [];
     in-out property <[string]> artifact-provenances: [];
     in-out property <bool> search-attempted: false;
+    in-out property <string> search-coverage-label: "";
+    in-out property <[string]> yara-hit-lines: [];
+    in-out property <[string]> hashset-hit-lines: [];
 
     in-out property <[string]> timeline-labels: [];
     in-out property <[string]> finding-claims: [];
     in-out property <[string]> finding-uuids: [];
     in-out property <string> report-state: "draft";
     in-out property <[string]> activity-lines: [];
+    in-out property <[string]> exception-lines: [];
+    in-out property <[string]> run-lines: [];
+    in-out property <[string]> log-lines: [];
     in-out property <float> progress-ratio: 0.0;
     in-out property <string> progress-stage: "";
     in-out property <string> progress-message: "";
@@ -126,6 +176,7 @@ export component AppWindow inherits Window {
     in-out property <string> coverage-status-label: "NotRun";
     in-out property <bool> report-finalizable: false;
     in-out property <[string]> report-blockers: [];
+    in-out property <string> export-status: "";
     in-out property <int> list-total: 0;
     in-out property <int> list-offset: 0;
     in-out property <int> list-page-size: 200;
@@ -135,6 +186,30 @@ export component AppWindow inherits Window {
     in-out property <[int]> tree-depths: [];
     in-out property <[string]> tree-kinds: [];
     in-out property <[int]> tree-file-index: [];
+
+    in-out property <[string]> palette-commands: [];
+    in-out property <string> palette-filter: "";
+    in-out property <string> placeholder-title: "";
+    in-out property <string> placeholder-body: "";
+
+    in-out property <string> inspector-title: "";
+    in-out property <string> inspector-path: "";
+    in-out property <string> inspector-size: "";
+    in-out property <string> inspector-designation: "";
+    in-out property <string> inspector-integrity: "";
+    in-out property <bool> inspector-deleted: false;
+    in-out property <bool> inspector-tagged: false;
+
+    property <bool> show-placeholder:
+        root.active-screen == "Hex"
+        || root.active-screen == "Artifacts"
+        || root.active-screen == "Graph"
+        || root.active-screen == "Transfer"
+        || root.active-screen == "Capabilities"
+        || root.active-screen == "About"
+        || root.active-screen == "SecondMethod"
+        || root.active-screen == "PT"
+        || root.active-screen == "Hypotheses";
 
     callback open-case-clicked();
     callback focus-open-case();
@@ -148,6 +223,16 @@ export component AppWindow inherits Window {
     callback bookmark-selection-clicked();
     callback find-related-clicked();
     callback header-search-clicked();
+    callback palette-filter-changed(string);
+    callback palette-command-activated(string);
+    callback palette-dismissed();
+    callback toggle-inspector-clicked();
+    callback toggle-log-clicked();
+    callback toggle-nav-clicked();
+    callback export-clicked();
+    callback transfer-export-clicked();
+    callback import-timeline-clicked();
+    callback shortcut-key(string);
 
     changed dark-mode => {
         Theme.apply(dark-mode);
@@ -167,429 +252,582 @@ export component AppWindow inherits Window {
         case-view.focus-open();
     }
 
-    VerticalLayout {
-        Rectangle {
-            height: 28px;
-            background: Theme.warning;
-            HorizontalLayout {
-                padding-left: 12px;
-                padding-right: 12px;
-                Text {
-                    text: root.disclosure-line;
-                    color: #121820;
-                    font-size: 11px;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                    overflow: elide;
-                }
-            }
-        }
-        Rectangle {
-            height: 49px;
-            background: Theme.surface;
-            VerticalLayout {
-                spacing: 0px;
+    root-container := Rectangle {
+        width: 100%;
+        height: 100%;
+
+        VerticalLayout {
+            Rectangle {
+                height: 28px;
+                background: Theme.warning;
                 HorizontalLayout {
-                    height: 48px;
-                    padding-left: 14px;
-                    padding-right: 14px;
-                    spacing: 12px;
-
+                    padding-left: 12px;
+                    padding-right: 12px;
                     Text {
-                        text: "TRAREON";
-                        color: Theme.accent;
+                        text: root.disclosure-line;
+                        color: #121820;
                         font-size: 11px;
-                        font-weight: 700;
-                        letter-spacing: 2px;
-                        vertical-alignment: center;
-                    }
-                    Text {
-                        text: "LAB";
-                        color: Theme.lab-accent;
-                        font-size: 14px;
-                        font-weight: 700;
-                        vertical-alignment: center;
-                    }
-
-                    Rectangle { width: 1px; height: 20px; background: Theme.border; }
-
-                    Text {
-                        text: root.case-title;
-                        color: Theme.mono-fg;
-                        font-family: "monospace";
-                        font-size: 12px;
+                        font-weight: 600;
                         vertical-alignment: center;
                         overflow: elide;
-                        horizontal-stretch: 1;
-                    }
-
-                    StatusBadge {
-                        label: root.case-state-label;
-                        kind: "info";
-                    }
-
-                    HeaderSearchChip {
-                        clicked => { root.header-search-clicked(); }
-                    }
-
-                    Rectangle {
-                        height: 32px;
-                        min-width: 36px;
-                        border-radius: 4px;
-                        border-width: 1px;
-                        border-color: Theme.border;
-                        background: root.prefs-open ? Theme.surface-raised : Theme.surface;
-                        HorizontalLayout {
-                            padding-left: 10px;
-                            padding-right: 10px;
-                            Text {
-                                text: "⚙";
-                                color: Theme.text-secondary;
-                                vertical-alignment: center;
-                            }
-                        }
-                        TouchArea {
-                            clicked => { root.prefs-open = !root.prefs-open; }
-                        }
                     }
                 }
-                Rectangle { height: 1px; background: Theme.border; }
             }
-        }
-
-        if root.prefs-open: Rectangle {
-            height: 44px;
-            background: Theme.surface-raised;
-            HorizontalLayout {
-                padding-left: 14px;
-                padding-right: 14px;
-                spacing: 16px;
-                Text {
-                    text: Strings.prefs;
-                    color: Theme.text-secondary;
-                    font-size: 12px;
-                    font-weight: 600;
-                    vertical-alignment: center;
-                }
-                Rectangle {
-                    border-width: 1px;
-                    border-color: Theme.border;
-                    border-radius: 4px;
-                    background: Theme.surface;
-                    HorizontalLayout {
-                        padding: 2px;
-                        spacing: 2px;
-                        SegmentBtn {
-                            label: Strings.lang-id;
-                            active: root.locale == "id";
-                            clicked => {
-                                root.locale = "id";
-                                root.locale-toggled("id");
-                            }
-                        }
-                        SegmentBtn {
-                            label: Strings.lang-en;
-                            active: root.locale == "en";
-                            clicked => {
-                                root.locale = "en";
-                                root.locale-toggled("en");
-                            }
-                        }
-                    }
-                }
-                Rectangle {
-                    border-width: 1px;
-                    border-color: Theme.border;
-                    border-radius: 4px;
-                    background: Theme.surface;
-                    HorizontalLayout {
-                        padding: 2px;
-                        spacing: 2px;
-                        SegmentBtn {
-                            label: Strings.theme-dark;
-                            active: root.dark-mode;
-                            clicked => {
-                                root.dark-mode = true;
-                                root.theme-toggled(true);
-                            }
-                        }
-                        SegmentBtn {
-                            label: Strings.theme-light;
-                            active: !root.dark-mode;
-                            clicked => {
-                                root.dark-mode = false;
-                                root.theme-toggled(false);
-                            }
-                        }
-                    }
-                }
-                Rectangle { horizontal-stretch: 1; }
-            }
-        }
-
-        HorizontalLayout {
-            vertical-stretch: 1;
 
             Rectangle {
-                width: 201px;
+                height: 49px;
                 background: Theme.surface;
-                HorizontalLayout {
+                VerticalLayout {
                     spacing: 0px;
-                    VerticalLayout {
-                        width: 200px;
-                        padding: 10px;
-                        spacing: 2px;
+                    HorizontalLayout {
+                        height: 48px;
+                        padding-left: 14px;
+                        padding-right: 14px;
+                        spacing: 10px;
 
-                        NavGroupLabel { label: Strings.nav-group-case; }
-                        NavItem {
-                            glyph: "▣";
-                            label: Strings.nav-case;
-                            active: root.active-screen == "Case";
-                            clicked => { root.navigate("Case"); }
+                        Text {
+                            text: "TRAREON";
+                            color: Theme.accent;
+                            font-size: 11px;
+                            font-weight: 700;
+                            letter-spacing: 2px;
+                            vertical-alignment: center;
                         }
-
-                        NavGroupLabel { label: Strings.nav-group-examine; }
-                        NavItem {
-                            glyph: "▤";
-                            label: Strings.nav-evidence;
-                            active: root.active-screen == "Evidence";
-                            clicked => { root.navigate("Evidence"); }
-                        }
-                        NavItem {
-                            glyph: "01";
-                            label: Strings.nav-hex;
-                            active: root.active-screen == "Hex";
-                            clicked => { root.navigate("Hex"); }
-                        }
-                        NavItem {
-                            glyph: "◆";
-                            label: Strings.nav-artifacts;
-                            active: root.active-screen == "Artifacts";
-                            clicked => { root.navigate("Artifacts"); }
-                        }
-                        NavItem {
-                            glyph: "⌕";
-                            label: Strings.nav-search;
-                            active: root.active-screen == "Search";
-                            clicked => { root.navigate("Search"); }
-                        }
-                        NavItem {
-                            glyph: "⏱";
-                            label: Strings.nav-timeline;
-                            active: root.active-screen == "Timeline";
-                            clicked => { root.navigate("Timeline"); }
+                        Text {
+                            text: "LAB";
+                            color: Theme.lab-accent;
+                            font-size: 14px;
+                            font-weight: 700;
+                            vertical-alignment: center;
                         }
 
-                        NavGroupLabel { label: Strings.nav-group-work; }
-                        NavItem {
-                            glyph: "★";
-                            label: Strings.nav-bookmarks;
-                            active: root.active-screen == "Bookmarks";
-                            clicked => { root.navigate("Bookmarks"); }
-                        }
-                        NavItem {
-                            glyph: "◇";
-                            label: Strings.nav-graph;
-                            active: root.active-screen == "Graph";
-                            clicked => { root.navigate("Graph"); }
-                        }
-                        NavItem {
-                            glyph: "▶";
-                            label: Strings.nav-runs;
-                            active: root.active-screen == "Runs";
-                            clicked => { root.navigate("Runs"); }
-                        }
-                        NavItem {
-                            glyph: "☰";
-                            label: Strings.nav-report;
-                            active: root.active-screen == "Report";
-                            clicked => { root.navigate("Report"); }
-                        }
-                        NavItem {
-                            glyph: "⇄";
-                            label: Strings.nav-transfer;
-                            active: root.active-screen == "Transfer";
-                            clicked => { root.navigate("Transfer"); }
-                        }
-                        NavItem {
-                            glyph: "✓";
-                            label: Strings.nav-capabilities;
-                            active: root.active-screen == "Capabilities";
-                            clicked => { root.navigate("Capabilities"); }
-                        }
-                        NavItem {
-                            glyph: "i";
-                            label: Strings.nav-about;
-                            active: root.active-screen == "About";
-                            clicked => { root.navigate("About"); }
+                        Rectangle { width: 1px; height: 20px; background: Theme.border; }
+
+                        Text {
+                            text: root.case-title;
+                            color: Theme.mono-fg;
+                            font-family: "monospace";
+                            font-size: 12px;
+                            vertical-alignment: center;
+                            overflow: elide;
+                            horizontal-stretch: 1;
                         }
 
-                        Rectangle { vertical-stretch: 1; }
-                    }
-                    Rectangle { width: 1px; background: Theme.border; }
-                }
-            }
+                        StatusBadge {
+                            label: root.case-state-label;
+                            kind: "info";
+                        }
 
-            Rectangle {
-                background: Theme.canvas;
-                horizontal-stretch: 1;
-                clip: true;
+                        HeaderSearchChip {
+                            clicked => { root.header-search-clicked(); }
+                        }
 
-                case-view := CaseScreen {
-                    visible: root.active-screen == "Case";
-                    width: 100%;
-                    height: 100%;
-                    case-title: root.case-title;
-                    case-state-label: root.case-state-label;
-                    evidence-count: root.evidence-count;
-                    coverage-count: root.coverage-count;
-                    bookmark-count: root.bookmark-count;
-                    activity-lines: root.activity-lines;
-                    open-case-clicked => { root.open-case-clicked(); }
-                    import-evidence-clicked => { root.import-evidence-clicked(); }
-                    navigate(s) => { root.navigate(s); }
-                }
+                        ChromeToggleChip {
+                            label: Strings.toggle-nav;
+                            active: !root.nav-collapsed;
+                            clicked => { root.toggle-nav-clicked(); }
+                        }
+                        ChromeToggleChip {
+                            label: Strings.toggle-inspector;
+                            active: root.inspector-open;
+                            clicked => { root.toggle-inspector-clicked(); }
+                        }
+                        ChromeToggleChip {
+                            label: Strings.toggle-log;
+                            active: root.log-open;
+                            clicked => { root.toggle-log-clicked(); }
+                        }
 
-                EvidenceScreen {
-                    visible: root.active-screen == "Evidence";
-                    width: 100%;
-                    height: 100%;
-                    evidence-names: root.evidence-names;
-                    evidence-paths: root.evidence-paths;
-                    evidence-sizes: root.evidence-sizes;
-                    evidence-deleted: root.evidence-deleted;
-                    selected-file-index: root.selected-file-index;
-                    filter-text <=> root.evidence-filter;
-                    import-evidence-clicked => { root.import-evidence-clicked(); }
-                    evidence-row-selected(i) => { root.evidence-row-selected(i); }
-                    bookmark-selection-clicked => { root.bookmark-selection-clicked(); }
-                    find-related-clicked => { root.find-related-clicked(); }
-                }
-
-                SearchScreen {
-                    visible: root.active-screen == "Search";
-                    width: 100%;
-                    height: 100%;
-                    search-query <=> root.search-query;
-                    search-results: root.search-results;
-                    artifact-kinds: root.artifact-kinds;
-                    artifact-summaries: root.artifact-summaries;
-                    artifact-provenances: root.artifact-provenances;
-                    search-attempted <=> root.search-attempted;
-                    search-submitted => { root.search-submitted(); }
-                    query-changed(q) => { root.search-query = q; }
-                    open-in-evidence-clicked => { root.navigate("Evidence"); }
-                    bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
-                }
-
-                TimelineScreen {
-                    visible: root.active-screen == "Timeline";
-                    width: 100%;
-                    height: 100%;
-                    timeline-labels: root.timeline-labels;
-                    jump-evidence-clicked => { root.navigate("Evidence"); }
-                    bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
-                }
-
-                BookmarksScreen {
-                    visible: root.active-screen == "Bookmarks";
-                    width: 100%;
-                    height: 100%;
-                    finding-claims: root.finding-claims;
-                    finding-uuids: root.finding-uuids;
-                    bookmark-count: root.bookmark-count;
-                    navigate-report => { root.navigate("Report"); }
-                }
-
-                ReportScreen {
-                    visible: root.active-screen == "Report";
-                    width: 100%;
-                    height: 100%;
-                    report-state: root.report-state;
-                    finding-claims: root.finding-claims;
-                    finding-uuids: root.finding-uuids;
-                    about-line: root.about-line;
-                }
-            }
-        }
-
-        Rectangle {
-            height: root.progress-visible ? 57px : 29px;
-            background: Theme.status-bar-bg;
-            VerticalLayout {
-                spacing: 0px;
-                Rectangle { height: 1px; background: Theme.border; }
-                if root.progress-visible: HorizontalLayout {
-                    height: 28px;
-                    padding-left: 14px;
-                    padding-right: 14px;
-                    spacing: 12px;
-                    Text {
-                        text: root.progress-stage + " — " + root.progress-message;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        vertical-alignment: center;
-                        overflow: elide;
-                        horizontal-stretch: 1;
-                    }
-                    ProgressIndicator {
-                        width: 140px;
-                        height: 6px;
-                        progress: root.progress-ratio;
-                        indeterminate: root.progress-ratio <= 0.0 && root.progress-stage != "";
-                    }
-                    Rectangle {
-                        height: 22px;
-                        min-width: 56px;
-                        border-radius: 4px;
-                        border-width: 1px;
-                        border-color: Theme.border;
-                        HorizontalLayout {
-                            padding-left: 8px;
-                            padding-right: 8px;
-                            Text {
-                                text: "Cancel";
-                                color: Theme.text-secondary;
-                                font-size: 11px;
-                                vertical-alignment: center;
+                        Rectangle {
+                            height: 32px;
+                            min-width: 36px;
+                            border-radius: 4px;
+                            border-width: 1px;
+                            border-color: Theme.border;
+                            background: root.prefs-open ? Theme.surface-raised : Theme.surface;
+                            HorizontalLayout {
+                                padding-left: 10px;
+                                padding-right: 10px;
+                                Text {
+                                    text: "⚙";
+                                    color: Theme.text-secondary;
+                                    vertical-alignment: center;
+                                }
+                            }
+                            TouchArea {
+                                clicked => { root.prefs-open = !root.prefs-open; }
                             }
                         }
-                        TouchArea {
-                            clicked => { root.cancel-progress-clicked(); }
-                        }
                     }
+                    Rectangle { height: 1px; background: Theme.border; }
                 }
+            }
+
+            if root.prefs-open: Rectangle {
+                height: 44px;
+                background: Theme.surface-raised;
                 HorizontalLayout {
-                    height: 28px;
                     padding-left: 14px;
                     padding-right: 14px;
                     spacing: 16px;
                     Text {
-                        text: Strings.status-evidence + ": \{root.evidence-count}";
+                        text: Strings.prefs;
                         color: Theme.text-secondary;
-                        font-size: 11px;
+                        font-size: 12px;
+                        font-weight: 600;
                         vertical-alignment: center;
                     }
+                    Rectangle {
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        border-radius: 4px;
+                        background: Theme.surface;
+                        HorizontalLayout {
+                            padding: 2px;
+                            spacing: 2px;
+                            SegmentBtn {
+                                label: Strings.lang-id;
+                                active: root.locale == "id";
+                                clicked => {
+                                    root.locale = "id";
+                                    root.locale-toggled("id");
+                                }
+                            }
+                            SegmentBtn {
+                                label: Strings.lang-en;
+                                active: root.locale == "en";
+                                clicked => {
+                                    root.locale = "en";
+                                    root.locale-toggled("en");
+                                }
+                            }
+                        }
+                    }
+                    Rectangle {
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        border-radius: 4px;
+                        background: Theme.surface;
+                        HorizontalLayout {
+                            padding: 2px;
+                            spacing: 2px;
+                            SegmentBtn {
+                                label: Strings.theme-dark;
+                                active: root.dark-mode;
+                                clicked => {
+                                    root.dark-mode = true;
+                                    root.theme-toggled(true);
+                                }
+                            }
+                            SegmentBtn {
+                                label: Strings.theme-light;
+                                active: !root.dark-mode;
+                                clicked => {
+                                    root.dark-mode = false;
+                                    root.theme-toggled(false);
+                                }
+                            }
+                        }
+                    }
+                    Rectangle { horizontal-stretch: 1; }
+                }
+            }
+
+            HorizontalLayout {
+                vertical-stretch: 1;
+
+                Rectangle {
+                    width: root.nav-collapsed ? 57px : 201px;
+                    background: Theme.surface;
+                    HorizontalLayout {
+                        spacing: 0px;
+                        VerticalLayout {
+                            width: root.nav-collapsed ? 56px : 200px;
+                            padding: root.nav-collapsed ? 6px : 10px;
+                            spacing: 2px;
+
+                            if !root.nav-collapsed: NavGroupLabel { label: Strings.nav-group-case; }
+                            NavItem {
+                                glyph: "▣";
+                                label: root.nav-collapsed ? "" : Strings.nav-case;
+                                active: root.active-screen == "Case";
+                                clicked => { root.navigate("Case"); }
+                            }
+
+                            if !root.nav-collapsed: NavGroupLabel { label: Strings.nav-group-examine; }
+                            NavItem {
+                                glyph: "▤";
+                                label: root.nav-collapsed ? "" : Strings.nav-evidence;
+                                active: root.active-screen == "Evidence";
+                                clicked => { root.navigate("Evidence"); }
+                            }
+                            NavItem {
+                                glyph: "01";
+                                label: root.nav-collapsed ? "" : Strings.nav-hex;
+                                active: root.active-screen == "Hex";
+                                clicked => { root.navigate("Hex"); }
+                            }
+                            NavItem {
+                                glyph: "◆";
+                                label: root.nav-collapsed ? "" : Strings.nav-artifacts;
+                                active: root.active-screen == "Artifacts";
+                                clicked => { root.navigate("Artifacts"); }
+                            }
+                            NavItem {
+                                glyph: "⌕";
+                                label: root.nav-collapsed ? "" : Strings.nav-search;
+                                active: root.active-screen == "Search";
+                                clicked => { root.navigate("Search"); }
+                            }
+                            NavItem {
+                                glyph: "⏱";
+                                label: root.nav-collapsed ? "" : Strings.nav-timeline;
+                                active: root.active-screen == "Timeline";
+                                clicked => { root.navigate("Timeline"); }
+                            }
+
+                            if !root.nav-collapsed: NavGroupLabel { label: Strings.nav-group-work; }
+                            NavItem {
+                                glyph: "★";
+                                label: root.nav-collapsed ? "" : Strings.nav-bookmarks;
+                                active: root.active-screen == "Bookmarks";
+                                clicked => { root.navigate("Bookmarks"); }
+                            }
+                            NavItem {
+                                glyph: "◇";
+                                label: root.nav-collapsed ? "" : Strings.nav-graph;
+                                active: root.active-screen == "Graph";
+                                clicked => { root.navigate("Graph"); }
+                            }
+                            NavItem {
+                                glyph: "▶";
+                                label: root.nav-collapsed ? "" : Strings.nav-runs;
+                                active: root.active-screen == "Runs";
+                                clicked => { root.navigate("Runs"); }
+                            }
+                            NavItem {
+                                glyph: "☰";
+                                label: root.nav-collapsed ? "" : Strings.nav-report;
+                                active: root.active-screen == "Report";
+                                clicked => { root.navigate("Report"); }
+                            }
+                            NavItem {
+                                glyph: "⇄";
+                                label: root.nav-collapsed ? "" : Strings.nav-transfer;
+                                active: root.active-screen == "Transfer";
+                                clicked => { root.navigate("Transfer"); }
+                            }
+                            NavItem {
+                                glyph: "✓";
+                                label: root.nav-collapsed ? "" : Strings.nav-capabilities;
+                                active: root.active-screen == "Capabilities";
+                                clicked => { root.navigate("Capabilities"); }
+                            }
+                            NavItem {
+                                glyph: "i";
+                                label: root.nav-collapsed ? "" : Strings.nav-about;
+                                active: root.active-screen == "About";
+                                clicked => { root.navigate("About"); }
+                            }
+
+                            Rectangle { vertical-stretch: 1; }
+                        }
+                        Rectangle { width: 1px; background: Theme.border; }
+                    }
+                }
+
+                Rectangle {
+                    background: Theme.canvas;
+                    horizontal-stretch: 1;
+                    clip: true;
+
+                    case-view := CaseScreen {
+                        visible: root.active-screen == "Case";
+                        width: 100%;
+                        height: 100%;
+                        case-title: root.case-title;
+                        case-state-label: root.case-state-label;
+                        evidence-count: root.evidence-count;
+                        coverage-count: root.coverage-count;
+                        bookmark-count: root.bookmark-count;
+                        activity-lines: root.activity-lines;
+                        exception-lines: root.exception-lines;
+                        open-case-clicked => { root.open-case-clicked(); }
+                        import-evidence-clicked => { root.import-evidence-clicked(); }
+                        navigate(s) => { root.navigate(s); }
+                    }
+
+                    EvidenceScreen {
+                        visible: root.active-screen == "Evidence";
+                        width: 100%;
+                        height: 100%;
+                        evidence-names: root.evidence-names;
+                        evidence-designations: root.evidence-designations;
+                        evidence-integrity: root.evidence-integrity;
+                        evidence-deleted: root.evidence-deleted;
+                        selected-file-index: root.selected-file-index;
+                        filter-text <=> root.evidence-filter;
+                        import-evidence-clicked => { root.import-evidence-clicked(); }
+                        evidence-row-selected(i) => { root.evidence-row-selected(i); }
+                    }
+
+                    SearchScreen {
+                        visible: root.active-screen == "Search";
+                        width: 100%;
+                        height: 100%;
+                        search-query <=> root.search-query;
+                        search-results: root.search-results;
+                        artifact-kinds: root.artifact-kinds;
+                        artifact-summaries: root.artifact-summaries;
+                        artifact-provenances: root.artifact-provenances;
+                        search-attempted <=> root.search-attempted;
+                        search-coverage-label: root.search-coverage-label;
+                        yara-hit-lines: root.yara-hit-lines;
+                        hashset-hit-lines: root.hashset-hit-lines;
+                        search-submitted => { root.search-submitted(); }
+                        query-changed(q) => { root.search-query = q; }
+                        open-in-evidence-clicked => { root.navigate("Evidence"); }
+                        bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
+                    }
+
+                    TimelineScreen {
+                        visible: root.active-screen == "Timeline";
+                        width: 100%;
+                        height: 100%;
+                        timeline-labels: root.timeline-labels;
+                        jump-evidence-clicked => { root.navigate("Evidence"); }
+                        bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
+                        import-timeline-clicked => { root.import-timeline-clicked(); }
+                    }
+
+                    BookmarksScreen {
+                        visible: root.active-screen == "Bookmarks";
+                        width: 100%;
+                        height: 100%;
+                        finding-claims: root.finding-claims;
+                        finding-uuids: root.finding-uuids;
+                        bookmark-count: root.bookmark-count;
+                        navigate-report => { root.navigate("Report"); }
+                    }
+
+                    ReportScreen {
+                        visible: root.active-screen == "Report";
+                        width: 100%;
+                        height: 100%;
+                        report-state: root.report-state;
+                        finding-claims: root.finding-claims;
+                        finding-uuids: root.finding-uuids;
+                        about-line: root.about-line;
+                        report-finalizable: root.report-finalizable;
+                        report-blockers: root.report-blockers;
+                        export-status: root.export-status;
+                        export-clicked => { root.export-clicked(); }
+                        transfer-export-clicked => { root.transfer-export-clicked(); }
+                    }
+
+                    RunsScreen {
+                        visible: root.active-screen == "Runs";
+                        width: 100%;
+                        height: 100%;
+                        run-lines: root.run-lines;
+                    }
+
+                    PlaceholderScreen {
+                        visible: root.show-placeholder;
+                        width: 100%;
+                        height: 100%;
+                        title: root.placeholder-title;
+                        body: root.placeholder-body;
+                    }
+                }
+
+                if root.inspector-open: InspectorPanel {
+                    width: 300px;
+                    title: root.inspector-title;
+                    path: root.inspector-path;
+                    size-label: root.inspector-size;
+                    designation-label: root.inspector-designation;
+                    integrity-label: root.inspector-integrity;
+                    deleted: root.inspector-deleted;
+                    tagged: root.inspector-tagged;
+                    has-selection: root.selected-file-index >= 0;
+                    hex-status: root.hex-status;
+                    hex-lines: root.hex-lines;
+                    bookmark-clicked => { root.bookmark-selection-clicked(); }
+                    find-related-clicked => { root.find-related-clicked(); }
+                    close-clicked => { root.toggle-inspector-clicked(); }
+                }
+            }
+
+            Rectangle {
+                height: (root.progress-visible ? 28px : 0px) + (root.log-open ? 80px : 0px) + 28px;
+                background: Theme.status-bar-bg;
+                VerticalLayout {
+                    spacing: 0px;
+                    Rectangle { height: 1px; background: Theme.border; }
+
+                    if root.progress-visible: HorizontalLayout {
+                        height: 28px;
+                        padding-left: 14px;
+                        padding-right: 14px;
+                        spacing: 12px;
+                        Text {
+                            text: root.progress-stage + " — " + root.progress-message;
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                            overflow: elide;
+                            horizontal-stretch: 1;
+                        }
+                        ProgressIndicator {
+                            width: 140px;
+                            height: 6px;
+                            progress: root.progress-ratio;
+                            indeterminate: root.progress-ratio <= 0.0 && root.progress-stage != "";
+                        }
+                        Rectangle {
+                            height: 22px;
+                            min-width: 56px;
+                            border-radius: 4px;
+                            border-width: 1px;
+                            border-color: Theme.border;
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                padding-right: 8px;
+                                Text {
+                                    text: "Cancel";
+                                    color: Theme.text-secondary;
+                                    font-size: 11px;
+                                    vertical-alignment: center;
+                                }
+                            }
+                            TouchArea {
+                                clicked => { root.cancel-progress-clicked(); }
+                            }
+                        }
+                    }
+
+                    if root.log-open: Rectangle {
+                        height: 80px;
+                        background: Theme.surface;
+                        VerticalLayout {
+                            padding-left: 14px;
+                            padding-right: 14px;
+                            padding-top: 4px;
+                            spacing: 2px;
+                            Text {
+                                text: Strings.log-title;
+                                color: Theme.text-secondary;
+                                font-size: 10px;
+                                font-weight: 700;
+                            }
+                            Flickable {
+                                vertical-stretch: 1;
+                                viewport-width: parent.width - 28px;
+                                if root.log-lines.length == 0: Text {
+                                    text: Strings.log-empty;
+                                    color: Theme.text-secondary;
+                                    font-size: 11px;
+                                }
+                                if root.log-lines.length > 0: VerticalLayout {
+                                    spacing: 1px;
+                                    width: parent.width - 28px;
+                                    for line in root.log-lines: Text {
+                                        text: line;
+                                        color: Theme.mono-fg;
+                                        font-family: "monospace";
+                                        font-size: 10px;
+                                        overflow: elide;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalLayout {
+                        height: 28px;
+                        padding-left: 14px;
+                        padding-right: 14px;
+                        spacing: 16px;
+                        Text {
+                            text: Strings.status-evidence + ": \{root.evidence-count}";
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            text: Strings.status-coverage + ": \{root.coverage-count}";
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            text: Strings.status-bookmarks + ": \{root.bookmark-count}";
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                        }
+                        Text {
+                            text: Strings.shortcuts-hint;
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                            overflow: elide;
+                            horizontal-alignment: right;
+                        }
+                        ChromeToggleChip {
+                            label: Strings.toggle-log;
+                            active: root.log-open;
+                            clicked => { root.toggle-log-clicked(); }
+                        }
+                    }
+                }
+            }
+        }
+
+        if root.palette-open: CommandPalette {
+            width: parent.width;
+            height: parent.height;
+            filter <=> root.palette-filter;
+            commands: root.palette-commands;
+            filter-changed(s) => { root.palette-filter-changed(s); }
+            command-activated(cmd) => { root.palette-command-activated(cmd); }
+            dismissed => { root.palette-dismissed(); }
+        }
+
+        if root.cheatsheet-open: Rectangle {
+            width: parent.width;
+            height: parent.height;
+            background: #00000066;
+
+            TouchArea {
+                clicked => { root.cheatsheet-open = false; }
+            }
+
+            cheatsheet-plate := Rectangle {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                width: min(480px, parent.width - 48px);
+                background: Theme.surface-raised;
+                border-width: 1px;
+                border-color: Theme.border;
+                border-radius: 6px;
+
+                VerticalLayout {
+                    padding: 16px;
+                    spacing: 10px;
                     Text {
-                        text: Strings.status-coverage + ": \{root.coverage-count}";
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        vertical-alignment: center;
+                        text: Strings.cheatsheet-title;
+                        color: Theme.text-primary;
+                        font-size: 14px;
+                        font-weight: 700;
                     }
                     Text {
-                        text: Strings.status-bookmarks + ": \{root.bookmark-count}";
+                        text: Strings.cheatsheet-body;
                         color: Theme.text-secondary;
-                        font-size: 11px;
-                        vertical-alignment: center;
-                    }
-                    Text {
-                        text: Strings.shortcuts-hint;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        vertical-alignment: center;
-                        horizontal-stretch: 1;
-                        overflow: elide;
-                        horizontal-alignment: right;
+                        font-size: 12px;
+                        wrap: word-wrap;
                     }
                 }
             }
