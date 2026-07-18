@@ -1,7 +1,8 @@
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
-import { SectionCard } from "../components/section_card.slint";
+import { PanelCard } from "../components/panel_card.slint";
 import { EmptyState } from "../components/empty_state.slint";
+import { StatusBadge } from "../components/status_badge.slint";
 
 export component CapabilitiesScreen inherits Rectangle {
     in-out property <[string]> capability-ids: [];
@@ -13,55 +14,61 @@ export component CapabilitiesScreen inherits Rectangle {
 
     if !has-rows: EmptyState {
         title: Strings.nav-capabilities;
-        body: "See docs/RELEASE-01-CAPABILITY-MATRIX.md for Validated subsets.";
+        body: Strings.empty-hint-capabilities;
         show-cta: false;
     }
 
     if has-rows: VerticalLayout {
         padding: Theme.main-pad;
-        spacing: 8px;
+        spacing: 12px;
         Text {
             text: Strings.nav-capabilities;
-            color: Theme.text-primary;
-            font-size: 14px;
-            font-weight: 700;
+            color: Theme.text-secondary;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
-        SectionCard {
-            show-title: false;
+        PanelCard {
             vertical-stretch: 1;
-            Flickable {
-                viewport-width: parent.width;
-                VerticalLayout {
-                    spacing: 2px;
-                    for i in capability-ids.length: Rectangle {
-                        height: Theme.row-height + 4px;
-                        HorizontalLayout {
-                            padding-left: 8px;
-                            padding-right: 8px;
-                            spacing: 10px;
-                            Text {
-                                text: capability-ids[i];
-                                color: Theme.text-primary;
-                                font-size: 12px;
-                                font-weight: 600;
-                                vertical-alignment: center;
-                                min-width: 120px;
-                            }
-                            Text {
-                                text: capability-statuses[i];
-                                color: Theme.accent;
-                                font-size: 11px;
-                                font-weight: 700;
-                                vertical-alignment: center;
-                                min-width: 90px;
-                            }
-                            Text {
-                                text: capability-notes[i];
-                                color: Theme.text-secondary;
-                                font-size: 11px;
-                                vertical-alignment: center;
-                                horizontal-stretch: 1;
-                                overflow: elide;
+            VerticalLayout {
+                padding: 12px;
+                Flickable {
+                    vertical-stretch: 1;
+                    viewport-width: parent.width - 24px;
+                    VerticalLayout {
+                        spacing: 4px;
+                        width: parent.width - 24px;
+                        for i in capability-ids.length: Rectangle {
+                            height: Theme.row-height + 8px;
+                            border-radius: Theme.chip-radius;
+                            background: Theme.surface;
+                            HorizontalLayout {
+                                padding-left: 8px;
+                                padding-right: 8px;
+                                spacing: 10px;
+                                Text {
+                                    text: capability-ids[i];
+                                    color: Theme.text-primary;
+                                    font-size: 12px;
+                                    font-weight: 600;
+                                    vertical-alignment: center;
+                                    min-width: 120px;
+                                }
+                                StatusBadge {
+                                    label: capability-statuses[i];
+                                    kind: capability-statuses[i] == "Validated" || capability-statuses[i] == "OK" ? "ok"
+                                        : capability-statuses[i] == "Partial" || capability-statuses[i] == "Warn" ? "warn"
+                                        : capability-statuses[i] == "Fail" || capability-statuses[i] == "Failed" ? "danger"
+                                        : "info";
+                                }
+                                Text {
+                                    text: capability-notes[i];
+                                    color: Theme.text-secondary;
+                                    font-size: 11px;
+                                    vertical-alignment: center;
+                                    horizontal-stretch: 1;
+                                    overflow: elide;
+                                }
                             }
                         }
                     }

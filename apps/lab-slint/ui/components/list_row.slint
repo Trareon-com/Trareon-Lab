@@ -1,0 +1,65 @@
+import { Theme } from "../theme.slint";
+
+/// Shared workbench list row — hover / selected copper family.
+export component ListRow inherits Rectangle {
+    in-out property <string> leading: "";
+    in-out property <string> primary: "";
+    in-out property <string> trailing: "";
+    in-out property <bool> selected: false;
+    in-out property <bool> mono-primary: false;
+    in-out property <length> row-height: 32px;
+    callback clicked();
+
+    height: root.row-height;
+    border-radius: Theme.chip-radius;
+    background: root.selected ? Theme.accent-muted : transparent;
+    border-width: root.selected ? 1px : 0px;
+    border-color: root.selected ? Theme.accent : transparent;
+
+    HorizontalLayout {
+        padding-left: 8px;
+        padding-right: 8px;
+        spacing: 10px;
+        if root.leading != "": Text {
+            text: root.leading;
+            color: Theme.accent;
+            font-size: 11px;
+            font-weight: 700;
+            vertical-alignment: center;
+            min-width: 72px;
+            overflow: elide;
+        }
+        Text {
+            text: root.primary;
+            color: Theme.text-primary;
+            font-family: root.mono-primary ? "monospace" : Theme.font-ui;
+            font-size: root.mono-primary ? 11px : 12px;
+            font-weight: root.selected ? 700 : 500;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            overflow: elide;
+        }
+        if root.trailing != "": Text {
+            text: root.trailing;
+            color: Theme.text-secondary;
+            font-family: "monospace";
+            font-size: 10px;
+            vertical-alignment: center;
+            max-width: 160px;
+            overflow: elide;
+        }
+    }
+
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+    states [
+        hover when ta.has-hover && !root.selected: {
+            background: Theme.row-hover;
+        }
+        focus when ta.has-hover && root.selected: {
+            border-color: Theme.focus-ring;
+        }
+    ]
+}

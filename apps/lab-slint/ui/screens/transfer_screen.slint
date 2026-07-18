@@ -1,7 +1,7 @@
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
 import { LabButton } from "../components/lab_button.slint";
-import { SectionCard } from "../components/section_card.slint";
+import { PanelCard } from "../components/panel_card.slint";
 import { MetaRow } from "../components/meta_row.slint";
 
 export component TransferScreen inherits Rectangle {
@@ -17,32 +17,34 @@ export component TransferScreen inherits Rectangle {
         spacing: 12px;
         Text {
             text: Strings.nav-transfer;
-            color: Theme.text-primary;
-            font-size: 14px;
-            font-weight: 700;
+            color: Theme.text-secondary;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
         Text {
-            text: "Export a signed package from an open case (Ed25519). Tampered packages verify as Invalid.";
+            text: Strings.transfer-blurb;
             color: Theme.text-secondary;
             font-size: 12px;
             wrap: word-wrap;
         }
-        SectionCard {
-            show-title: false;
+        PanelCard {
             VerticalLayout {
-                spacing: 8px;
+                padding: 14px;
+                spacing: 10px;
                 MetaRow {
-                    label: "Status";
+                    label: Strings.meta-status;
                     value: root.transfer-status == "" ? "—" : root.transfer-status;
                 }
                 MetaRow {
-                    label: "Trust";
+                    label: Strings.meta-trust;
                     value: root.transfer-trust-label == "" ? "—" : root.transfer-trust-label;
                 }
                 HorizontalLayout {
                     spacing: 8px;
                     LabButton {
                         primary: true;
+                        prominent: true;
                         label: Strings.transfer-export;
                         clicked => { root.export-clicked(); }
                     }
@@ -54,5 +56,6 @@ export component TransferScreen inherits Rectangle {
                 }
             }
         }
+        Rectangle { vertical-stretch: 1; }
     }
 }

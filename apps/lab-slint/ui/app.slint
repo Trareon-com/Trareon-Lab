@@ -79,8 +79,12 @@ export component AppWindow inherits Window {
     in-out property <string> search-coverage-label: "";
     in-out property <[string]> yara-hit-lines: [];
     in-out property <[string]> hashset-hit-lines: [];
+    in-out property <string> hashset-pin: "";
+    in-out property <int> selected-search-index: -1;
 
     in-out property <[string]> timeline-labels: [];
+    in-out property <string> timeline-tz: "UTC";
+    in-out property <string> timeline-filter: "";
     in-out property <[string]> finding-claims: [];
     in-out property <[string]> finding-uuids: [];
     in-out property <string> report-state: "draft";
@@ -98,11 +102,18 @@ export component AppWindow inherits Window {
     in-out property <bool> report-finalizable: false;
     in-out property <[string]> report-blockers: [];
     in-out property <string> export-status: "";
+    in-out property <[string]> export-format-labels: [];
+    in-out property <int> selected-export-format: 0;
     in-out property <string> transfer-status: "";
     in-out property <string> transfer-trust-label: "";
     in-out property <int> list-total: 0;
     in-out property <int> list-offset: 0;
     in-out property <int> list-page-size: 200;
+    in-out property <[string]> recent-case-titles: [];
+    in-out property <[string]> recent-case-labels: [];
+    in-out property <bool> prefs-open: false;
+    in-out property <bool> reduce-motion: false;
+    in-out property <string> prefs-last-case: "";
     in-out property <string> hex-status: "";
     in-out property <[string]> hex-lines: [];
     in-out property <[string]> tree-labels: [];
@@ -165,13 +176,24 @@ export component AppWindow inherits Window {
     callback hex-prev-clicked();
     callback hex-next-clicked();
     callback hex-popout-clicked();
+    callback page-prev-clicked();
+    callback page-next-clicked();
+    callback copy-path-clicked();
+    callback search-row-selected(int);
+    callback export-format-selected(int);
+    callback recent-case-clicked(int);
+    callback timeline-filter-changed(string);
+    callback prefs-toggled();
+    callback reduce-motion-toggled(bool);
 
     changed dark-mode => { Theme.apply(dark-mode); }
     changed locale => { Strings.locale = locale; }
+    changed reduce-motion => { Theme.reduce-motion = reduce-motion; }
 
     init => {
         Theme.apply(dark-mode);
         Strings.locale = locale;
+        Theme.reduce-motion = reduce-motion;
     }
 
     focus-open-case => { open-case-focused = true; }
@@ -272,11 +294,14 @@ export component AppWindow inherits Window {
                                 report-finalizable: root.report-finalizable;
                                 activity-lines: root.activity-lines;
                                 exception-lines: root.exception-lines;
+                                recent-case-titles: root.recent-case-titles;
+                                recent-case-labels: root.recent-case-labels;
                                 open-case-clicked => { root.open-case-clicked(); }
                                 import-evidence-clicked => { root.import-evidence-clicked(); }
                                 quick-verify-clicked => { root.quick-verify-clicked(); }
                                 load-demo-clicked => { root.load-demo-clicked(); }
                                 navigate(s) => { root.navigate(s); }
+                                recent-case-clicked(i) => { root.recent-case-clicked(i); }
                             }
 
                             EvidenceScreen {
@@ -292,6 +317,9 @@ export component AppWindow inherits Window {
                                 selected-file-index: root.selected-file-index;
                                 filter-text <=> root.evidence-filter;
                                 carve-hit-lines: root.carve-hit-lines;
+                                list-total: root.list-total;
+                                list-offset: root.list-offset;
+                                list-page-size: root.list-page-size;
                                 import-evidence-clicked => { root.import-evidence-clicked(); }
                                 evidence-row-selected(i) => { root.evidence-row-selected(i); }
                                 run-carving-clicked => { root.run-carving-clicked(); }
@@ -302,6 +330,9 @@ export component AppWindow inherits Window {
                                         root.toggle-inspector-clicked();
                                     }
                                 }
+                                page-prev-clicked => { root.page-prev-clicked(); }
+                                page-next-clicked => { root.page-next-clicked(); }
+                                copy-path-clicked => { root.copy-path-clicked(); }
                             }
 
                             SearchScreen {
@@ -317,10 +348,13 @@ export component AppWindow inherits Window {
                                 search-coverage-label: root.search-coverage-label;
                                 yara-hit-lines: root.yara-hit-lines;
                                 hashset-hit-lines: root.hashset-hit-lines;
+                                hashset-pin: root.hashset-pin;
+                                selected-search-index <=> root.selected-search-index;
                                 search-submitted => { root.search-submitted(); }
                                 query-changed(q) => { root.search-query = q; }
                                 open-in-evidence-clicked => { root.navigate("Evidence"); }
                                 bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
+                                search-row-selected(i) => { root.search-row-selected(i); }
                             }
 
                             TimelineScreen {
@@ -328,9 +362,12 @@ export component AppWindow inherits Window {
                                 width: 100%;
                                 height: 100%;
                                 timeline-labels: root.timeline-labels;
+                                timeline-tz: root.timeline-tz;
+                                timeline-filter <=> root.timeline-filter;
                                 jump-evidence-clicked => { root.navigate("Evidence"); }
                                 bookmark-hit-clicked => { root.bookmark-selection-clicked(); }
                                 import-timeline-clicked => { root.import-timeline-clicked(); }
+                                filter-changed(q) => { root.timeline-filter-changed(q); }
                             }
 
                             BookmarksScreen {
@@ -341,6 +378,7 @@ export component AppWindow inherits Window {
                                 finding-uuids: root.finding-uuids;
                                 bookmark-count: root.bookmark-count;
                                 navigate-report => { root.navigate("Report"); }
+                                go-evidence-clicked => { root.navigate("Evidence"); }
                             }
 
                             ReportScreen {
@@ -354,8 +392,11 @@ export component AppWindow inherits Window {
                                 report-finalizable: root.report-finalizable;
                                 report-blockers: root.report-blockers;
                                 export-status: root.export-status;
+                                export-format-labels: root.export-format-labels;
+                                selected-export-format <=> root.selected-export-format;
                                 export-clicked => { root.export-clicked(); }
                                 transfer-export-clicked => { root.transfer-export-clicked(); }
+                                export-format-selected(i) => { root.export-format-selected(i); }
                             }
 
                             RunsScreen {
@@ -403,6 +444,7 @@ export component AppWindow inherits Window {
                                 width: 100%;
                                 height: 100%;
                                 graph-edges: root.graph-edges;
+                                go-evidence-clicked => { root.navigate("Evidence"); }
                             }
 
                             TransferScreen {
@@ -451,14 +493,18 @@ export component AppWindow inherits Window {
                         background: Theme.surface;
                         border-width: 1px;
                         border-color: Theme.border;
+                        drop-shadow-blur: 12px;
+                        drop-shadow-color: Theme.shadow;
+                        drop-shadow-offset-y: -2px;
                         VerticalLayout {
-                            padding: 8px;
-                            spacing: 2px;
+                            padding: 10px;
+                            spacing: 4px;
                             Text {
                                 text: Strings.log-title;
                                 color: Theme.text-secondary;
-                                font-size: 10px;
-                                font-weight: 700;
+                                font-size: 11px;
+                                font-weight: 800;
+                                letter-spacing: 0.5px;
                             }
                             Flickable {
                                 vertical-stretch: 1;
@@ -550,6 +596,7 @@ export component AppWindow inherits Window {
                 toggle-log-clicked => { root.toggle-log-clicked(); }
                 toggle-inspector-clicked => { root.toggle-inspector-clicked(); }
                 cancel-progress-clicked => { root.cancel-progress-clicked(); }
+                prefs-clicked => { root.prefs-toggled(); }
             }
         }
 
@@ -575,20 +622,160 @@ export component AppWindow inherits Window {
                 background: Theme.surface;
                 border-width: 1px;
                 border-color: Theme.border;
-                border-radius: 8px;
+                border-radius: Theme.panel-radius;
+                drop-shadow-blur: 16px;
+                drop-shadow-color: Theme.shadow;
                 VerticalLayout {
                     padding: 16px;
                     spacing: 10px;
                     Text {
                         text: Strings.cheatsheet-title;
-                        color: Theme.text-primary;
-                        font-size: 14px;
-                        font-weight: 700;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
                     }
                     Text {
                         text: Strings.cheatsheet-body;
+                        color: Theme.text-primary;
+                        font-size: 13px;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+
+        if root.prefs-open: Rectangle {
+            width: parent.width;
+            height: parent.height;
+            background: #00000066;
+            TouchArea { clicked => { root.prefs-toggled(); } }
+            Rectangle {
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+                width: min(400px, parent.width - 48px);
+                background: Theme.surface;
+                border-width: 1px;
+                border-color: Theme.border;
+                border-radius: Theme.panel-radius;
+                drop-shadow-blur: 16px;
+                drop-shadow-color: Theme.shadow;
+                VerticalLayout {
+                    padding: 16px;
+                    spacing: 12px;
+                    Text {
+                        text: Strings.prefs;
                         color: Theme.text-secondary;
-                        font-size: 12px;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Text {
+                            text: root.dark-mode ? Strings.theme-dark : Strings.theme-light;
+                            color: Theme.text-primary;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                        TouchArea {
+                            width: 72px;
+                            height: 28px;
+                            clicked => { root.theme-toggled(!root.dark-mode); }
+                            Rectangle {
+                                background: Theme.accent-muted;
+                                border-radius: Theme.chip-radius;
+                                border-width: 1px;
+                                border-color: Theme.accent;
+                                Text {
+                                    width: 100%;
+                                    height: 100%;
+                                    text: root.dark-mode ? Strings.theme-light : Strings.theme-dark;
+                                    color: Theme.accent;
+                                    font-size: 11px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Text {
+                            text: Strings.lang-en + " / " + Strings.lang-id;
+                            color: Theme.text-primary;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                        TouchArea {
+                            width: 72px;
+                            height: 28px;
+                            clicked => {
+                                root.locale-toggled(root.locale == "en" ? "id" : "en");
+                            }
+                            Rectangle {
+                                background: Theme.surface-raised;
+                                border-radius: Theme.chip-radius;
+                                border-width: 1px;
+                                border-color: Theme.border;
+                                Text {
+                                    width: 100%;
+                                    height: 100%;
+                                    text: root.locale == "en" ? Strings.lang-id : Strings.lang-en;
+                                    color: Theme.text-primary;
+                                    font-size: 11px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        Text {
+                            text: Strings.reduce-motion;
+                            color: Theme.text-primary;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                            horizontal-stretch: 1;
+                        }
+                        TouchArea {
+                            width: 72px;
+                            height: 28px;
+                            clicked => { root.reduce-motion-toggled(!root.reduce-motion); }
+                            Rectangle {
+                                background: root.reduce-motion ? Theme.accent-muted : Theme.surface-raised;
+                                border-radius: Theme.chip-radius;
+                                border-width: 1px;
+                                border-color: root.reduce-motion ? Theme.accent : Theme.border;
+                                Text {
+                                    width: 100%;
+                                    height: 100%;
+                                    text: root.reduce-motion ? "ON" : "OFF";
+                                    color: root.reduce-motion ? Theme.accent : Theme.text-secondary;
+                                    font-size: 11px;
+                                    font-weight: 700;
+                                    horizontal-alignment: center;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                    Text {
+                        text: Strings.prefs-last-case;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 700;
+                    }
+                    Text {
+                        text: root.prefs-last-case == "" ? "—" : root.prefs-last-case;
+                        color: Theme.mono-fg;
+                        font-family: "monospace";
+                        font-size: 11px;
                         wrap: word-wrap;
                     }
                 }

@@ -1,6 +1,6 @@
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
-import { SectionCard } from "../components/section_card.slint";
+import { PanelCard } from "../components/panel_card.slint";
 import { LabButton } from "../components/lab_button.slint";
 
 export component QuickVerifyScreen inherits Rectangle {
@@ -13,22 +13,22 @@ export component QuickVerifyScreen inherits Rectangle {
     background: transparent;
 
     VerticalLayout {
-        padding: 12px;
+        padding: Theme.main-pad;
         spacing: 12px;
 
-        SectionCard {
-            show-title: false;
+        PanelCard {
             VerticalLayout {
-                spacing: 8px;
+                padding: 14px;
+                spacing: 10px;
                 Text {
                     text: Strings.quick-verify-title;
                     color: Theme.text-primary;
-                    font-size: 18px;
+                    font-size: 16px;
                     font-weight: 800;
                 }
                 Rectangle {
                     background: Theme.warning-bg;
-                    border-radius: 6px;
+                    border-radius: Theme.chip-radius;
                     border-width: 1px;
                     border-color: Theme.accent;
                     HorizontalLayout {
@@ -49,7 +49,7 @@ export component QuickVerifyScreen inherits Rectangle {
                 }
                 if root.meta-lines.length > 0: LabButton {
                     primary: false;
-                    label: "Discard ephemeral";
+                    label: Strings.discard-ephemeral;
                     clicked => { root.discard-clicked(); }
                 }
             }
@@ -59,11 +59,18 @@ export component QuickVerifyScreen inherits Rectangle {
             spacing: 12px;
             vertical-stretch: 1;
 
-            SectionCard {
-                title: "Metadata";
+            PanelCard {
                 horizontal-stretch: 1;
                 VerticalLayout {
-                    spacing: 4px;
+                    padding: 14px;
+                    spacing: 8px;
+                    Text {
+                        text: Strings.meta-title;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                    }
                     if root.meta-lines.length == 0: Text {
                         text: Strings.empty-hint-evidence;
                         color: Theme.text-secondary;
@@ -80,13 +87,20 @@ export component QuickVerifyScreen inherits Rectangle {
                 }
             }
 
-            SectionCard {
-                title: Strings.carve-hits;
+            PanelCard {
                 horizontal-stretch: 1;
                 VerticalLayout {
-                    spacing: 4px;
+                    padding: 14px;
+                    spacing: 8px;
+                    Text {
+                        text: Strings.carve-hits;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                    }
                     if root.carve-lines.length == 0: Text {
-                        text: "No carve hits yet.";
+                        text: Strings.carve-empty;
                         color: Theme.text-secondary;
                         font-size: 12px;
                     }
@@ -101,10 +115,17 @@ export component QuickVerifyScreen inherits Rectangle {
             }
         }
 
-        SectionCard {
-            title: "Host timeline (mtime only)";
+        PanelCard {
             VerticalLayout {
-                spacing: 4px;
+                padding: 14px;
+                spacing: 8px;
+                Text {
+                    text: Strings.host-timeline-title;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
+                }
                 if root.timeline-lines.length == 0: Text {
                     text: Strings.empty-no-timeline;
                     color: Theme.text-secondary;

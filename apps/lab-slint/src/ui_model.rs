@@ -156,6 +156,15 @@ pub struct UiSnapshot {
     pub artifact_hits: Vec<ArtifactHitRow>,
     pub timeline_labels: Vec<String>,
     pub timeline_tz: String,
+    /// Substring / ISO-prefix filter over `timeline_labels` (client-side).
+    pub timeline_filter_query: String,
+    /// Selected hit on Search screen (artifact or legacy result row).
+    pub selected_search_index: Option<usize>,
+    /// Export format labels from session (HTML / PDF / …).
+    pub export_format_labels: Vec<String>,
+    pub selected_export_format: usize,
+    /// Preferences overlay visibility.
+    pub prefs_open: bool,
     pub findings: Vec<FindingRow>,
     pub report_state: String,
     pub last_shortcut: String,
@@ -262,6 +271,11 @@ impl Default for UiSnapshot {
             artifact_hits: Vec::new(),
             timeline_labels: Vec::new(),
             timeline_tz: "UTC".into(),
+            timeline_filter_query: String::new(),
+            selected_search_index: None,
+            export_format_labels: Vec::new(),
+            selected_export_format: 0,
+            prefs_open: false,
             findings: Vec::new(),
             report_state: "draft".into(),
             last_shortcut: String::new(),
@@ -548,11 +562,77 @@ impl UiSnapshot {
     /// Import Plaso/Hayabusa-style CSV lines into timeline (honest adapter; no sidecar spawn).
     pub fn import_timeline_csv_lines(&mut self, lines: Vec<String>) {
         self.timeline_labels = lines;
+        self.timeline_filter_query.clear();
         self.active_screen = NavScreen::Timeline;
         self.push_log(format!(
             "timeline import · {} event label(s)",
             self.timeline_labels.len()
         ));
+    }
+
+    /// Client-side filter on imported timeline labels.
+    /// `# ponytail: label substring / ISO date prefix; full Plaso index later`
+    pub fn filtered_timeline_labels(&self) -> Vec<String> {
+        let q = self.timeline_filter_query.trim().to_ascii_lowercase();
+        if q.is_empty() {
+            return self.timeline_labels.clone();
+        }
+        self.timeline_labels
+            .iter()
+            .filter(|line| {
+                let lower = line.to_ascii_lowercase();
+                if lower.contains(&q) {
+                    return true;
+                }
+                // Optional ISO date window: "from:YYYY-MM-DD" / "to:YYYY-MM-DD" tokens.
+                if let Some(rest) = q.strip_prefix("from:") {
+                    let day = rest.split_whitespace().next().unwrap_or("");
+                    return line.starts_with(day);
+                }
+                if let Some(rest) = q.strip_prefix("to:") {
+                    let day = rest.split_whitespace().next().unwrap_or("");
+                    return line.get(..day.len()).map(|p| p <= day).unwrap_or(false);
+                }
+                false
+            })
+            .cloned()
+            .collect()
+    }
+
+    pub fn set_timeline_filter(&mut self, query: impl Into<String>) {
+        self.timeline_filter_query = query.into();
+    }
+
+    pub fn select_search_hit(&mut self, index: usize) -> bool {
+        let len = if !self.artifact_hits.is_empty() {
+            self.artifact_hits.len()
+        } else {
+            self.search_results.len()
+        };
+        if index < len {
+            self.selected_search_index = Some(index);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn clear_search_selection(&mut self) {
+        self.selected_search_index = None;
+    }
+
+    pub fn page_prev(&mut self) {
+        let step = self.list_page_size.max(1);
+        self.list_offset = (self.list_offset - step).max(0);
+        self.last_action = format!("evidence · page offset {}", self.list_offset);
+    }
+
+    pub fn page_next(&mut self) {
+        let step = self.list_page_size.max(1);
+        if self.list_offset + step < self.list_total {
+            self.list_offset += step;
+            self.last_action = format!("evidence · page offset {}", self.list_offset);
+        }
     }
 
     pub fn open_case(&mut self, title: impl Into<String>, evidence: i32, coverage: i32) {

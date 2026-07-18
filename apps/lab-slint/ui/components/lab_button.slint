@@ -57,6 +57,7 @@ export component LabButton inherits Rectangle {
 
     ta := TouchArea {
         enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
         clicked => {
             root.clicked();
         }
@@ -65,6 +66,7 @@ export component LabButton inherits Rectangle {
     states [
         hover when ta.has-hover && root.enabled && !root.primary: {
             background: Theme.row-hover;
+            border-color: Theme.focus-ring;
         }
         hover-primary when ta.has-hover && root.enabled && root.primary: {
             background: Theme.accent-hover;
