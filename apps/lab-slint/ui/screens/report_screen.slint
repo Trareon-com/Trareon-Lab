@@ -43,6 +43,8 @@ export component ReportScreen inherits Rectangle {
             Rectangle { horizontal-stretch: 1; }
             LabButton {
                 primary: true;
+                prominent: true;
+                enabled: root.report-finalizable;
                 label: Strings.export-action;
                 clicked => { root.export-clicked(); }
             }

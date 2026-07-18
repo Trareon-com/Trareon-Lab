@@ -25,6 +25,7 @@ lab-storage = { workspace = true }
 lab-index = { workspace = true }
 lab-transfer = { workspace = true }
 lab-fsnap = { workspace = true }
+lab-carving = { workspace = true }
 sha2 = "0.10"
 hex = "0.4"
 slint = { version = "1.9", optional = true }

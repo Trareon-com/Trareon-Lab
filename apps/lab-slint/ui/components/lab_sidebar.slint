@@ -1,0 +1,203 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { Icon } from "icon.slint";
+
+component RailItem inherits Rectangle {
+    in-out property <image> glyph;
+    in-out property <string> label;
+    in-out property <bool> active: false;
+    in-out property <bool> show-label: true;
+    callback clicked();
+
+    height: 40px;
+    background: transparent;
+
+    if root.active: Rectangle {
+        x: 0px;
+        width: 3px;
+        height: parent.height;
+        background: Theme.nav-active-bar;
+    }
+
+    if root.show-label: HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 10px;
+        spacing: 10px;
+        Icon {
+            glyph: root.glyph;
+            size: 16px;
+            tint: root.active ? Theme.icon-active : Theme.icon-muted;
+            vertical-alignment: center;
+        }
+        Text {
+            text: root.label;
+            color: root.active ? Theme.accent : Theme.text-primary;
+            font-family: Theme.font-ui;
+            font-size: 12px;
+            font-weight: root.active ? 700 : 500;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            overflow: elide;
+        }
+    }
+    if !root.show-label: HorizontalLayout {
+        alignment: center;
+        Icon {
+            glyph: root.glyph;
+            size: 18px;
+            tint: root.active ? Theme.icon-active : Theme.icon-muted;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+        }
+    }
+
+    ta := TouchArea { clicked => { root.clicked(); } }
+    states [ hover when ta.has-hover && !root.active: { background: Theme.row-hover; } ]
+}
+
+component GroupLabel inherits Rectangle {
+    in-out property <string> label;
+    in-out property <bool> show-label: true;
+    height: root.show-label ? 22px : 8px;
+    if root.show-label: HorizontalLayout {
+        padding-left: 14px;
+        padding-top: 6px;
+        Text {
+            text: root.label;
+            color: Theme.text-secondary;
+            font-family: Theme.font-ui;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+        }
+    }
+}
+
+component ToolRow inherits Rectangle {
+    in-out property <string> label;
+    in-out property <bool> active: false;
+    in-out property <bool> show-label: true;
+    callback clicked();
+    height: root.show-label ? 26px : 0px;
+    visible: root.show-label;
+    HorizontalLayout {
+        padding-left: 28px;
+        padding-right: 10px;
+        Text {
+            text: root.label;
+            color: root.active ? Theme.accent : Theme.text-secondary;
+            font-family: Theme.font-ui;
+            font-size: 11px;
+            font-weight: root.active ? 700 : 500;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+    }
+    ta := TouchArea { clicked => { root.clicked(); } }
+    states [ hover when ta.has-hover: { background: Theme.row-hover; } ]
+}
+
+/// EPIC nav: Primary 1–6 · Tools · Meta. Rail 48 ↔ labeled 180.
+export component LabSidebar inherits Rectangle {
+    in-out property <string> active-key: "Case";
+    in-out property <bool> expanded: false;
+    callback navigate-key(string);
+
+    width: root.expanded ? Theme.sidebar-width : Theme.sidebar-rail-width;
+    background: Theme.sidebar-bg;
+
+    HorizontalLayout {
+        spacing: 0px;
+        VerticalLayout {
+            padding-top: 8px;
+            padding-bottom: 8px;
+            spacing: 1px;
+
+            RailItem {
+                glyph: @image-url("../assets/icons/nav-cases.png");
+                label: Strings.nav-case;
+                show-label: root.expanded;
+                active: root.active-key == "Case" || root.active-key == "Home";
+                clicked => { root.navigate-key("Case"); }
+            }
+            RailItem {
+                glyph: @image-url("../assets/icons/nav-lab.png");
+                label: Strings.nav-evidence;
+                show-label: root.expanded;
+                active: root.active-key == "Evidence";
+                clicked => { root.navigate-key("Evidence"); }
+            }
+            RailItem {
+                glyph: @image-url("../assets/icons/nav-search.png");
+                label: Strings.nav-search;
+                show-label: root.expanded;
+                active: root.active-key == "Search";
+                clicked => { root.navigate-key("Search"); }
+            }
+            RailItem {
+                glyph: @image-url("../assets/icons/nav-timeline.png");
+                label: Strings.nav-timeline;
+                show-label: root.expanded;
+                active: root.active-key == "Timeline";
+                clicked => { root.navigate-key("Timeline"); }
+            }
+            RailItem {
+                glyph: @image-url("../assets/icons/nav-bookmark.png");
+                label: Strings.nav-bookmarks;
+                show-label: root.expanded;
+                active: root.active-key == "Bookmarks";
+                clicked => { root.navigate-key("Bookmarks"); }
+            }
+            RailItem {
+                glyph: @image-url("../assets/icons/nav-report.png");
+                label: Strings.nav-report;
+                show-label: root.expanded;
+                active: root.active-key == "Report";
+                clicked => { root.navigate-key("Report"); }
+            }
+
+            GroupLabel { label: "TOOLS"; show-label: root.expanded; }
+            ToolRow {
+                label: Strings.nav-artifacts;
+                show-label: root.expanded;
+                active: root.active-key == "Artifacts";
+                clicked => { root.navigate-key("Artifacts"); }
+            }
+            ToolRow {
+                label: Strings.nav-graph;
+                show-label: root.expanded;
+                active: root.active-key == "Graph";
+                clicked => { root.navigate-key("Graph"); }
+            }
+            ToolRow {
+                label: Strings.nav-runs;
+                show-label: root.expanded;
+                active: root.active-key == "Runs";
+                clicked => { root.navigate-key("Runs"); }
+            }
+            ToolRow {
+                label: Strings.nav-transfer;
+                show-label: root.expanded;
+                active: root.active-key == "Transfer";
+                clicked => { root.navigate-key("Transfer"); }
+            }
+
+            GroupLabel { label: "META"; show-label: root.expanded; }
+            ToolRow {
+                label: Strings.nav-capabilities;
+                show-label: root.expanded;
+                active: root.active-key == "Capabilities";
+                clicked => { root.navigate-key("Capabilities"); }
+            }
+            ToolRow {
+                label: Strings.nav-about;
+                show-label: root.expanded;
+                active: root.active-key == "About";
+                clicked => { root.navigate-key("About"); }
+            }
+
+            Rectangle { vertical-stretch: 1; }
+        }
+        Rectangle { width: 1px; background: Theme.border; }
+    }
+}

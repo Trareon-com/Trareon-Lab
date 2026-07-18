@@ -1,0 +1,72 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { SectionCard } from "../components/section_card.slint";
+import { EmptyState } from "../components/empty_state.slint";
+
+export component CapabilitiesScreen inherits Rectangle {
+    in-out property <[string]> capability-ids: [];
+    in-out property <[string]> capability-statuses: [];
+    in-out property <[string]> capability-notes: [];
+
+    background: transparent;
+    property <bool> has-rows: capability-ids.length > 0;
+
+    if !has-rows: EmptyState {
+        title: Strings.nav-capabilities;
+        body: "See docs/RELEASE-01-CAPABILITY-MATRIX.md for Validated subsets.";
+        show-cta: false;
+    }
+
+    if has-rows: VerticalLayout {
+        padding: Theme.main-pad;
+        spacing: 8px;
+        Text {
+            text: Strings.nav-capabilities;
+            color: Theme.text-primary;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        SectionCard {
+            show-title: false;
+            vertical-stretch: 1;
+            Flickable {
+                viewport-width: parent.width;
+                VerticalLayout {
+                    spacing: 2px;
+                    for i in capability-ids.length: Rectangle {
+                        height: Theme.row-height + 4px;
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 8px;
+                            spacing: 10px;
+                            Text {
+                                text: capability-ids[i];
+                                color: Theme.text-primary;
+                                font-size: 12px;
+                                font-weight: 600;
+                                vertical-alignment: center;
+                                min-width: 120px;
+                            }
+                            Text {
+                                text: capability-statuses[i];
+                                color: Theme.accent;
+                                font-size: 11px;
+                                font-weight: 700;
+                                vertical-alignment: center;
+                                min-width: 90px;
+                            }
+                            Text {
+                                text: capability-notes[i];
+                                color: Theme.text-secondary;
+                                font-size: 11px;
+                                vertical-alignment: center;
+                                horizontal-stretch: 1;
+                                overflow: elide;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

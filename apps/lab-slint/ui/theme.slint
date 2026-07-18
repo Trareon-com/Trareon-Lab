@@ -1,69 +1,126 @@
-// Trareon Forensic Family tokens — copper brand accent; teal = lab-accent.
+// Trareon Lab — examination workbench tokens (best-practice density).
+// Light default; dark via header toggle.
+
+import "../assets/fonts/Inter-Regular.ttf";
+import "../assets/fonts/Inter-Medium.ttf";
+import "../assets/fonts/Inter-SemiBold.ttf";
+import "../assets/fonts/Inter-Bold.ttf";
 
 export global Theme {
+    // Geometry (1280×800 target; min 960×640)
+    out property <length> disclosure-height: 22px;
+    out property <length> header-height: 40px;
+    out property <length> sidebar-rail-width: 48px;
+    out property <length> sidebar-width: 180px;
+    out property <length> inspector-width: 280px;
+    out property <length> status-height: 28px;
+    out property <length> log-overlay-height: 160px;
+    out property <length> row-height: 26px;
+    out property <length> chrome-pad: 8px;
+    out property <length> main-pad: 12px;
+    out property <length> panel-radius: 6px;
+    out property <length> chip-radius: 4px;
+    out property <length> nav-row-height: 32px;
+    // Legacy aliases used by older screens
+    out property <length> footer-height: 28px;
+
     in-out property <bool> dark: false;
-    in-out property <color> canvas: #E8EDF2;
+    in-out property <color> canvas: #F5F6F8;
     in-out property <color> surface: #FFFFFF;
-    in-out property <color> surface-raised: #F0F3F7;
-    in-out property <color> border: #D0D8E0;
-    in-out property <color> text-primary: #121820;
-    in-out property <color> text-secondary: #5A6A78;
-    in-out property <color> accent: #A86B3E;
-    in-out property <color> accent-muted: #E8D5C4;
-    in-out property <color> lab-accent: #2F7F75;
-    in-out property <color> danger: #B04040;
-    in-out property <color> warning: #C9A227;
-    in-out property <color> success: #4F9F6A;
-    in-out property <color> info: #5B8FD9;
-    in-out property <color> row-hover: #F3EAE3;
-    in-out property <color> nav-active-bar: #A86B3E;
-    in-out property <color> mono-fg: #3A4254;
-    in-out property <color> status-bar-bg: #F0F3F7;
+    in-out property <color> surface-raised: #FFFFFF;
+    in-out property <color> border: #E4E6EB;
+    in-out property <color> text-primary: #1C1F24;
+    in-out property <color> text-secondary: #6B7280;
+    in-out property <color> accent: #B95410;
+    in-out property <color> accent-hover: #9A4610;
+    in-out property <color> accent-muted: #F5EBE3;
+    in-out property <color> lab-accent: #0D9488;
+    in-out property <color> danger: #991B1B;
+    in-out property <color> danger-bg: #FEF2F2;
+    in-out property <color> warning: #C05600;
+    in-out property <color> warning-bg: #F8F3EF;
+    in-out property <color> success: #16A34A;
+    in-out property <color> success-bg: #F0FDF4;
+    in-out property <color> info: #1D4ED8;
+    in-out property <color> info-bg: #EFF6FF;
+    in-out property <color> row-hover: #F7F8FA;
+    in-out property <color> nav-active-bar: #C05600;
+    in-out property <color> mono-fg: #374151;
+    in-out property <color> status-bar-bg: #FFFFFF;
     in-out property <color> on-accent: #FFFFFF;
-    in-out property <color> focus-ring: #A86B3E;
+    in-out property <color> focus-ring: #C05600;
+    in-out property <color> sidebar-bg: #F7FBFE;
+    in-out property <color> tile-warn-bg: #F8F3EF;
+    in-out property <color> tile-warn-fg: #C05600;
+    in-out property <color> shadow: #00000018;
+    in-out property <color> icon-muted: #6B7280;
+    in-out property <color> icon-active: #C05600;
+    in-out property <string> font-ui: "Inter";
 
     public function apply(is-dark: bool) {
         dark = is-dark;
         if is-dark {
-            canvas = #080C10;
-            surface = #121A22;
-            surface-raised = #1A2430;
-            border = #2A3848;
-            text-primary = #EEF3F7;
-            text-secondary = #93A3B4;
-            accent = #D09262;
-            accent-muted = #2A1F16;
-            lab-accent = #3D9B8F;
-            danger = #D16B6B;
-            warning = #C9A227;
-            success = #4F9F6A;
-            info = #5B8FD9;
-            row-hover = #22303B;
-            nav-active-bar = #D09262;
-            mono-fg = #B8C0D0;
-            status-bar-bg = #0E151C;
-            on-accent = #F4FFFC;
-            focus-ring = #D09262;
-        } else {
-            canvas = #E8EDF2;
-            surface = #FFFFFF;
-            surface-raised = #F0F3F7;
-            border = #D0D8E0;
-            text-primary = #121820;
-            text-secondary = #5A6A78;
-            accent = #A86B3E;
-            accent-muted = #E8D5C4;
-            lab-accent = #2F7F75;
-            danger = #B04040;
-            warning = #C9A227;
-            success = #4F9F6A;
-            info = #5B8FD9;
-            row-hover = #F3EAE3;
-            nav-active-bar = #A86B3E;
-            mono-fg = #3A4254;
-            status-bar-bg = #F0F3F7;
+            canvas = #0B0F14;
+            surface = #111827;
+            surface-raised = #1F2937;
+            border = #374151;
+            text-primary = #F9FAFB;
+            text-secondary = #9CA3AF;
+            accent = #D4844A;
+            accent-hover = #E09A66;
+            accent-muted = #3B2418;
+            lab-accent = #14B8A6;
+            danger = #F87171;
+            danger-bg = #7F1D1D;
+            warning = #FBBF24;
+            warning-bg = #78350F;
+            success = #34D399;
+            success-bg = #064E3B;
+            info = #60A5FA;
+            info-bg = #1E3A8A;
+            row-hover = #1F2937;
+            nav-active-bar = #D4844A;
+            mono-fg = #D1D5DB;
+            status-bar-bg = #111827;
             on-accent = #FFFFFF;
-            focus-ring = #A86B3E;
+            focus-ring = #D4844A;
+            sidebar-bg = #111827;
+            tile-warn-bg = #3B2418;
+            tile-warn-fg = #F5EBE3;
+            shadow = #00000055;
+            icon-muted = #9CA3AF;
+            icon-active = #D4844A;
+        } else {
+            canvas = #F5F6F8;
+            surface = #FFFFFF;
+            surface-raised = #FFFFFF;
+            border = #E4E6EB;
+            text-primary = #1C1F24;
+            text-secondary = #6B7280;
+            accent = #C05600;
+            accent-hover = #A34900;
+            accent-muted = #F5EBE3;
+            lab-accent = #0D9488;
+            danger = #991B1B;
+            danger-bg = #FEF2F2;
+            warning = #C05600;
+            warning-bg = #F8F3EF;
+            success = #16A34A;
+            success-bg = #F0FDF4;
+            info = #1D4ED8;
+            info-bg = #EFF6FF;
+            row-hover = #F7F8FA;
+            nav-active-bar = #C05600;
+            mono-fg = #374151;
+            status-bar-bg = #FFFFFF;
+            on-accent = #FFFFFF;
+            focus-ring = #C05600;
+            sidebar-bg = #F7FBFE;
+            tile-warn-bg = #F8F3EF;
+            tile-warn-fg = #C05600;
+            shadow = #00000018;
+            icon-muted = #6B7280;
+            icon-active = #C05600;
         }
     }
 }

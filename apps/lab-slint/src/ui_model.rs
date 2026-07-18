@@ -24,6 +24,7 @@ pub enum NavScreen {
     Transfer,
     Capabilities,
     About,
+    QuickVerify,
 }
 
 impl NavScreen {
@@ -45,6 +46,7 @@ impl NavScreen {
             Self::Transfer => "Transfer",
             Self::Capabilities => "Capabilities",
             Self::About => "About",
+            Self::QuickVerify => "QuickVerify",
         }
     }
 
@@ -66,6 +68,7 @@ impl NavScreen {
             "Transfer" => Self::Transfer,
             "Capabilities" => Self::Capabilities,
             "About" => Self::About,
+            "QuickVerify" | "Quick Verify" => Self::QuickVerify,
             _ => Self::CaseHome,
         }
     }
@@ -88,6 +91,7 @@ impl NavScreen {
             Self::Transfer,
             Self::Capabilities,
             Self::About,
+            Self::QuickVerify,
         ]
     }
 }
@@ -223,6 +227,22 @@ pub struct UiSnapshot {
     pub prefs_last_case: String,
     /// Keyboard cheat-sheet overlay.
     pub cheatsheet_open: bool,
+    /// Signature carve hit lines (Quick Verify / Run carving).
+    pub carve_hit_lines: Vec<String>,
+    /// Quick Verify file metadata lines (path, size, sha256, mtime).
+    pub quick_verify_meta_lines: Vec<String>,
+    /// Ephemeral Quick Verify case directory (for cleanup).
+    pub ephemeral_case_dir: Option<String>,
+    /// Host-file timeline honesty (mtime only).
+    pub quick_verify_timeline_lines: Vec<String>,
+    /// Inspector content-viewer tab: "properties" | "hex".
+    pub inspector_tab: String,
+    /// Ambient status-bar last action line.
+    pub last_action: String,
+    /// Window width &lt; 1100 — compact chrome (set from host resize).
+    pub layout_compact: bool,
+    /// When compact, inspector draws as overlay instead of side panel.
+    pub inspector_overlay: bool,
 }
 
 impl Default for UiSnapshot {
@@ -250,7 +270,7 @@ impl Default for UiSnapshot {
             second_method_count: 0,
             blind_pt_status: "none".into(),
             about_disclosure: "SBOM: release-evidence/sbom/; UNSIGNED — Lab use only; NOT court-ready / NOT ISO-certified".into(),
-            dark_mode: true,
+            dark_mode: false,
             locale: "en".into(),
             progress_ratio: 0.0,
             progress_stage: String::new(),
@@ -281,12 +301,12 @@ impl Default for UiSnapshot {
             intake_status: "pending".into(),
             intake_accepted: false,
             hashset_pin: None,
-            capabilities: Vec::new(),
+            capabilities: Self::default_capabilities(),
             graph_edges: Vec::new(),
             ai_enabled: false,
             live_preflight_message: "Live intake requires Trareon Acquire — Open Acquire".into(),
-            nav_collapsed: false,
-            inspector_open: true,
+            nav_collapsed: true,
+            inspector_open: false,
             log_open: false,
             palette_open: false,
             log_lines: Vec::new(),
@@ -302,6 +322,14 @@ impl Default for UiSnapshot {
             placeholder_body: String::new(),
             prefs_last_case: String::new(),
             cheatsheet_open: false,
+            carve_hit_lines: Vec::new(),
+            quick_verify_meta_lines: Vec::new(),
+            ephemeral_case_dir: None,
+            quick_verify_timeline_lines: Vec::new(),
+            inspector_tab: "properties".into(),
+            last_action: String::new(),
+            layout_compact: false,
+            inspector_overlay: false,
         }
     }
 }
@@ -311,6 +339,9 @@ impl UiSnapshot {
         vec![
             "Open Case".into(),
             "Import Evidence".into(),
+            "Quick Verify".into(),
+            "Load Demo Case".into(),
+            "Run Carving".into(),
             "Go Case".into(),
             "Go Evidence".into(),
             "Go Search".into(),
@@ -319,10 +350,51 @@ impl UiSnapshot {
             "Go Report".into(),
             "Go Runs".into(),
             "Go Transfer".into(),
+            "Go Artifacts".into(),
+            "Go Graph".into(),
+            "Go Capabilities".into(),
+            "Go About".into(),
+            "Focus Hex".into(),
             "Toggle Inspector".into(),
             "Toggle Log".into(),
             "Toggle Nav".into(),
             "Toggle Cheatsheet".into(),
+        ]
+    }
+
+    /// Honest capability matrix rows (display-only; guide-backed Validated claims).
+    pub fn default_capabilities() -> Vec<(String, String, String)> {
+        vec![
+            (
+                "case".into(),
+                "Validated".into(),
+                "Case lifecycle + lock".into(),
+            ),
+            (
+                "examination".into(),
+                "Validated".into(),
+                "Evidence / search / timeline shell".into(),
+            ),
+            (
+                "transfer".into(),
+                "Validated".into(),
+                "Ed25519 signed package".into(),
+            ),
+            (
+                "export".into(),
+                "Validated".into(),
+                "HTML / PDF/A / CASE-UCO drafts".into(),
+            ),
+            (
+                "hex".into(),
+                "Indication".into(),
+                "Byte preview via Inspector".into(),
+            ),
+            (
+                "graph".into(),
+                "Indication".into(),
+                "Edge list only — no force layout".into(),
+            ),
         ]
     }
 
@@ -353,6 +425,9 @@ impl UiSnapshot {
                 self.navigate_to(NavScreen::CaseHome);
             }
             "Import Evidence" => self.navigate_to(NavScreen::Evidence),
+            "Quick Verify" => self.navigate_to(NavScreen::QuickVerify),
+            "Load Demo Case" => self.navigate_to(NavScreen::CaseHome),
+            "Run Carving" => self.navigate_to(NavScreen::Evidence),
             "Go Case" => self.navigate_to(NavScreen::CaseHome),
             "Go Evidence" => self.navigate_to(NavScreen::Evidence),
             "Go Search" => self.navigate_to(NavScreen::Search),
@@ -361,6 +436,15 @@ impl UiSnapshot {
             "Go Report" => self.navigate_to(NavScreen::Report),
             "Go Runs" => self.navigate_to(NavScreen::Runs),
             "Go Transfer" => self.navigate_to(NavScreen::Transfer),
+            "Go Artifacts" => self.navigate_to(NavScreen::Artifacts),
+            "Go Graph" => self.navigate_to(NavScreen::Graph),
+            "Go Capabilities" => self.navigate_to(NavScreen::Capabilities),
+            "Go About" => self.navigate_to(NavScreen::About),
+            "Focus Hex" => {
+                self.inspector_open = true;
+                self.inspector_tab = "hex".into();
+                self.last_action = "inspector · hex".into();
+            }
             "Toggle Inspector" => self.inspector_open = !self.inspector_open,
             "Toggle Log" => self.log_open = !self.log_open,
             "Toggle Nav" => self.nav_collapsed = !self.nav_collapsed,
@@ -427,6 +511,15 @@ impl UiSnapshot {
                 },
             ),
             NavScreen::About => ("About".into(), self.about_disclosure.clone()),
+            NavScreen::QuickVerify => (
+                "Quick Verify".into(),
+                if self.carve_hit_lines.is_empty() {
+                    "Pick a file — ephemeral scan (hash + signature carve). Not a custody case."
+                        .into()
+                } else {
+                    format!("{} carve hit(s)", self.carve_hit_lines.len())
+                },
+            ),
             NavScreen::Transfer => (
                 "Transfer".into(),
                 if self.transfer_status.is_empty() {
@@ -518,7 +611,41 @@ impl UiSnapshot {
     }
 
     pub fn push_log(&mut self, line: impl Into<String>) {
-        self.log_lines.push(line.into());
+        let line = line.into();
+        self.last_action = line.clone();
+        self.log_lines.push(line);
+    }
+
+    pub fn step_hex_offset(&mut self, delta: i64) {
+        let next = if delta < 0 {
+            self.hex_offset.saturating_sub((-delta) as u64)
+        } else {
+            self.hex_offset.saturating_add(delta as u64)
+        };
+        self.hex_offset = next;
+        self.last_action = format!("hex · offset {next:#x}");
+    }
+
+    /// Responsive breakpoints (desktop Slint — not CSS). Preferred 1280; compact &lt; 1100.
+    pub fn apply_layout_width(&mut self, width_px: i32) {
+        let compact = width_px < 1100;
+        self.layout_compact = compact;
+        self.inspector_overlay = compact;
+        if compact {
+            self.nav_collapsed = true;
+        }
+    }
+
+    pub fn nav_expanded(&self) -> bool {
+        !self.nav_collapsed && !self.layout_compact
+    }
+
+    pub fn inspector_as_side(&self) -> bool {
+        self.inspector_open && !self.inspector_overlay
+    }
+
+    pub fn inspector_as_overlay(&self) -> bool {
+        self.inspector_open && self.inspector_overlay
     }
 
     pub fn handle_shortcut(&mut self, key: &str) {
@@ -540,6 +667,10 @@ impl UiSnapshot {
                     self.palette_open = false;
                 } else if self.cheatsheet_open {
                     self.cheatsheet_open = false;
+                } else if self.log_open {
+                    self.log_open = false;
+                } else if self.inspector_open {
+                    self.inspector_open = false;
                 } else {
                     self.selected_file_index = None;
                     self.provenance_open = None;
@@ -551,6 +682,7 @@ impl UiSnapshot {
             "4" => self.navigate_to(NavScreen::Timeline),
             "5" => self.navigate_to(NavScreen::Bookmarks),
             "6" => self.navigate_to(NavScreen::Report),
+            "i" => self.inspector_open = !self.inspector_open,
             "?" => self.cheatsheet_open = !self.cheatsheet_open,
             "palette" => self.palette_open = !self.palette_open,
             "inspector" => self.inspector_open = !self.inspector_open,

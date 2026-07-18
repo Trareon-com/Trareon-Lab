@@ -1,0 +1,32 @@
+import { Theme } from "../theme.slint";
+
+/// Sticky honesty strip — always visible.
+export component DisclosureBanner inherits Rectangle {
+    in-out property <string> line: "UNSIGNED — Lab use only · NOT court-ready · NOT ISO-certified";
+
+    height: Theme.disclosure-height;
+    background: Theme.warning-bg;
+
+    HorizontalLayout {
+        padding-left: Theme.chrome-pad;
+        padding-right: Theme.chrome-pad;
+        spacing: 8px;
+        Text {
+            text: "⚠";
+            color: Theme.warning;
+            font-size: 12px;
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+        Text {
+            text: root.line;
+            color: Theme.tile-warn-fg;
+            font-family: Theme.font-ui;
+            font-size: 11px;
+            font-weight: 600;
+            vertical-alignment: center;
+            horizontal-stretch: 1;
+            overflow: elide;
+        }
+    }
+}

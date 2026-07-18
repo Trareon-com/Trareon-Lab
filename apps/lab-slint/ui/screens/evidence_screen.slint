@@ -4,6 +4,7 @@ import { Strings } from "../strings.slint";
 import { SectionCard } from "../components/section_card.slint";
 import { EmptyState } from "../components/empty_state.slint";
 import { StatusBadge } from "../components/status_badge.slint";
+import { LabButton } from "../components/lab_button.slint";
 
 export component EvidenceRow inherits Rectangle {
     in-out property <string> name;
@@ -63,8 +64,10 @@ export component EvidenceScreen inherits Rectangle {
     in-out property <[bool]> evidence-deleted;
     in-out property <int> selected-file-index: -1;
     in-out property <string> filter-text: "";
+    in-out property <[string]> carve-hit-lines: [];
     callback import-evidence-clicked();
     callback evidence-row-selected(int);
+    callback run-carving-clicked();
 
     background: transparent;
     property <bool> has-files: evidence-names.length > 0;
@@ -87,6 +90,11 @@ export component EvidenceScreen inherits Rectangle {
                 text <=> root.filter-text;
                 placeholder-text: Strings.filter-placeholder;
                 horizontal-stretch: 1;
+            }
+            LabButton {
+                primary: true;
+                label: Strings.run-carving;
+                clicked => { root.run-carving-clicked(); }
             }
             Text {
                 text: Strings.shortcuts-hint;
@@ -113,6 +121,20 @@ export component EvidenceScreen inherits Rectangle {
                         selected: root.selected-file-index == index;
                         clicked => { root.evidence-row-selected(index); }
                     }
+                }
+            }
+        }
+
+        if root.carve-hit-lines.length > 0: SectionCard {
+            title: Strings.carve-hits;
+            VerticalLayout {
+                spacing: 2px;
+                for line in root.carve-hit-lines: Text {
+                    text: line;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                    wrap: word-wrap;
                 }
             }
         }

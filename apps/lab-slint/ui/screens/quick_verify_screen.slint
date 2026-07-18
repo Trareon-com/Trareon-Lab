@@ -1,0 +1,122 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { SectionCard } from "../components/section_card.slint";
+import { LabButton } from "../components/lab_button.slint";
+
+export component QuickVerifyScreen inherits Rectangle {
+    in-out property <[string]> meta-lines: [];
+    in-out property <[string]> carve-lines: [];
+    in-out property <[string]> timeline-lines: [];
+    callback pick-file-clicked();
+    callback discard-clicked();
+
+    background: transparent;
+
+    VerticalLayout {
+        padding: 12px;
+        spacing: 12px;
+
+        SectionCard {
+            show-title: false;
+            VerticalLayout {
+                spacing: 8px;
+                Text {
+                    text: Strings.quick-verify-title;
+                    color: Theme.text-primary;
+                    font-size: 18px;
+                    font-weight: 800;
+                }
+                Rectangle {
+                    background: Theme.warning-bg;
+                    border-radius: 6px;
+                    border-width: 1px;
+                    border-color: Theme.accent;
+                    HorizontalLayout {
+                        padding: 8px;
+                        Text {
+                            text: Strings.ephemeral-banner;
+                            color: Theme.accent;
+                            font-size: 12px;
+                            font-weight: 700;
+                        }
+                    }
+                }
+                LabButton {
+                    primary: true;
+                    prominent: true;
+                    label: Strings.quick-verify;
+                    clicked => { root.pick-file-clicked(); }
+                }
+                if root.meta-lines.length > 0: LabButton {
+                    primary: false;
+                    label: "Discard ephemeral";
+                    clicked => { root.discard-clicked(); }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            spacing: 12px;
+            vertical-stretch: 1;
+
+            SectionCard {
+                title: "Metadata";
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 4px;
+                    if root.meta-lines.length == 0: Text {
+                        text: Strings.empty-hint-evidence;
+                        color: Theme.text-secondary;
+                        font-size: 12px;
+                        wrap: word-wrap;
+                    }
+                    for line in root.meta-lines: Text {
+                        text: line;
+                        color: Theme.mono-fg;
+                        font-family: "monospace";
+                        font-size: 11px;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+
+            SectionCard {
+                title: Strings.carve-hits;
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    spacing: 4px;
+                    if root.carve-lines.length == 0: Text {
+                        text: "No carve hits yet.";
+                        color: Theme.text-secondary;
+                        font-size: 12px;
+                    }
+                    for line in root.carve-lines: Text {
+                        text: line;
+                        color: Theme.text-primary;
+                        font-size: 11px;
+                        font-family: "monospace";
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+
+        SectionCard {
+            title: "Host timeline (mtime only)";
+            VerticalLayout {
+                spacing: 4px;
+                if root.timeline-lines.length == 0: Text {
+                    text: Strings.empty-no-timeline;
+                    color: Theme.text-secondary;
+                    font-size: 12px;
+                }
+                for line in root.timeline-lines: Text {
+                    text: line;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                }
+            }
+        }
+    }
+}

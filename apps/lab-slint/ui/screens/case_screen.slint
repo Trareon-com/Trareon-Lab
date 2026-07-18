@@ -1,42 +1,75 @@
 import { Button } from "std-widgets.slint";
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
-import { SectionCard } from "../components/section_card.slint";
-import { MetricTile } from "../components/metric_tile.slint";
 import { LabButton } from "../components/lab_button.slint";
 import { StatusBadge } from "../components/status_badge.slint";
+import { AcquireStepper } from "../components/acquire_stepper.slint";
+import { PanelCard } from "../components/panel_card.slint";
 
-export component PlaceTile inherits Rectangle {
+/// Text-row place link (Acquire-dense, not a card).
+component PlaceRow inherits Rectangle {
     in-out property <string> label;
     in-out property <bool> enabled: true;
     callback clicked();
-
-    height: 36px;
-    border-radius: 4px;
-    border-width: 1px;
-    border-color: Theme.border;
-    background: Theme.surface-raised;
-    opacity: enabled ? 1.0 : 0.45;
-
+    height: 32px;
+    opacity: enabled ? 1.0 : 0.4;
     HorizontalLayout {
-        padding-left: 10px;
-        padding-right: 10px;
+        padding-left: 4px;
+        padding-right: 4px;
+        spacing: 8px;
         Text {
             text: root.label;
             color: Theme.text-primary;
+            font-family: Theme.font-ui;
             font-size: 12px;
+            font-weight: 600;
             vertical-alignment: center;
+            horizontal-stretch: 1;
             overflow: elide;
         }
+        Text {
+            text: "→";
+            color: Theme.text-secondary;
+            font-size: 12px;
+            font-weight: 700;
+            vertical-alignment: center;
+        }
     }
-
     ta := TouchArea {
         enabled: root.enabled;
         clicked => { root.clicked(); }
     }
-    states [
-        hover when ta.has-hover && root.enabled: { background: Theme.row-hover; }
-    ]
+    states [ hover when ta.has-hover && root.enabled: { background: Theme.row-hover; } ]
+}
+
+component MetricLine inherits HorizontalLayout {
+    in-out property <string> label;
+    in-out property <int> value;
+    in-out property <color> bar-color: Theme.accent;
+    spacing: 10px;
+    height: 28px;
+    alignment: center;
+    Rectangle {
+        width: 3px;
+        height: 22px;
+        border-radius: 1.5px;
+        background: root.bar-color;
+    }
+    Text {
+        text: root.label;
+        color: Theme.text-secondary;
+        font-size: 12px;
+        font-weight: 600;
+        vertical-alignment: center;
+        horizontal-stretch: 1;
+    }
+    Text {
+        text: root.value;
+        color: Theme.text-primary;
+        font-size: 14px;
+        font-weight: 800;
+        vertical-alignment: center;
+    }
 }
 
 export component CaseScreen inherits Rectangle {
@@ -45,25 +78,29 @@ export component CaseScreen inherits Rectangle {
     in-out property <int> evidence-count;
     in-out property <int> coverage-count;
     in-out property <int> bookmark-count;
+    in-out property <bool> report-finalizable: false;
     in-out property <[string]> activity-lines;
     in-out property <[string]> exception-lines: [];
     callback open-case-clicked();
     callback import-evidence-clicked();
+    callback quick-verify-clicked();
+    callback load-demo-clicked();
     callback navigate(string);
 
     background: transparent;
     property <bool> has-case: case-title != "" && case-title != "(no case)";
     property <int> stage: !has-case ? 0
         : evidence-count <= 0 ? 1
-        : bookmark-count > 0 ? 3
+        : bookmark-count > 0 ? (report-finalizable ? 4 : 3)
         : 2;
+    property <int> stepper-index: root.stage >= 4 ? 5 : root.stage + 1;
     property <string> next-body: stage == 0 ? Strings.next-open
         : stage == 1 ? Strings.next-import
-        : stage == 3 ? Strings.next-report
+        : stage == 3 || stage == 4 ? Strings.next-report
         : Strings.next-examine;
     property <string> next-cta: stage == 0 ? Strings.open-case
         : stage == 1 ? Strings.import-evidence
-        : stage == 3 ? Strings.go-report
+        : stage == 3 || stage == 4 ? Strings.go-report
         : Strings.browse-evidence;
 
     open-btn := Button {
@@ -81,167 +118,236 @@ export component CaseScreen inherits Rectangle {
     }
 
     VerticalLayout {
-        padding: 12px;
-        spacing: 12px;
+        padding: 16px;
+        spacing: 10px;
 
-        SectionCard {
-            title: Strings.next-action;
-            VerticalLayout {
-                spacing: 12px;
-                Text {
-                    text: root.next-body;
-                    color: Theme.text-primary;
-                    font-size: 14px;
-                    font-weight: 600;
-                    wrap: word-wrap;
+        HorizontalLayout {
+            spacing: 16px;
+            alignment: center;
+            Text {
+                text: "Lab";
+                color: Theme.text-primary;
+                font-size: 26px;
+                font-weight: 800;
+                font-family: Theme.font-ui;
+                vertical-alignment: center;
+            }
+            AcquireStepper {
+                active-index: root.stepper-index;
+                labels: [
+                    Strings.workflow-open,
+                    Strings.workflow-import,
+                    Strings.workflow-examine,
+                    Strings.workflow-bookmark,
+                    Strings.workflow-report,
+                ];
+            }
+            Rectangle { horizontal-stretch: 1; }
+        }
+        Text {
+            text: root.next-body;
+            color: Theme.text-secondary;
+            font-size: 12px;
+            font-family: Theme.font-ui;
+        }
+
+        HorizontalLayout {
+            spacing: 14px;
+            vertical-stretch: 1;
+
+            // Left: identity + metrics + activity
+            PanelCard {
+                horizontal-stretch: 1.15;
+                VerticalLayout {
+                    padding: 16px;
+                    spacing: 12px;
+                    Text {
+                        text: Strings.case-overview;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.6px;
+                    }
+                    Text {
+                        text: root.has-case ? root.case-title : Strings.empty-no-case;
+                        color: Theme.text-primary;
+                        font-size: 18px;
+                        font-weight: 800;
+                        font-family: Theme.font-ui;
+                        overflow: elide;
+                    }
+                    if root.has-case: StatusBadge {
+                        label: root.case-state-label;
+                        kind: "info";
+                    }
+                    if !root.has-case: Text {
+                        text: Strings.next-open;
+                        color: Theme.text-secondary;
+                        font-size: 12px;
+                        wrap: word-wrap;
+                    }
+                    Rectangle { height: 1px; background: Theme.border; }
+                    MetricLine {
+                        label: Strings.status-evidence;
+                        value: root.evidence-count;
+                        bar-color: Theme.lab-accent;
+                    }
+                    MetricLine {
+                        label: Strings.status-coverage;
+                        value: root.coverage-count;
+                        bar-color: Theme.accent;
+                    }
+                    MetricLine {
+                        label: Strings.status-bookmarks;
+                        value: root.bookmark-count;
+                        bar-color: Theme.info;
+                    }
+                    Rectangle { height: 1px; background: Theme.border; }
+                    Text {
+                        text: Strings.activity;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                    }
+                    if root.activity-lines.length == 0: Text {
+                        text: Strings.activity-empty;
+                        color: Theme.text-secondary;
+                        font-size: 12px;
+                    }
+                    if root.activity-lines.length > 0: VerticalLayout {
+                        spacing: 3px;
+                        for line in root.activity-lines: Text {
+                            text: "·  " + line;
+                            color: Theme.mono-fg;
+                            font-family: "monospace";
+                            font-size: 11px;
+                            overflow: elide;
+                        }
+                    }
+                    if root.exception-lines.length > 0: VerticalLayout {
+                        spacing: 3px;
+                        Text {
+                            text: Strings.exceptions-title;
+                            color: Theme.danger;
+                            font-size: 11px;
+                            font-weight: 800;
+                        }
+                        for line in root.exception-lines: Text {
+                            text: "·  " + line;
+                            color: Theme.danger;
+                            font-size: 11px;
+                            wrap: word-wrap;
+                        }
+                    }
+                    Rectangle { vertical-stretch: 1; }
                 }
-                Text {
-                    text: root.has-case ? root.case-title : Strings.empty-no-case;
-                    color: Theme.mono-fg;
-                    font-family: "monospace";
-                    font-size: 12px;
-                    wrap: word-wrap;
-                }
-                HorizontalLayout {
-                    spacing: 8px;
+            }
+
+            // Right: one primary CTA + text secondary + places
+            PanelCard {
+                horizontal-stretch: 1;
+                VerticalLayout {
+                    padding: 16px;
+                    spacing: 12px;
+                    Text {
+                        text: Strings.next-action;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.6px;
+                    }
                     LabButton {
                         primary: true;
+                        prominent: true;
                         label: root.next-cta;
                         clicked => {
                             if root.stage == 0 {
                                 root.open-case-clicked();
                             } else if root.stage == 1 {
                                 root.import-evidence-clicked();
-                            } else if root.stage == 3 {
+                            } else if root.stage == 3 || root.stage == 4 {
                                 root.navigate("Report");
                             } else {
                                 root.navigate("Evidence");
                             }
                         }
                     }
-                    if root.stage >= 2: LabButton {
-                        primary: false;
-                        label: Strings.go-search;
-                        clicked => { root.navigate("Search"); }
+                    HorizontalLayout {
+                        spacing: 16px;
+                        TouchArea {
+                            clicked => { root.load-demo-clicked(); }
+                            Text {
+                                text: Strings.load-demo;
+                                color: Theme.text-secondary;
+                                font-size: 12px;
+                                font-weight: 600;
+                            }
+                        }
+                        TouchArea {
+                            clicked => { root.quick-verify-clicked(); }
+                            Text {
+                                text: Strings.quick-verify;
+                                color: Theme.text-secondary;
+                                font-size: 12px;
+                                font-weight: 600;
+                            }
+                        }
+                        if root.stage == 0 || root.stage == 1: TouchArea {
+                            clicked => { root.import-evidence-clicked(); }
+                            Text {
+                                text: Strings.import-evidence;
+                                color: Theme.text-secondary;
+                                font-size: 12px;
+                                font-weight: 600;
+                            }
+                        }
+                        if root.bookmark-count > 0: TouchArea {
+                            clicked => { root.navigate("Report"); }
+                            Text {
+                                text: Strings.go-report;
+                                color: Theme.accent;
+                                font-size: 12px;
+                                font-weight: 700;
+                            }
+                        }
                     }
-                    if root.stage >= 2: LabButton {
-                        primary: false;
-                        label: Strings.go-timeline;
-                        clicked => { root.navigate("Timeline"); }
+                    Rectangle { height: 1px; background: Theme.border; }
+                    Text {
+                        text: Strings.places-to-start;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
                     }
-                }
-            }
-        }
-
-        HorizontalLayout {
-            spacing: 12px;
-            vertical-stretch: 1;
-
-            SectionCard {
-                title: Strings.case-overview;
-                horizontal-stretch: 1;
-                VerticalLayout {
-                    spacing: 10px;
-                    StatusBadge {
-                        label: root.case-state-label;
-                        kind: "info";
-                    }
-                    LabButton {
-                        primary: false;
-                        label: Strings.open-case;
-                        clicked => { root.open-case-clicked(); }
-                    }
-                    LabButton {
-                        primary: false;
-                        label: Strings.import-evidence;
-                        clicked => { root.import-evidence-clicked(); }
-                    }
-                }
-            }
-
-            SectionCard {
-                title: Strings.evidence-overview;
-                horizontal-stretch: 1;
-                VerticalLayout {
-                    spacing: 10px;
-                    MetricTile {
-                        label: Strings.status-evidence;
-                        value: root.evidence-count;
-                    }
-                    MetricTile {
-                        label: Strings.status-coverage;
-                        value: root.coverage-count;
-                    }
-                    MetricTile {
-                        label: Strings.status-bookmarks;
-                        value: root.bookmark-count;
-                    }
-                }
-            }
-
-            SectionCard {
-                title: Strings.examine-now;
-                horizontal-stretch: 1;
-                VerticalLayout {
-                    spacing: 8px;
-                    PlaceTile {
+                    PlaceRow {
                         label: Strings.go-evidence;
                         enabled: root.evidence-count > 0;
                         clicked => { root.navigate("Evidence"); }
                     }
-                    PlaceTile {
+                    PlaceRow {
                         label: Strings.go-search;
                         clicked => { root.navigate("Search"); }
                     }
-                    PlaceTile {
+                    PlaceRow {
                         label: Strings.go-timeline;
                         clicked => { root.navigate("Timeline"); }
                     }
-                    PlaceTile {
+                    PlaceRow {
                         label: Strings.go-bookmarks;
                         enabled: root.bookmark-count > 0;
                         clicked => { root.navigate("Bookmarks"); }
                     }
-                }
-            }
-        }
-
-        HorizontalLayout {
-            spacing: 12px;
-            SectionCard {
-                title: Strings.activity;
-                horizontal-stretch: 1;
-                if root.activity-lines.length == 0: Text {
-                    text: Strings.activity-empty;
-                    color: Theme.text-secondary;
-                    font-size: 12px;
-                }
-                if root.activity-lines.length > 0: VerticalLayout {
-                    spacing: 4px;
-                    for line in root.activity-lines: Text {
-                        text: "·  " + line;
-                        color: Theme.mono-fg;
-                        font-family: "monospace";
-                        font-size: 11px;
-                        overflow: elide;
+                    PlaceRow {
+                        label: Strings.go-report;
+                        enabled: root.bookmark-count > 0;
+                        clicked => { root.navigate("Report"); }
                     }
-                }
-            }
-            SectionCard {
-                title: Strings.exceptions-title;
-                horizontal-stretch: 1;
-                if root.exception-lines.length == 0: Text {
-                    text: Strings.exceptions-empty;
-                    color: Theme.text-secondary;
-                    font-size: 12px;
-                }
-                if root.exception-lines.length > 0: VerticalLayout {
-                    spacing: 4px;
-                    for line in root.exception-lines: Text {
-                        text: "·  " + line;
-                        color: Theme.danger;
-                        font-size: 11px;
-                        wrap: word-wrap;
+                    Rectangle { vertical-stretch: 1; }
+                    Text {
+                        text: Strings.shortcuts-hint;
+                        color: Theme.text-secondary;
+                        font-size: 10px;
                     }
                 }
             }

@@ -23,8 +23,18 @@ This tutorial walks through the desktop workbench (`trareon-lab`) from empty ins
 ```bash
 git clone https://github.com/Trareon-com/Trareon-Lab.git
 cd Trareon-Lab
-cargo run -p lab-slint --bin trareon-lab --features gui
+cargo build -p lab-slint --bin trareon-lab --features gui --release
+./target/release/trareon-lab
+# or: cargo run -p lab-slint --bin trareon-lab --features gui
 ```
+
+### Try without your own evidence
+
+1. On **Home**, click **Load demo case** (or palette → *Load Demo Case*).
+2. Lab opens an ephemeral case labelled `DEMO · demo-disk.dd` and imports [`testdata/demo/demo-disk.dd`](../../testdata/demo/demo-disk.dd).
+3. Open **Evidence** → **Run carving** to see signature hits (jpg/pdf/gif/zip/7z, …).
+
+Or use **Quick Verify**: pick any local file → hash + carve without building a custody case (banner: *ephemeral · not a custody case*). Env: `TRAREON_QUICK_VERIFY_PATH`.
 
 Headless / CI (no display):
 

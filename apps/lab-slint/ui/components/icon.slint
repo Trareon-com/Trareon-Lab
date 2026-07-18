@@ -1,0 +1,14 @@
+import { Theme } from "../theme.slint";
+
+/// Colorizable line-icon mask (PNG alpha → Theme brush).
+export component Icon inherits Image {
+    in-out property <image> glyph;
+    in-out property <color> tint: Theme.icon-muted;
+    in-out property <length> size: 18px;
+    width: root.size;
+    height: root.size;
+    source: root.glyph;
+    colorize: root.tint;
+    image-fit: contain;
+    image-rendering: smooth;
+}

@@ -1,0 +1,184 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+
+/// TopBar: brand · case · palette · locale · theme
+export component LabHeader inherits Rectangle {
+    in-out property <string> case-title: "(no case)";
+    in-out property <string> case-state-label: "created";
+    in-out property <bool> compact: false;
+    in-out property <bool> dark-mode: false;
+    in-out property <string> locale: "en";
+    callback palette-clicked();
+    callback case-clicked();
+    callback locale-toggled(string);
+    callback theme-toggled(bool);
+
+    height: Theme.header-height;
+    background: Theme.surface;
+
+    VerticalLayout {
+        HorizontalLayout {
+            padding-left: 12px;
+            padding-right: 10px;
+            spacing: 10px;
+            alignment: center;
+
+            Text {
+                text: "TRAREON";
+                color: Theme.text-primary;
+                font-family: Theme.font-ui;
+                font-size: 13px;
+                font-weight: 800;
+                letter-spacing: 0.5px;
+                vertical-alignment: center;
+            }
+            Text {
+                text: "LAB";
+                color: Theme.accent;
+                font-family: Theme.font-ui;
+                font-size: 13px;
+                font-weight: 800;
+                letter-spacing: 1px;
+                vertical-alignment: center;
+            }
+
+            Rectangle { width: 1px; height: 18px; background: Theme.border; }
+
+            TouchArea {
+                clicked => { root.case-clicked(); }
+                HorizontalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: "Case: " + root.case-title;
+                        color: Theme.text-primary;
+                        font-family: Theme.font-ui;
+                        font-size: 12px;
+                        font-weight: 600;
+                        vertical-alignment: center;
+                        max-width: 240px;
+                        overflow: elide;
+                    }
+                    if !root.compact: Text {
+                        text: "· " + root.case-state-label;
+                        color: Theme.text-secondary;
+                        font-family: Theme.font-ui;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                    }
+                }
+            }
+
+            Rectangle { horizontal-stretch: 1; }
+
+            Rectangle {
+                height: 28px;
+                min-width: root.compact ? 36px : 160px;
+                border-radius: Theme.chip-radius;
+                border-width: 1px;
+                border-color: Theme.border;
+                background: Theme.canvas;
+                HorizontalLayout {
+                    padding-left: 8px;
+                    padding-right: 8px;
+                    spacing: 6px;
+                    Text {
+                        text: "⌕";
+                        color: Theme.text-secondary;
+                        font-size: 12px;
+                        vertical-alignment: center;
+                    }
+                    if !root.compact: Text {
+                        text: Strings.header-search-hint;
+                        color: Theme.text-secondary;
+                        font-family: Theme.font-ui;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                        overflow: elide;
+                        horizontal-stretch: 1;
+                    }
+                    if root.compact: Text {
+                        text: "/";
+                        color: Theme.text-secondary;
+                        font-family: Theme.font-ui;
+                        font-size: 11px;
+                        font-weight: 700;
+                        vertical-alignment: center;
+                    }
+                }
+                TouchArea { clicked => { root.palette-clicked(); } }
+            }
+
+            Rectangle {
+                height: 26px;
+                border-radius: Theme.chip-radius;
+                border-width: 1px;
+                border-color: Theme.border;
+                HorizontalLayout {
+                    padding: 2px;
+                    Rectangle {
+                        width: 28px;
+                        height: 22px;
+                        border-radius: 3px;
+                        background: root.locale == "en" ? Theme.accent : transparent;
+                        Text {
+                            text: Strings.lang-en;
+                            color: root.locale == "en" ? Theme.on-accent : Theme.text-secondary;
+                            font-size: 10px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                        TouchArea {
+                            clicked => {
+                                root.locale = "en";
+                                root.locale-toggled("en");
+                            }
+                        }
+                    }
+                    Rectangle {
+                        width: 28px;
+                        height: 22px;
+                        border-radius: 3px;
+                        background: root.locale == "id" ? Theme.accent : transparent;
+                        Text {
+                            text: Strings.lang-id;
+                            color: root.locale == "id" ? Theme.on-accent : Theme.text-secondary;
+                            font-size: 10px;
+                            font-weight: 700;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+                        TouchArea {
+                            clicked => {
+                                root.locale = "id";
+                                root.locale-toggled("id");
+                            }
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                width: 28px;
+                height: 26px;
+                border-radius: Theme.chip-radius;
+                border-width: 1px;
+                border-color: Theme.border;
+                Text {
+                    text: root.dark-mode ? "☀" : "🌙";
+                    color: Theme.text-secondary;
+                    font-size: 12px;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+                TouchArea {
+                    clicked => {
+                        root.dark-mode = !root.dark-mode;
+                        root.theme-toggled(root.dark-mode);
+                    }
+                }
+            }
+        }
+        Rectangle { height: 1px; background: Theme.border; }
+    }
+}
