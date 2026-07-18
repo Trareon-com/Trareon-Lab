@@ -73,6 +73,70 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.set_evidence_sizes(ModelRc::new(VecModel::from(sizes)));
         ui.set_evidence_deleted(ModelRc::new(VecModel::from(deleted)));
         ui.set_evidence_integrity(ModelRc::new(VecModel::from(integrity)));
+        let designations: Vec<SharedString> =
+            page.iter().map(|f| f.designation.clone().into()).collect();
+        ui.set_evidence_designations(ModelRc::new(VecModel::from(designations)));
+
+        ui.set_nav_collapsed(snap.nav_collapsed);
+        ui.set_inspector_open(snap.inspector_open);
+        ui.set_log_open(snap.log_open);
+        ui.set_palette_open(snap.palette_open);
+        ui.set_cheatsheet_open(snap.cheatsheet_open);
+        ui.set_search_coverage_label(snap.search_coverage_label.clone().into());
+        ui.set_export_status(snap.export_status.clone().into());
+        ui.set_placeholder_title(snap.placeholder_title.clone().into());
+        ui.set_placeholder_body(snap.placeholder_body.clone().into());
+
+        let exceptions: Vec<SharedString> = snap
+            .exception_lines
+            .iter()
+            .map(|s| s.clone().into())
+            .collect();
+        ui.set_exception_lines(ModelRc::new(VecModel::from(exceptions)));
+        let runs: Vec<SharedString> = snap
+            .run_compare_lines
+            .iter()
+            .map(|s| s.clone().into())
+            .collect();
+        ui.set_run_lines(ModelRc::new(VecModel::from(runs)));
+        let logs: Vec<SharedString> = snap.log_lines.iter().map(|s| s.clone().into()).collect();
+        ui.set_log_lines(ModelRc::new(VecModel::from(logs)));
+        let cmds: Vec<SharedString> = snap
+            .palette_commands
+            .iter()
+            .map(|s| s.clone().into())
+            .collect();
+        ui.set_palette_commands(ModelRc::new(VecModel::from(cmds)));
+        let yara: Vec<SharedString> = snap
+            .yara_hit_lines
+            .iter()
+            .map(|s| s.clone().into())
+            .collect();
+        ui.set_yara_hit_lines(ModelRc::new(VecModel::from(yara)));
+        let hashset: Vec<SharedString> = snap
+            .hashset_hit_lines
+            .iter()
+            .map(|s| s.clone().into())
+            .collect();
+        ui.set_hashset_hit_lines(ModelRc::new(VecModel::from(hashset)));
+
+        if let Some(f) = snap.selected_file() {
+            ui.set_inspector_title(f.name.clone().into());
+            ui.set_inspector_path(f.path.clone().into());
+            ui.set_inspector_size(f.size.to_string().into());
+            ui.set_inspector_designation(f.designation.clone().into());
+            ui.set_inspector_integrity(f.integrity.as_str().into());
+            ui.set_inspector_deleted(f.deleted);
+            ui.set_inspector_tagged(snap.bookmark_count > 0 && snap.selected_file_index.is_some());
+        } else {
+            ui.set_inspector_title("".into());
+            ui.set_inspector_path("".into());
+            ui.set_inspector_size("".into());
+            ui.set_inspector_designation("".into());
+            ui.set_inspector_integrity("".into());
+            ui.set_inspector_deleted(false);
+            ui.set_inspector_tagged(false);
+        }
 
         let tree_labels: Vec<SharedString> = snap
             .tree_nodes
@@ -170,8 +234,19 @@ fn main() -> Result<(), slint::PlatformError> {
                 Ok(sess) => {
                     let _ = sess.sync_snapshot(&mut snap);
                     snap.intake_accepted = false;
+                    snap.prefs_last_case = case_dir.display().to_string();
+                    if let Some(home) = dirs_next_home() {
+                        let prefs = home.join(".trareon-lab");
+                        let _ = std::fs::create_dir_all(&prefs);
+                        let _ = std::fs::write(
+                            prefs.join("prefs.txt"),
+                            snap.prefs_last_case.as_bytes(),
+                        );
+                    }
                     *sess_open.borrow_mut() = Some(sess);
-                    snap.hex_status = format!("Case open · {}", case_dir.display());
+                    let status = format!("Case open · {}", case_dir.display());
+                    snap.hex_status = status.clone();
+                    snap.push_log(status);
                 }
                 Err(e) => {
                     snap.open_case("Untitled Case", 0, 0);
@@ -383,8 +458,194 @@ fn main() -> Result<(), slint::PlatformError> {
         }
     });
 
+    let ui_weak = ui.as_weak();
+    let snap_pf = Rc::clone(&snapshot);
+    ui.on_palette_filter_changed(move |f| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_pf.borrow_mut();
+            snap.filter_palette(f.as_str());
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_pc = Rc::clone(&snapshot);
+    ui.on_palette_command_activated(move |cmd| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_pc.borrow_mut();
+            let c = cmd.to_string();
+            if c == "Open Case" {
+                drop(snap);
+                ui.invoke_open_case_clicked();
+                return;
+            }
+            if c == "Import Evidence" {
+                drop(snap);
+                ui.invoke_import_evidence_clicked();
+                return;
+            }
+            snap.activate_palette_command(&c);
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_pd = Rc::clone(&snapshot);
+    ui.on_palette_dismissed(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_pd.borrow_mut();
+            snap.palette_open = false;
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_ti = Rc::clone(&snapshot);
+    ui.on_toggle_inspector_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_ti.borrow_mut();
+            snap.handle_shortcut("inspector");
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_tl = Rc::clone(&snapshot);
+    ui.on_toggle_log_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_tl.borrow_mut();
+            snap.handle_shortcut("log");
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_tn = Rc::clone(&snapshot);
+    ui.on_toggle_nav_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_tn.borrow_mut();
+            snap.handle_shortcut("nav");
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_ex = Rc::clone(&snapshot);
+    let sess_ex = Rc::clone(&session);
+    ui.on_export_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_ex.borrow_mut();
+            if let Some(sess) = sess_ex.borrow().as_ref() {
+                match sess.export_formats(lab_core::ExportMode::Draft) {
+                    Ok(parts) => {
+                        snap.export_status = parts
+                            .iter()
+                            .map(|(k, d)| format!("{k}={d}"))
+                            .collect::<Vec<_>>()
+                            .join("; ");
+                        snap.push_log("export · formats written (digests)");
+                    }
+                    Err(e) => {
+                        snap.export_status = format!("export failed: {e:?}");
+                    }
+                }
+            } else {
+                snap.export_status = "export: open a case first".into();
+            }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_tr = Rc::clone(&snapshot);
+    let sess_tr = Rc::clone(&session);
+    ui.on_transfer_export_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_tr.borrow_mut();
+            if let Some(sess) = sess_tr.borrow_mut().as_mut() {
+                match sess.export_transfer_package("ui") {
+                    Ok(trust) => {
+                        snap.transfer_status = "package exported".into();
+                        snap.transfer_trust_label = format!("{trust:?}");
+                        snap.set_transfer_status("package exported");
+                        snap.push_log(format!("transfer · {trust:?}"));
+                        snap.navigate_to(NavScreen::Transfer);
+                    }
+                    Err(e) => {
+                        snap.transfer_status = format!("transfer failed: {e:?}");
+                        snap.navigate_to(NavScreen::Transfer);
+                    }
+                }
+            } else {
+                snap.transfer_status = "transfer: open a case first".into();
+                snap.navigate_to(NavScreen::Transfer);
+            }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_it = Rc::clone(&snapshot);
+    ui.on_import_timeline_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_it.borrow_mut();
+            let path = std::env::var_os("TRAREON_TIMELINE_CSV")
+                .map(PathBuf::from)
+                .or_else(|| {
+                    rfd::FileDialog::new()
+                        .set_title("Import Plaso/Hayabusa CSV")
+                        .add_filter("CSV", &["csv", "tsv", "txt"])
+                        .pick_file()
+                });
+            let Some(path) = path else {
+                snap.push_log("timeline import cancelled");
+                apply(&ui, &snap);
+                return;
+            };
+            match std::fs::read_to_string(&path) {
+                Ok(raw) => {
+                    let lines: Vec<String> = raw
+                        .lines()
+                        .filter(|l| !l.trim().is_empty())
+                        .take(500)
+                        .map(|l| l.to_string())
+                        .collect();
+                    snap.import_timeline_csv_lines(lines);
+                }
+                Err(e) => snap.push_log(format!("timeline import failed: {e}")),
+            }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_sk = Rc::clone(&snapshot);
+    ui.on_shortcut_key(move |key| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_sk.borrow_mut();
+            snap.handle_shortcut(key.as_str());
+            apply(&ui, &snap);
+        }
+    });
+
+    // Prefs: remember last case dir when opened.
+    let prefs_path = dirs_next_home()
+        .map(|h| h.join(".trareon-lab").join("prefs.txt"))
+        .unwrap_or_else(|| PathBuf::from("trareon-lab-prefs.txt"));
+    if let Ok(prev) = std::fs::read_to_string(&prefs_path) {
+        snapshot.borrow_mut().prefs_last_case = prev.trim().to_string();
+    }
+    apply(&ui, &snapshot.borrow());
+
     ui.invoke_focus_open_case();
     ui.run()
+}
+
+#[cfg(feature = "gui")]
+fn dirs_next_home() -> Option<std::path::PathBuf> {
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(std::path::PathBuf::from)
 }
 
 #[cfg(not(feature = "gui"))]

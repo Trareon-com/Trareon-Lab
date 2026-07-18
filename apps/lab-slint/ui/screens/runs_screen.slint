@@ -1,0 +1,37 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+import { SectionCard } from "../components/section_card.slint";
+import { EmptyState } from "../components/empty_state.slint";
+
+export component RunsScreen inherits Rectangle {
+    in-out property <[string]> run-lines: [];
+    background: transparent;
+    property <bool> has-runs: run-lines.length > 0;
+
+    if !has-runs: EmptyState {
+        title: Strings.runs-title;
+        body: Strings.runs-empty;
+        show-cta: false;
+    }
+    if has-runs: VerticalLayout {
+        padding: 12px;
+        SectionCard {
+            title: Strings.runs-title;
+            Flickable {
+                vertical-stretch: 1;
+                viewport-width: parent.width - 28px;
+                VerticalLayout {
+                    spacing: 4px;
+                    width: parent.width - 28px;
+                    for line in root.run-lines: Text {
+                        text: line;
+                        color: Theme.mono-fg;
+                        font-family: "monospace";
+                        font-size: 12px;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+    }
+}

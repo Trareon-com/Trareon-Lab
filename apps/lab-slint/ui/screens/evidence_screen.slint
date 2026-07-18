@@ -3,16 +3,17 @@ import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
 import { SectionCard } from "../components/section_card.slint";
 import { EmptyState } from "../components/empty_state.slint";
-import { LabButton } from "../components/lab_button.slint";
 import { StatusBadge } from "../components/status_badge.slint";
 
 export component EvidenceRow inherits Rectangle {
     in-out property <string> name;
+    in-out property <string> designation: "";
+    in-out property <string> integrity: "";
     in-out property <bool> deleted: false;
     in-out property <bool> selected: false;
     callback clicked();
 
-    height: 30px;
+    height: 28px;
     background: selected ? Theme.surface-raised : transparent;
     border-radius: 4px;
 
@@ -28,6 +29,18 @@ export component EvidenceRow inherits Rectangle {
             horizontal-stretch: 1;
             overflow: elide;
         }
+        if root.designation != "": Text {
+            text: root.designation;
+            color: Theme.text-secondary;
+            font-size: 10px;
+            vertical-alignment: center;
+        }
+        if root.integrity != "": StatusBadge {
+            label: root.integrity;
+            kind: root.integrity == "VerifiedMatch" ? "ok"
+                : root.integrity == "VerifiedMismatch" ? "danger"
+                : "info";
+        }
         if root.deleted: StatusBadge {
             label: Strings.deleted;
             kind: "warn";
@@ -42,21 +55,19 @@ export component EvidenceRow inherits Rectangle {
     ]
 }
 
+/// File list only — detail lives in chrome Inspector (Autopsy Content Viewer pattern).
 export component EvidenceScreen inherits Rectangle {
     in-out property <[string]> evidence-names;
-    in-out property <[string]> evidence-paths;
-    in-out property <[string]> evidence-sizes;
+    in-out property <[string]> evidence-designations: [];
+    in-out property <[string]> evidence-integrity: [];
     in-out property <[bool]> evidence-deleted;
     in-out property <int> selected-file-index: -1;
     in-out property <string> filter-text: "";
     callback import-evidence-clicked();
     callback evidence-row-selected(int);
-    callback bookmark-selection-clicked();
-    callback find-related-clicked();
 
     background: transparent;
     property <bool> has-files: evidence-names.length > 0;
-    property <bool> has-selection: selected-file-index >= 0 && selected-file-index < evidence-names.length;
 
     if !has-files: EmptyState {
         title: Strings.empty-no-evidence;
@@ -67,8 +78,8 @@ export component EvidenceScreen inherits Rectangle {
     }
 
     if has-files: VerticalLayout {
-        padding: 12px;
-        spacing: 10px;
+        padding: 8px;
+        spacing: 8px;
 
         HorizontalLayout {
             spacing: 8px;
@@ -85,89 +96,22 @@ export component EvidenceScreen inherits Rectangle {
             }
         }
 
-        HorizontalLayout {
-            spacing: 12px;
+        SectionCard {
+            title: Strings.files-title;
             vertical-stretch: 1;
-
-            SectionCard {
-                title: Strings.files-title;
-                horizontal-stretch: 2;
-                Flickable {
-                    vertical-stretch: 1;
-                    viewport-width: parent.width - 28px;
-                    VerticalLayout {
-                        spacing: 2px;
-                        width: parent.width - 28px;
-                        for name[index] in root.evidence-names: EvidenceRow {
-                            name: name;
-                            deleted: index < root.evidence-deleted.length ? root.evidence-deleted[index] : false;
-                            selected: root.selected-file-index == index;
-                            clicked => { root.evidence-row-selected(index); }
-                        }
-                    }
-                }
-            }
-
-            SectionCard {
-                title: Strings.detail-title;
-                horizontal-stretch: 3;
-                if !root.has-selection: Text {
-                    text: Strings.empty-no-selection;
-                    color: Theme.text-secondary;
-                    font-size: 12px;
-                }
-                if root.has-selection: VerticalLayout {
-                    spacing: 10px;
-                    Text {
-                        text: Strings.col-name;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                    }
-                    Text {
-                        text: root.evidence-names[root.selected-file-index];
-                        color: Theme.text-primary;
-                        font-size: 13px;
-                        font-weight: 600;
-                    }
-                    Text {
-                        text: Strings.col-path;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                    }
-                    Text {
-                        text: root.selected-file-index < root.evidence-paths.length ? root.evidence-paths[root.selected-file-index] : "";
-                        color: Theme.mono-fg;
-                        font-family: "monospace";
-                        font-size: 12px;
-                        wrap: word-wrap;
-                    }
-                    Text {
-                        text: Strings.col-size;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                    }
-                    Text {
-                        text: root.selected-file-index < root.evidence-sizes.length ? root.evidence-sizes[root.selected-file-index] : "";
-                        color: Theme.mono-fg;
-                        font-family: "monospace";
-                        font-size: 12px;
-                    }
-                    if root.selected-file-index < root.evidence-deleted.length && root.evidence-deleted[root.selected-file-index]: StatusBadge {
-                        label: Strings.deleted;
-                        kind: "warn";
-                    }
-                    HorizontalLayout {
-                        spacing: 8px;
-                        LabButton {
-                            primary: true;
-                            label: Strings.add-bookmark;
-                            clicked => { root.bookmark-selection-clicked(); }
-                        }
-                        LabButton {
-                            primary: false;
-                            label: Strings.find-related;
-                            clicked => { root.find-related-clicked(); }
-                        }
+            Flickable {
+                vertical-stretch: 1;
+                viewport-width: parent.width - 28px;
+                VerticalLayout {
+                    spacing: 2px;
+                    width: parent.width - 28px;
+                    for name[index] in root.evidence-names: EvidenceRow {
+                        name: name;
+                        designation: index < root.evidence-designations.length ? root.evidence-designations[index] : "";
+                        integrity: index < root.evidence-integrity.length ? root.evidence-integrity[index] : "";
+                        deleted: index < root.evidence-deleted.length ? root.evidence-deleted[index] : false;
+                        selected: root.selected-file-index == index;
+                        clicked => { root.evidence-row-selected(index); }
                     }
                 }
             }

@@ -276,6 +276,13 @@ impl LabSession {
             });
         }
         snap.set_evidence_files(rows);
+        let exceptions: Vec<String> = coverage
+            .iter()
+            .filter(|c| c.status == "failed" || c.status == "unsupported")
+            .map(|c| format!("{} · {} · {}", c.status, c.scope, c.detail_json))
+            .collect();
+        snap.set_exceptions(exceptions);
+        snap.run_compare_lines = self.compare_last_runs();
         snap.recompute_report_gate();
         Ok(())
     }
@@ -408,6 +415,17 @@ impl LabSession {
             },
         };
         self.search_plans.push(plan);
+        snap.set_search_coverage(if result.truncated {
+            format!(
+                "partial · {}",
+                result
+                    .truncation_reason
+                    .clone()
+                    .unwrap_or_else(|| "page limit".into())
+            )
+        } else {
+            format!("complete · {} hit(s)", result.entries.len())
+        });
         snap.set_search(query, labels);
         Ok(())
     }
