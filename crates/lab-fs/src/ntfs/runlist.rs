@@ -27,7 +27,7 @@ pub fn decode_runlist(data: &[u8]) -> LabResult<Vec<DataRun>> {
                 detail: "truncated runlist".into(),
             });
         }
-        let vcn_length = read_le_int(&data[i..i + len_size]) as u64;
+        let vcn_length = read_le_int(&data[i..i + len_size]);
         i += len_size;
         let lcn = if off_size == 0 {
             None

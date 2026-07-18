@@ -69,6 +69,7 @@ fn read_inode(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn walk_dir(
     image: &mut dyn ImageReader,
     sb: &crate::ext4::superblock::Ext4Superblock,
