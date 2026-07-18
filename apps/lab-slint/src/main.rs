@@ -640,7 +640,8 @@ fn main() -> Result<(), slint::PlatformError> {
     ui.invoke_focus_open_case();
 
     // Docs / screenshot automation (no picker when TRAREON_CASE_DIR is set).
-    if std::env::var_os("TRAREON_AUTO_OPEN").is_some() && std::env::var_os("TRAREON_CASE_DIR").is_some()
+    if std::env::var_os("TRAREON_AUTO_OPEN").is_some()
+        && std::env::var_os("TRAREON_CASE_DIR").is_some()
     {
         ui.invoke_open_case_clicked();
     }
