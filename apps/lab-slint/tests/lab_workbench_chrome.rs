@@ -1,17 +1,18 @@
-//! Lab examination workbench chrome contract (best-practice remount).
+//! Lab ASCII shell chrome contract (Acquire-family remount).
 
 use lab_slint::{NavScreen, UiSnapshot};
 
-const DISCLOSURE_HEIGHT_PX: i32 = 22;
-const HEADER_HEIGHT_PX: i32 = 40;
-const SIDEBAR_RAIL_PX: i32 = 48;
-const SIDEBAR_EXPANDED_PX: i32 = 180;
+const DISCLOSURE_HEIGHT_PX: i32 = 26;
+const HEADER_HEIGHT_PX: i32 = 48;
+const SIDEBAR_RAIL_PX: i32 = 56;
+const SIDEBAR_EXPANDED_PX: i32 = 188;
+const SAFETY_HEIGHT_PX: i32 = 40;
 const INSPECTOR_WIDTH_PX: i32 = 280;
-const STATUS_HEIGHT_PX: i32 = 28;
-const MIN_WIDTH_PX: i32 = 960;
-const MIN_HEIGHT_PX: i32 = 640;
+const STATUS_HEIGHT_PX: i32 = 30;
+const MIN_WIDTH_PX: i32 = 920;
+const MIN_HEIGHT_PX: i32 = 680;
 
-const PRIMARY_NAV: &[&str] = &[
+const WORKFLOW_NAV: &[&str] = &[
     "Case",
     "Evidence",
     "Search",
@@ -19,38 +20,47 @@ const PRIMARY_NAV: &[&str] = &[
     "Bookmarks",
     "Report",
 ];
-
-const TOOLS_NAV: &[&str] = &["Artifacts", "Graph", "Runs", "Transfer"];
-const META_NAV: &[&str] = &["Capabilities", "About"];
+const LAB_NAV: &[&str] = &[
+    "Artifacts",
+    "Graph",
+    "Runs",
+    "Transfer",
+    "QuickVerify",
+];
+const SUPPORT_NAV: &[&str] = &["Capabilities", "About"];
 
 #[test]
-fn lab_workbench_geometry_lock() {
-    assert_eq!(DISCLOSURE_HEIGHT_PX, 22);
-    assert_eq!(HEADER_HEIGHT_PX, 40);
-    assert_eq!(SIDEBAR_RAIL_PX, 48);
-    assert_eq!(SIDEBAR_EXPANDED_PX, 180);
+fn lab_ascii_geometry_lock() {
+    assert_eq!(DISCLOSURE_HEIGHT_PX, 26);
+    assert_eq!(HEADER_HEIGHT_PX, 48);
+    assert_eq!(SIDEBAR_RAIL_PX, 56);
+    assert_eq!(SIDEBAR_EXPANDED_PX, 188);
+    assert_eq!(SAFETY_HEIGHT_PX, 40);
     assert_eq!(INSPECTOR_WIDTH_PX, 280);
-    assert_eq!(STATUS_HEIGHT_PX, 28);
-    assert_eq!(MIN_WIDTH_PX, 960);
-    assert_eq!(MIN_HEIGHT_PX, 640);
+    assert_eq!(STATUS_HEIGHT_PX, 30);
+    assert_eq!(MIN_WIDTH_PX, 920);
+    assert_eq!(MIN_HEIGHT_PX, 680);
 }
 
 #[test]
-fn lab_workbench_nav_ia() {
-    assert_eq!(PRIMARY_NAV.len(), 6);
-    assert!(!PRIMARY_NAV.contains(&"Hex"));
-    assert!(!PRIMARY_NAV.contains(&"Quick Verify"));
-    assert_eq!(TOOLS_NAV, ["Artifacts", "Graph", "Runs", "Transfer"]);
-    assert_eq!(META_NAV, ["Capabilities", "About"]);
+fn lab_ascii_nav_ia() {
+    assert_eq!(WORKFLOW_NAV.len(), 6);
+    assert!(!WORKFLOW_NAV.contains(&"Hex"));
+    assert!(!WORKFLOW_NAV.contains(&"QuickVerify"));
+    assert_eq!(
+        LAB_NAV,
+        ["Artifacts", "Graph", "Runs", "Transfer", "QuickVerify"]
+    );
+    assert_eq!(SUPPORT_NAV, ["Capabilities", "About"]);
 }
 
 #[test]
-fn shell_defaults_rail_inspector_off_light() {
+fn shell_defaults_labeled_rail_inspector_off_light() {
     let snap = UiSnapshot::default();
     assert!(!snap.dark_mode);
     assert!(!snap.inspector_open);
-    assert!(snap.nav_collapsed);
-    assert!(!snap.nav_expanded());
+    assert!(!snap.nav_collapsed);
+    assert!(snap.nav_expanded());
     assert!(!snap.layout_compact);
     assert_eq!(snap.active_screen, NavScreen::CaseHome);
     assert_eq!(snap.inspector_tab, "properties");

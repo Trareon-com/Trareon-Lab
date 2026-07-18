@@ -1,0 +1,169 @@
+import { Theme } from "../theme.slint";
+import { Strings } from "../strings.slint";
+
+component StageTab inherits Rectangle {
+    in-out property <string> glyph;
+    in-out property <string> label;
+    in-out property <bool> done: false;
+    in-out property <bool> current: false;
+    callback clicked();
+    height: 32px;
+    min-width: 72px;
+    border-radius: Theme.chip-radius;
+    background: root.current ? Theme.accent-muted : transparent;
+    VerticalLayout {
+        spacing: 0px;
+        HorizontalLayout {
+            padding-left: 8px;
+            padding-right: 8px;
+            spacing: 6px;
+            alignment: center;
+            vertical-stretch: 1;
+            Text {
+                text: root.glyph;
+                color: root.current ? Theme.accent : (root.done ? Theme.text-primary : Theme.text-secondary);
+                font-family: Theme.font-ui;
+                font-size: 11px;
+                font-weight: 700;
+                vertical-alignment: center;
+            }
+            Text {
+                text: root.label;
+                color: root.current ? Theme.accent : (root.done ? Theme.text-primary : Theme.text-secondary);
+                font-family: Theme.font-ui;
+                font-size: 11px;
+                font-weight: root.current ? 800 : 600;
+                vertical-alignment: center;
+            }
+        }
+        Rectangle {
+            height: 2.5px;
+            background: root.current ? Theme.accent : transparent;
+            border-radius: 1.5px;
+        }
+    }
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+component SafetyChip inherits Rectangle {
+    in-out property <string> caption;
+    in-out property <string> value;
+    in-out property <bool> ok: false;
+    in-out property <bool> warn: false;
+    in-out property <bool> clickable: true;
+    callback clicked();
+    HorizontalLayout {
+        spacing: 6px;
+        alignment: center;
+        Text {
+            text: root.caption + ":";
+            color: Theme.icon-muted;
+            font-family: Theme.font-ui;
+            font-size: 10px;
+            font-weight: 700;
+            vertical-alignment: center;
+        }
+        Text {
+            text: root.value;
+            color: root.ok ? Theme.success : (root.warn ? Theme.accent : Theme.text-primary);
+            font-family: Theme.font-ui;
+            font-size: 11px;
+            font-weight: 600;
+            vertical-alignment: center;
+            overflow: elide;
+            max-width: 160px;
+        }
+    }
+    TouchArea {
+        enabled: root.clickable;
+        mouse-cursor: root.clickable ? pointer : default;
+        clicked => { root.clicked(); }
+    }
+}
+
+/// CASE · COVERAGE · INTEGRITY + Open→Report stage tabs.
+export component LabSafetyStrip inherits Rectangle {
+    in-out property <string> case-title: "(no case)";
+    in-out property <string> coverage-label: "NotRun";
+    in-out property <string> integrity-label: "SHA-256";
+    in-out property <bool> integrity-ok: true;
+    in-out property <int> active-stage: 1;
+    callback case-clicked();
+    callback coverage-clicked();
+    callback stage-clicked(int);
+
+    height: Theme.safety-height;
+    background: Theme.surface;
+
+    VerticalLayout {
+        spacing: 0px;
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 10px;
+        spacing: 14px;
+        alignment: center;
+        vertical-stretch: 1;
+
+        SafetyChip {
+            caption: Strings.chip-case;
+            value: root.case-title;
+            warn: root.case-title == "(no case)" || root.case-title == "";
+            clicked => { root.case-clicked(); }
+        }
+        SafetyChip {
+            caption: Strings.chip-coverage;
+            value: root.coverage-label;
+            warn: root.coverage-label == "NotRun" || root.coverage-label == "Not Run";
+            clicked => { root.coverage-clicked(); }
+        }
+        SafetyChip {
+            caption: Strings.chip-integrity;
+            value: root.integrity-label;
+            ok: root.integrity-ok;
+            clickable: false;
+        }
+
+        Rectangle { horizontal-stretch: 1; }
+
+        StageTab {
+            glyph: "1";
+            label: Strings.workflow-open;
+            current: root.active-stage == 1;
+            done: root.active-stage > 1;
+            clicked => { root.stage-clicked(1); }
+        }
+        StageTab {
+            glyph: "2";
+            label: Strings.workflow-import;
+            current: root.active-stage == 2;
+            done: root.active-stage > 2;
+            clicked => { root.stage-clicked(2); }
+        }
+        StageTab {
+            glyph: "3";
+            label: Strings.workflow-examine;
+            current: root.active-stage == 3;
+            done: root.active-stage > 3;
+            clicked => { root.stage-clicked(3); }
+        }
+        StageTab {
+            glyph: "4";
+            label: Strings.workflow-bookmark;
+            current: root.active-stage == 4;
+            done: root.active-stage > 4;
+            clicked => { root.stage-clicked(4); }
+        }
+        StageTab {
+            glyph: "5";
+            label: Strings.workflow-report;
+            current: root.active-stage == 5;
+            done: false;
+            clicked => { root.stage-clicked(5); }
+        }
+    }
+    Rectangle { height: 1px; background: Theme.border; }
+    }
+}

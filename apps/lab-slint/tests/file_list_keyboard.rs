@@ -47,9 +47,9 @@ fn keyboard_shortcuts_bookmark_and_search() {
     assert!(snap.selected_file_index.is_none());
     snap.handle_shortcut("2");
     assert_eq!(snap.active_screen, NavScreen::Evidence);
-    assert!(snap.nav_collapsed); // rail default
+    assert!(!snap.nav_collapsed); // labeled rail default (ASCII)
     snap.handle_shortcut("nav");
-    assert!(!snap.nav_collapsed); // expand labeled nav
+    assert!(snap.nav_collapsed); // collapse to icon rail
 }
 
 #[test]

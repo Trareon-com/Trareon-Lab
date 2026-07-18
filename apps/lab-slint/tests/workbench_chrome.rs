@@ -6,7 +6,7 @@ use lab_slint::UiSnapshot;
 fn workbench_chrome_defaults_and_toggles() {
     let mut snap = UiSnapshot::default();
     assert!(!snap.inspector_open);
-    assert!(snap.nav_collapsed); // rail default
+    assert!(!snap.nav_collapsed); // labeled rail default (ASCII)
     assert!(!snap.log_open);
     assert!(!snap.palette_open);
 
@@ -21,5 +21,5 @@ fn workbench_chrome_defaults_and_toggles() {
     snap.handle_shortcut("log");
     assert!(snap.log_open);
     snap.handle_shortcut("nav");
-    assert!(!snap.nav_collapsed); // expanded
+    assert!(snap.nav_collapsed); // collapsed to icon rail
 }

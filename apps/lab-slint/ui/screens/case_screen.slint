@@ -3,33 +3,47 @@ import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
 import { LabButton } from "../components/lab_button.slint";
 import { StatusBadge } from "../components/status_badge.slint";
-import { AcquireStepper } from "../components/acquire_stepper.slint";
 import { PanelCard } from "../components/panel_card.slint";
+import { StatCard } from "../components/stat_card.slint";
+import { WorkflowCard } from "../components/workflow_card.slint";
+import { Icon } from "../components/icon.slint";
 
-/// Text-row place link (Acquire-dense, not a card).
+/// Examine shortcut row — readable when locked, with clear unlock hint.
 component PlaceRow inherits Rectangle {
     in-out property <string> label;
     in-out property <bool> enabled: true;
+    in-out property <string> locked-hint: Strings.shortcut-needs-case;
     callback clicked();
-    height: 32px;
-    opacity: enabled ? 1.0 : 0.4;
+    height: root.enabled ? 34px : 48px;
+
     HorizontalLayout {
         padding-left: 4px;
         padding-right: 4px;
         spacing: 8px;
-        Text {
-            text: root.label;
-            color: Theme.text-primary;
-            font-family: Theme.font-ui;
-            font-size: 12px;
-            font-weight: 600;
-            vertical-alignment: center;
-            horizontal-stretch: 1;
-            overflow: elide;
+        VerticalLayout {
+            spacing: 2px;
+            vertical-stretch: 1;
+            alignment: center;
+            Text {
+                text: root.label;
+                color: Theme.text-primary;
+                font-family: Theme.font-ui;
+                font-size: 12px;
+                font-weight: 600;
+                overflow: elide;
+            }
+            if !root.enabled: Text {
+                text: root.locked-hint;
+                color: Theme.text-secondary;
+                font-family: Theme.font-ui;
+                font-size: 10px;
+                font-weight: 500;
+                overflow: elide;
+            }
         }
         Text {
             text: "→";
-            color: Theme.text-secondary;
+            color: root.enabled ? Theme.text-secondary : Theme.border;
             font-size: 12px;
             font-weight: 700;
             vertical-alignment: center;
@@ -42,36 +56,48 @@ component PlaceRow inherits Rectangle {
     states [ hover when ta.has-hover && root.enabled: { background: Theme.row-hover; } ]
 }
 
-component MetricLine inherits HorizontalLayout {
+component OutlineAction inherits Rectangle {
     in-out property <string> label;
-    in-out property <int> value;
-    in-out property <color> bar-color: Theme.accent;
-    spacing: 10px;
-    height: 28px;
-    alignment: center;
-    Rectangle {
-        width: 3px;
-        height: 22px;
-        border-radius: 1.5px;
-        background: root.bar-color;
+    in-out property <image> glyph;
+    in-out property <bool> has-glyph: false;
+    callback clicked();
+
+    height: 34px;
+    horizontal-stretch: 1;
+    border-radius: Theme.chip-radius;
+    border-width: 1px;
+    border-color: Theme.accent;
+    background: Theme.surface;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        spacing: 6px;
+        alignment: center;
+        if root.has-glyph: Icon {
+            glyph: root.glyph;
+            tint: Theme.accent;
+            size: 14px;
+            vertical-alignment: center;
+        }
+        Text {
+            text: root.label;
+            color: Theme.accent;
+            font-family: Theme.font-ui;
+            font-size: 11px;
+            font-weight: 700;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+            overflow: elide;
+        }
     }
-    Text {
-        text: root.label;
-        color: Theme.text-secondary;
-        font-size: 12px;
-        font-weight: 600;
-        vertical-alignment: center;
-        horizontal-stretch: 1;
+    ta := TouchArea {
+        clicked => { root.clicked(); }
     }
-    Text {
-        text: root.value;
-        color: Theme.text-primary;
-        font-size: 14px;
-        font-weight: 800;
-        vertical-alignment: center;
-    }
+    states [ hover when ta.has-hover: { background: Theme.accent-muted; } ]
 }
 
+/// Case Home — IDENTITY | EXAMINE | ACTION (safety strip owns stages).
 export component CaseScreen inherits Rectangle {
     in-out property <string> case-title;
     in-out property <string> case-state-label: "open";
@@ -89,12 +115,12 @@ export component CaseScreen inherits Rectangle {
 
     background: transparent;
     property <bool> has-case: case-title != "" && case-title != "(no case)";
+    property <bool> more-open: false;
     property <int> stage: !has-case ? 0
         : evidence-count <= 0 ? 1
         : bookmark-count > 0 ? (report-finalizable ? 4 : 3)
         : 2;
-    property <int> stepper-index: root.stage >= 4 ? 5 : root.stage + 1;
-    property <string> next-body: stage == 0 ? Strings.next-open
+    property <string> next-body: stage == 0 ? Strings.welcome-subtitle
         : stage == 1 ? Strings.next-import
         : stage == 3 || stage == 4 ? Strings.next-report
         : Strings.next-examine;
@@ -119,30 +145,14 @@ export component CaseScreen inherits Rectangle {
 
     VerticalLayout {
         padding: 16px;
-        spacing: 10px;
+        spacing: 12px;
 
-        HorizontalLayout {
-            spacing: 16px;
-            alignment: center;
-            Text {
-                text: "Lab";
-                color: Theme.text-primary;
-                font-size: 26px;
-                font-weight: 800;
-                font-family: Theme.font-ui;
-                vertical-alignment: center;
-            }
-            AcquireStepper {
-                active-index: root.stepper-index;
-                labels: [
-                    Strings.workflow-open,
-                    Strings.workflow-import,
-                    Strings.workflow-examine,
-                    Strings.workflow-bookmark,
-                    Strings.workflow-report,
-                ];
-            }
-            Rectangle { horizontal-stretch: 1; }
+        Text {
+            text: "Lab";
+            color: Theme.text-primary;
+            font-size: 26px;
+            font-weight: 800;
+            font-family: Theme.font-ui;
         }
         Text {
             text: root.next-body;
@@ -152,173 +162,179 @@ export component CaseScreen inherits Rectangle {
         }
 
         HorizontalLayout {
-            spacing: 14px;
+            spacing: 12px;
             vertical-stretch: 1;
 
-            // Left: identity + metrics + activity
+            // IDENTITY ~42%
             PanelCard {
-                horizontal-stretch: 1.15;
+                horizontal-stretch: 1.2;
+                background: root.has-case
+                    ? Theme.surface
+                    : @linear-gradient(180deg, #FBF7F2 0%, #F3EEE6 100%);
                 VerticalLayout {
-                    padding: 16px;
-                    spacing: 12px;
-                    Text {
-                        text: Strings.case-overview;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        font-weight: 800;
-                        letter-spacing: 0.6px;
-                    }
-                    Text {
-                        text: root.has-case ? root.case-title : Strings.empty-no-case;
-                        color: Theme.text-primary;
-                        font-size: 18px;
-                        font-weight: 800;
-                        font-family: Theme.font-ui;
-                        overflow: elide;
-                    }
-                    if root.has-case: StatusBadge {
-                        label: root.case-state-label;
-                        kind: "info";
-                    }
-                    if !root.has-case: Text {
-                        text: Strings.next-open;
-                        color: Theme.text-secondary;
-                        font-size: 12px;
-                        wrap: word-wrap;
-                    }
-                    Rectangle { height: 1px; background: Theme.border; }
-                    MetricLine {
-                        label: Strings.status-evidence;
-                        value: root.evidence-count;
-                        bar-color: Theme.lab-accent;
-                    }
-                    MetricLine {
-                        label: Strings.status-coverage;
-                        value: root.coverage-count;
-                        bar-color: Theme.accent;
-                    }
-                    MetricLine {
-                        label: Strings.status-bookmarks;
-                        value: root.bookmark-count;
-                        bar-color: Theme.info;
-                    }
-                    Rectangle { height: 1px; background: Theme.border; }
-                    Text {
-                        text: Strings.activity;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        font-weight: 800;
-                        letter-spacing: 0.5px;
-                    }
-                    if root.activity-lines.length == 0: Text {
-                        text: Strings.activity-empty;
-                        color: Theme.text-secondary;
-                        font-size: 12px;
-                    }
-                    if root.activity-lines.length > 0: VerticalLayout {
-                        spacing: 3px;
-                        for line in root.activity-lines: Text {
-                            text: "·  " + line;
-                            color: Theme.mono-fg;
-                            font-family: "monospace";
-                            font-size: 11px;
-                            overflow: elide;
+                    padding: 18px;
+                    spacing: 14px;
+
+                    if !root.has-case: VerticalLayout {
+                        spacing: 6px;
+                        HorizontalLayout {
+                            Text {
+                                text: Strings.welcome-prefix;
+                                color: Theme.text-primary;
+                                font-family: Theme.font-ui;
+                                font-size: 20px;
+                                font-weight: 600;
+                            }
+                            Text {
+                                text: Strings.brand;
+                                color: Theme.accent;
+                                font-family: Theme.font-ui;
+                                font-size: 20px;
+                                font-weight: 800;
+                            }
+                        }
+                        Text {
+                            text: Strings.welcome-subtitle;
+                            color: Theme.text-secondary;
+                            font-family: Theme.font-ui;
+                            font-size: 12px;
                         }
                     }
-                    if root.exception-lines.length > 0: VerticalLayout {
-                        spacing: 3px;
+
+                    if root.has-case: VerticalLayout {
+                        spacing: 8px;
                         Text {
-                            text: Strings.exceptions-title;
-                            color: Theme.danger;
+                            text: Strings.case-overview;
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            font-weight: 800;
+                            letter-spacing: 0.6px;
+                        }
+                        Text {
+                            text: root.case-title;
+                            color: Theme.text-primary;
+                            font-size: 18px;
+                            font-weight: 800;
+                            font-family: Theme.font-ui;
+                            overflow: elide;
+                        }
+                        StatusBadge {
+                            label: root.case-state-label;
+                            kind: "info";
+                        }
+                    }
+
+                    HorizontalLayout {
+                        spacing: 10px;
+                        StatCard {
+                            label: Strings.stat-evidence-items;
+                            value: root.evidence-count;
+                            glyph: @image-url("../assets/icons/nav-search.png");
+                            accent-color: Theme.lab-accent;
+                        }
+                        StatCard {
+                            label: Strings.stat-data-coverage;
+                            value: root.coverage-count;
+                            glyph: @image-url("../assets/icons/brand-shield.png");
+                            accent-color: Theme.accent;
+                        }
+                        StatCard {
+                            label: Strings.stat-bookmarked;
+                            value: root.bookmark-count;
+                            glyph: @image-url("../assets/icons/nav-bookmark.png");
+                            accent-color: Theme.info;
+                        }
+                    }
+
+                    if !root.has-case: VerticalLayout {
+                        spacing: 10px;
+                        Text {
+                            text: Strings.workflow-guide;
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            font-weight: 800;
+                            letter-spacing: 0.5px;
+                        }
+                        HorizontalLayout {
+                            spacing: 10px;
+                            WorkflowCard {
+                                title: Strings.workflow-step-create;
+                                subtitle: Strings.workflow-step-create-body;
+                                glyph: @image-url("../assets/icons/ico-folder.png");
+                                clicked => { root.open-case-clicked(); }
+                            }
+                            WorkflowCard {
+                                title: Strings.workflow-step-import;
+                                subtitle: Strings.workflow-step-import-body;
+                                glyph: @image-url("../assets/icons/ico-disk.png");
+                                clicked => { root.import-evidence-clicked(); }
+                            }
+                            WorkflowCard {
+                                title: Strings.workflow-step-analyze;
+                                subtitle: Strings.workflow-step-analyze-body;
+                                glyph: @image-url("../assets/icons/nav-lab.png");
+                                clicked => { root.navigate("Evidence"); }
+                            }
+                        }
+                    }
+
+                    if root.has-case: VerticalLayout {
+                        spacing: 8px;
+                        Rectangle { height: 1px; background: Theme.border; }
+                        Text {
+                            text: Strings.activity;
+                            color: Theme.text-secondary;
                             font-size: 11px;
                             font-weight: 800;
                         }
-                        for line in root.exception-lines: Text {
-                            text: "·  " + line;
-                            color: Theme.danger;
-                            font-size: 11px;
-                            wrap: word-wrap;
+                        if root.activity-lines.length == 0: Text {
+                            text: Strings.activity-empty;
+                            color: Theme.text-secondary;
+                            font-size: 12px;
+                        }
+                        if root.activity-lines.length > 0: VerticalLayout {
+                            spacing: 3px;
+                            for line in root.activity-lines: Text {
+                                text: "·  " + line;
+                                color: Theme.mono-fg;
+                                font-family: "monospace";
+                                font-size: 11px;
+                                overflow: elide;
+                            }
+                        }
+                        if root.exception-lines.length > 0: VerticalLayout {
+                            spacing: 3px;
+                            Text {
+                                text: Strings.exceptions-title;
+                                color: Theme.danger;
+                                font-size: 11px;
+                                font-weight: 800;
+                            }
+                            for line in root.exception-lines: Text {
+                                text: "·  " + line;
+                                color: Theme.danger;
+                                font-size: 11px;
+                                wrap: word-wrap;
+                            }
                         }
                     }
+
                     Rectangle { vertical-stretch: 1; }
                 }
             }
 
-            // Right: one primary CTA + text secondary + places
+            // EXAMINE ~33%
             PanelCard {
                 horizontal-stretch: 1;
                 VerticalLayout {
-                    padding: 16px;
-                    spacing: 12px;
-                    Text {
-                        text: Strings.next-action;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        font-weight: 800;
-                        letter-spacing: 0.6px;
-                    }
-                    LabButton {
-                        primary: true;
-                        prominent: true;
-                        label: root.next-cta;
-                        clicked => {
-                            if root.stage == 0 {
-                                root.open-case-clicked();
-                            } else if root.stage == 1 {
-                                root.import-evidence-clicked();
-                            } else if root.stage == 3 || root.stage == 4 {
-                                root.navigate("Report");
-                            } else {
-                                root.navigate("Evidence");
-                            }
-                        }
-                    }
-                    HorizontalLayout {
-                        spacing: 16px;
-                        TouchArea {
-                            clicked => { root.load-demo-clicked(); }
-                            Text {
-                                text: Strings.load-demo;
-                                color: Theme.text-secondary;
-                                font-size: 12px;
-                                font-weight: 600;
-                            }
-                        }
-                        TouchArea {
-                            clicked => { root.quick-verify-clicked(); }
-                            Text {
-                                text: Strings.quick-verify;
-                                color: Theme.text-secondary;
-                                font-size: 12px;
-                                font-weight: 600;
-                            }
-                        }
-                        if root.stage == 0 || root.stage == 1: TouchArea {
-                            clicked => { root.import-evidence-clicked(); }
-                            Text {
-                                text: Strings.import-evidence;
-                                color: Theme.text-secondary;
-                                font-size: 12px;
-                                font-weight: 600;
-                            }
-                        }
-                        if root.bookmark-count > 0: TouchArea {
-                            clicked => { root.navigate("Report"); }
-                            Text {
-                                text: Strings.go-report;
-                                color: Theme.accent;
-                                font-size: 12px;
-                                font-weight: 700;
-                            }
-                        }
-                    }
-                    Rectangle { height: 1px; background: Theme.border; }
+                    padding: 18px;
+                    spacing: 10px;
                     Text {
                         text: Strings.places-to-start;
                         color: Theme.text-secondary;
                         font-size: 11px;
                         font-weight: 800;
-                        letter-spacing: 0.5px;
+                        letter-spacing: 0.6px;
                     }
                     PlaceRow {
                         label: Strings.go-evidence;
@@ -327,10 +343,12 @@ export component CaseScreen inherits Rectangle {
                     }
                     PlaceRow {
                         label: Strings.go-search;
+                        enabled: root.has-case;
                         clicked => { root.navigate("Search"); }
                     }
                     PlaceRow {
                         label: Strings.go-timeline;
+                        enabled: root.has-case;
                         clicked => { root.navigate("Timeline"); }
                     }
                     PlaceRow {
@@ -349,6 +367,120 @@ export component CaseScreen inherits Rectangle {
                         color: Theme.text-secondary;
                         font-size: 10px;
                     }
+                }
+            }
+
+            // ACTION ~25%
+            PanelCard {
+                horizontal-stretch: 0.85;
+                VerticalLayout {
+                    padding: 18px;
+                    spacing: 12px;
+                    Text {
+                        text: Strings.next-action;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.6px;
+                    }
+                    LabButton {
+                        primary: true;
+                        prominent: true;
+                        label: root.next-cta;
+                        has-leading-icon: true;
+                        leading-icon: @image-url("../assets/icons/ico-folder.png");
+                        clicked => {
+                            root.more-open = false;
+                            if root.stage == 0 {
+                                root.open-case-clicked();
+                            } else if root.stage == 1 {
+                                root.import-evidence-clicked();
+                            } else if root.stage == 3 || root.stage == 4 {
+                                root.navigate("Report");
+                            } else {
+                                root.navigate("Evidence");
+                            }
+                        }
+                    }
+                    OutlineAction {
+                        label: Strings.load-demo;
+                        has-glyph: true;
+                        glyph: @image-url("../assets/icons/nav-cases.png");
+                        clicked => {
+                            root.more-open = false;
+                            root.load-demo-clicked();
+                        }
+                    }
+                    OutlineAction {
+                        label: Strings.quick-verify;
+                        has-glyph: true;
+                        glyph: @image-url("../assets/icons/ico-check.png");
+                        clicked => {
+                            root.more-open = false;
+                            root.quick-verify-clicked();
+                        }
+                    }
+                    Rectangle {
+                        height: 34px;
+                        border-radius: Theme.chip-radius;
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        background: root.more-open ? Theme.accent-muted : Theme.surface;
+                        HorizontalLayout {
+                            alignment: center;
+                            Text {
+                                text: Strings.more-actions;
+                                color: Theme.text-primary;
+                                font-family: Theme.font-ui;
+                                font-size: 11px;
+                                font-weight: 700;
+                                vertical-alignment: center;
+                            }
+                        }
+                        TouchArea {
+                            clicked => { root.more-open = !root.more-open; }
+                        }
+                    }
+                    if root.more-open: Rectangle {
+                        border-radius: Theme.chip-radius;
+                        border-width: 1px;
+                        border-color: Theme.border;
+                        background: Theme.surface;
+                        VerticalLayout {
+                            padding: 6px;
+                            Rectangle {
+                                height: 36px;
+                                border-radius: Theme.chip-radius;
+                                HorizontalLayout {
+                                    padding-left: 10px;
+                                    padding-right: 10px;
+                                    spacing: 8px;
+                                    Icon {
+                                        glyph: @image-url("../assets/icons/ico-disk.png");
+                                        tint: Theme.text-primary;
+                                        size: 16px;
+                                        vertical-alignment: center;
+                                    }
+                                    Text {
+                                        text: Strings.import-evidence;
+                                        color: Theme.text-primary;
+                                        font-family: Theme.font-ui;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                        vertical-alignment: center;
+                                    }
+                                }
+                                ta-import := TouchArea {
+                                    clicked => {
+                                        root.more-open = false;
+                                        root.import-evidence-clicked();
+                                    }
+                                }
+                                states [ hover when ta-import.has-hover: { background: Theme.row-hover; } ]
+                            }
+                        }
+                    }
+                    Rectangle { vertical-stretch: 1; }
                 }
             }
         }

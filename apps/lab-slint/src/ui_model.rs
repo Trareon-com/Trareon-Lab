@@ -305,7 +305,7 @@ impl Default for UiSnapshot {
             graph_edges: Vec::new(),
             ai_enabled: false,
             live_preflight_message: "Live intake requires Trareon Acquire — Open Acquire".into(),
-            nav_collapsed: true,
+            nav_collapsed: false,
             inspector_open: false,
             log_open: false,
             palette_open: false,

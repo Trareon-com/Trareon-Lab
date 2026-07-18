@@ -2,7 +2,7 @@
 
 ## Status
 
-**Superseded for Lab chrome (2026-07-19):** Lab now uses the **examination workbench** shell (disclosure · TRAREON|LAB header · 48↔180 rail · inspector Properties|Hex · status+progress · log overlay). See implementation / `apps/lab-slint/tests/lab_workbench_chrome.rs`.
+**Superseded for Lab chrome (2026-07-19):** ASCII shell remount — see `docs/superpowers/specs/2026-07-19-lab-ascii-shell-remount-design.md` (banner 26 · header 48 · rail 188/56 · safety 40 · status 30 · copper `#AF622E`). Prior examination-workbench geometry is obsolete.
 
 **Acquire product shell** (TRAREON|ACQUIRE · Prepare→Acquire→Seal wizard) remains a **separate future** design — not this Lab remount.
 

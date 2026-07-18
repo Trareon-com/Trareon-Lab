@@ -1,0 +1,59 @@
+import { Theme } from "../theme.slint";
+import { Icon } from "icon.slint";
+
+/// Onboarding / overview metric card: colored top edge, outline icon, value, label.
+export component StatCard inherits Rectangle {
+    in-out property <string> label;
+    in-out property <int> value: 0;
+    in-out property <image> glyph;
+    in-out property <color> accent-color: Theme.accent;
+
+    background: Theme.surface;
+    border-width: 1px;
+    border-color: Theme.border;
+    border-radius: 10px;
+    drop-shadow-blur: 12px;
+    drop-shadow-color: Theme.shadow;
+    drop-shadow-offset-y: 2px;
+    min-height: 118px;
+    horizontal-stretch: 1;
+    clip: true;
+
+    VerticalLayout {
+        spacing: 0px;
+        Rectangle {
+            height: 3px;
+            background: root.accent-color;
+        }
+        VerticalLayout {
+            padding: 16px;
+            spacing: 10px;
+            alignment: center;
+            HorizontalLayout {
+                alignment: center;
+                Icon {
+                    glyph: root.glyph;
+                    tint: root.accent-color;
+                    size: 28px;
+                }
+            }
+            Text {
+                text: root.value;
+                color: Theme.text-primary;
+                font-family: Theme.font-ui;
+                font-size: 28px;
+                font-weight: 800;
+                horizontal-alignment: center;
+            }
+            Text {
+                text: root.label;
+                color: Theme.text-secondary;
+                font-family: Theme.font-ui;
+                font-size: 11px;
+                font-weight: 600;
+                horizontal-alignment: center;
+                wrap: word-wrap;
+            }
+        }
+    }
+}

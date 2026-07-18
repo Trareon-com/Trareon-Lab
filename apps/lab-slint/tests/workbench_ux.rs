@@ -8,7 +8,7 @@ fn light_mode_default_for_workbench() {
     let snap = UiSnapshot::default();
     assert!(!snap.dark_mode);
     assert!(!snap.inspector_open);
-    assert!(snap.nav_collapsed);
+    assert!(!snap.nav_collapsed);
     assert!(!snap.palette_open);
 }
 
@@ -18,7 +18,7 @@ fn palette_commands_and_toggles() {
     snap.handle_shortcut("/");
     assert!(snap.palette_open);
     snap.activate_palette_command("Toggle Nav");
-    assert!(!snap.nav_collapsed); // was rail; toggle expands
+    assert!(snap.nav_collapsed); // was labeled; toggle collapses to rail
     assert!(!snap.palette_open);
     snap.filter_palette("run");
     assert!(snap

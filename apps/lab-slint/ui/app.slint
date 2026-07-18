@@ -4,6 +4,7 @@ import { CommandPalette } from "components/command_palette.slint";
 import { DisclosureBanner } from "components/disclosure_banner.slint";
 import { LabHeader } from "components/lab_header.slint";
 import { LabSidebar } from "components/lab_sidebar.slint";
+import { LabSafetyStrip } from "components/lab_safety_strip.slint";
 import { LabStatusBar } from "components/lab_status_bar.slint";
 import { InspectorPanel } from "components/inspector_panel.slint";
 import { CaseScreen } from "screens/case_screen.slint";
@@ -26,8 +27,8 @@ export component AppWindow inherits Window {
     title: Strings.brand;
     preferred-width: 1280px;
     preferred-height: 800px;
-    min-width: 960px;
-    min-height: 640px;
+    min-width: Theme.window-min-w;
+    min-height: Theme.window-min-h;
     background: Theme.canvas;
     default-font-family: "Inter";
     default-font-size: 13px;
@@ -46,7 +47,7 @@ export component AppWindow inherits Window {
     in-out property <string> footer-clock: "";
     in-out property <string> last-action: "";
 
-    in-out property <bool> nav-collapsed: true;
+    in-out property <bool> nav-collapsed: false;
     in-out property <bool> inspector-open: false;
     in-out property <bool> log-open: false;
     in-out property <bool> palette-open: false;
@@ -175,6 +176,11 @@ export component AppWindow inherits Window {
 
     focus-open-case => { open-case-focused = true; }
 
+    property <int> workflow-stage: (case-title == "" || case-title == "(no case)") ? 1
+        : evidence-count <= 0 ? 2
+        : bookmark-count > 0 ? (report-finalizable ? 5 : 4)
+        : 3;
+
     root-container := Rectangle {
         width: 100%;
         height: 100%;
@@ -209,8 +215,36 @@ export component AppWindow inherits Window {
                     navigate-key(k) => { root.navigate(k); }
                 }
 
+                VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 0px;
+
+                    LabSafetyStrip {
+                        case-title: root.case-title;
+                        coverage-label: root.coverage-status-label;
+                        integrity-label: "SHA-256";
+                        integrity-ok: true;
+                        active-stage: root.workflow-stage;
+                        case-clicked => { root.navigate("Case"); }
+                        coverage-clicked => { root.navigate("Case"); }
+                        stage-clicked(i) => {
+                            if i == 1 {
+                                root.navigate("Case");
+                            } else if i == 2 {
+                                root.navigate("Case");
+                            } else if i == 3 {
+                                root.navigate("Evidence");
+                            } else if i == 4 {
+                                root.navigate("Bookmarks");
+                            } else {
+                                root.navigate("Report");
+                            }
+                        }
+                    }
+
                 Rectangle {
                     horizontal-stretch: 1;
+                    vertical-stretch: 1;
                     min-width: 480px;
                     clip: true;
                     background: Theme.canvas;
@@ -248,6 +282,8 @@ export component AppWindow inherits Window {
                                 width: 100%;
                                 height: 100%;
                                 evidence-names: root.evidence-names;
+                                evidence-paths: root.evidence-paths;
+                                evidence-sizes: root.evidence-sizes;
                                 evidence-designations: root.evidence-designations;
                                 evidence-integrity: root.evidence-integrity;
                                 evidence-deleted: root.evidence-deleted;
@@ -257,6 +293,13 @@ export component AppWindow inherits Window {
                                 import-evidence-clicked => { root.import-evidence-clicked(); }
                                 evidence-row-selected(i) => { root.evidence-row-selected(i); }
                                 run-carving-clicked => { root.run-carving-clicked(); }
+                                bookmark-clicked => { root.bookmark-selection-clicked(); }
+                                open-hex-clicked => {
+                                    root.inspector-tab-changed("hex");
+                                    if !root.inspector-open {
+                                        root.toggle-inspector-clicked();
+                                    }
+                                }
                             }
 
                             SearchScreen {
@@ -464,6 +507,7 @@ export component AppWindow inherits Window {
                         }
                     }
                 }
+                } // VerticalLayout: safety + body
 
                 if root.inspector-as-side: InspectorPanel {
                     title: root.inspector-title;

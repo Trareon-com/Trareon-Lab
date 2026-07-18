@@ -1,0 +1,59 @@
+import { Theme } from "../theme.slint";
+import { Icon } from "icon.slint";
+
+/// Clickable onboarding step card for the empty Case Home.
+export component WorkflowCard inherits Rectangle {
+    in-out property <string> title;
+    in-out property <string> subtitle;
+    in-out property <image> glyph;
+    callback clicked();
+
+    background: Theme.surface;
+    border-width: 1px;
+    border-color: Theme.border;
+    border-radius: 10px;
+    drop-shadow-blur: 10px;
+    drop-shadow-color: Theme.shadow;
+    drop-shadow-offset-y: 2px;
+    min-height: 128px;
+    horizontal-stretch: 1;
+    clip: true;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 10px;
+        Icon {
+            glyph: root.glyph;
+            tint: Theme.accent;
+            size: 26px;
+        }
+        Text {
+            text: root.title;
+            color: Theme.text-primary;
+            font-family: Theme.font-ui;
+            font-size: 13px;
+            font-weight: 700;
+            wrap: word-wrap;
+        }
+        Text {
+            text: root.subtitle;
+            color: Theme.text-secondary;
+            font-family: Theme.font-ui;
+            font-size: 11px;
+            font-weight: 500;
+            wrap: word-wrap;
+            vertical-stretch: 1;
+        }
+    }
+
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+
+    states [
+        hover when ta.has-hover: {
+            background: Theme.row-hover;
+            border-color: Theme.accent;
+        }
+    ]
+}

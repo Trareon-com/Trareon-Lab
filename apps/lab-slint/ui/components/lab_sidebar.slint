@@ -9,20 +9,19 @@ component RailItem inherits Rectangle {
     in-out property <bool> show-label: true;
     callback clicked();
 
-    height: 40px;
-    background: transparent;
-
-    if root.active: Rectangle {
-        x: 0px;
-        width: 3px;
-        height: parent.height;
-        background: Theme.nav-active-bar;
-    }
+    height: Theme.nav-row-height;
+    background: root.active ? Theme.accent-muted : transparent;
+    border-radius: Theme.chip-radius;
 
     if root.show-label: HorizontalLayout {
-        padding-left: 12px;
+        padding-left: 10px;
         padding-right: 10px;
         spacing: 10px;
+        Rectangle {
+            width: 3px;
+            background: root.active ? Theme.nav-active-bar : transparent;
+            border-radius: 1.5px;
+        }
         Icon {
             glyph: root.glyph;
             size: 16px;
@@ -78,8 +77,10 @@ component ToolRow inherits Rectangle {
     in-out property <bool> active: false;
     in-out property <bool> show-label: true;
     callback clicked();
-    height: root.show-label ? 26px : 0px;
+    height: root.show-label ? 28px : 0px;
     visible: root.show-label;
+    background: root.active ? Theme.accent-muted : transparent;
+    border-radius: Theme.chip-radius;
     HorizontalLayout {
         padding-left: 28px;
         padding-right: 10px;
@@ -97,10 +98,10 @@ component ToolRow inherits Rectangle {
     states [ hover when ta.has-hover: { background: Theme.row-hover; } ]
 }
 
-/// EPIC nav: Primary 1–6 · Tools · Meta. Rail 48 ↔ labeled 180.
+/// ASCII rail: WORKFLOW · LAB · SUPPORT — 188 ↔ 56.
 export component LabSidebar inherits Rectangle {
     in-out property <string> active-key: "Case";
-    in-out property <bool> expanded: false;
+    in-out property <bool> expanded: true;
     callback navigate-key(string);
 
     width: root.expanded ? Theme.sidebar-width : Theme.sidebar-rail-width;
@@ -111,8 +112,11 @@ export component LabSidebar inherits Rectangle {
         VerticalLayout {
             padding-top: 8px;
             padding-bottom: 8px;
+            padding-left: 6px;
+            padding-right: 6px;
             spacing: 1px;
 
+            GroupLabel { label: Strings.nav-group-workflow; show-label: root.expanded; }
             RailItem {
                 glyph: @image-url("../assets/icons/nav-cases.png");
                 label: Strings.nav-case;
@@ -156,7 +160,7 @@ export component LabSidebar inherits Rectangle {
                 clicked => { root.navigate-key("Report"); }
             }
 
-            GroupLabel { label: "TOOLS"; show-label: root.expanded; }
+            GroupLabel { label: Strings.nav-group-lab; show-label: root.expanded; }
             ToolRow {
                 label: Strings.nav-artifacts;
                 show-label: root.expanded;
@@ -181,8 +185,14 @@ export component LabSidebar inherits Rectangle {
                 active: root.active-key == "Transfer";
                 clicked => { root.navigate-key("Transfer"); }
             }
+            ToolRow {
+                label: Strings.quick-verify;
+                show-label: root.expanded;
+                active: root.active-key == "QuickVerify";
+                clicked => { root.navigate-key("QuickVerify"); }
+            }
 
-            GroupLabel { label: "META"; show-label: root.expanded; }
+            GroupLabel { label: Strings.nav-group-support; show-label: root.expanded; }
             ToolRow {
                 label: Strings.nav-capabilities;
                 show-label: root.expanded;
