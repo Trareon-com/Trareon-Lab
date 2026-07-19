@@ -68,9 +68,11 @@ fn shell_defaults_labeled_rail_inspector_off_light() {
 
 #[test]
 fn responsive_compact_forces_rail_and_overlay() {
-    let mut snap = UiSnapshot::default();
-    snap.nav_collapsed = false;
-    snap.inspector_open = true;
+    let mut snap = UiSnapshot {
+        nav_collapsed: false,
+        inspector_open: true,
+        ..Default::default()
+    };
     snap.apply_layout_width(1000);
     assert!(snap.layout_compact);
     assert!(snap.nav_collapsed);

@@ -4,12 +4,14 @@ use lab_slint::UiSnapshot;
 
 #[test]
 fn filtered_timeline_labels_substring() {
-    let mut snap = UiSnapshot::default();
-    snap.timeline_labels = vec![
-        "2024-01-01T10:00:00Z create".into(),
-        "2024-02-15T12:00:00Z modify".into(),
-        "noise line".into(),
-    ];
+    let mut snap = UiSnapshot {
+        timeline_labels: vec![
+            "2024-01-01T10:00:00Z create".into(),
+            "2024-02-15T12:00:00Z modify".into(),
+            "noise line".into(),
+        ],
+        ..Default::default()
+    };
     snap.set_timeline_filter("modify");
     let filtered = snap.filtered_timeline_labels();
     assert_eq!(filtered.len(), 1);
@@ -18,11 +20,13 @@ fn filtered_timeline_labels_substring() {
 
 #[test]
 fn filtered_timeline_labels_from_prefix() {
-    let mut snap = UiSnapshot::default();
-    snap.timeline_labels = vec![
-        "2024-01-01T10:00:00Z a".into(),
-        "2024-06-01T10:00:00Z b".into(),
-    ];
+    let mut snap = UiSnapshot {
+        timeline_labels: vec![
+            "2024-01-01T10:00:00Z a".into(),
+            "2024-06-01T10:00:00Z b".into(),
+        ],
+        ..Default::default()
+    };
     snap.set_timeline_filter("from:2024-06");
     let filtered = snap.filtered_timeline_labels();
     assert_eq!(filtered.len(), 1);
@@ -31,8 +35,10 @@ fn filtered_timeline_labels_from_prefix() {
 
 #[test]
 fn select_search_hit_and_clear() {
-    let mut snap = UiSnapshot::default();
-    snap.search_results = vec!["a".into(), "b".into(), "c".into()];
+    let mut snap = UiSnapshot {
+        search_results: vec!["a".into(), "b".into(), "c".into()],
+        ..Default::default()
+    };
     assert!(snap.select_search_hit(1));
     assert_eq!(snap.selected_search_index, Some(1));
     assert!(!snap.select_search_hit(9));
@@ -42,10 +48,12 @@ fn select_search_hit_and_clear() {
 
 #[test]
 fn evidence_page_prev_next() {
-    let mut snap = UiSnapshot::default();
-    snap.list_total = 500;
-    snap.list_page_size = 200;
-    snap.list_offset = 0;
+    let mut snap = UiSnapshot {
+        list_total: 500,
+        list_page_size: 200,
+        list_offset: 0,
+        ..Default::default()
+    };
     snap.page_next();
     assert_eq!(snap.list_offset, 200);
     snap.page_next();
