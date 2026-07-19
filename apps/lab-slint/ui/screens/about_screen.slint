@@ -1,6 +1,6 @@
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
-import { SectionCard } from "../components/section_card.slint";
+import { PanelCard } from "../components/panel_card.slint";
 
 export component AboutScreen inherits Rectangle {
     in-out property <string> about-line: "";
@@ -14,26 +14,36 @@ export component AboutScreen inherits Rectangle {
         spacing: 12px;
         Text {
             text: Strings.nav-about;
-            color: Theme.text-primary;
-            font-size: 14px;
-            font-weight: 700;
+            color: Theme.text-secondary;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
-        SectionCard {
-            show-title: false;
+        PanelCard {
             VerticalLayout {
-                spacing: 10px;
+                padding: 16px;
+                spacing: 12px;
                 Text {
                     text: root.version-line;
                     color: Theme.text-primary;
-                    font-size: 13px;
-                    font-weight: 600;
+                    font-size: 16px;
+                    font-weight: 800;
                 }
-                Text {
-                    text: root.disclosure-line;
-                    color: Theme.warning;
-                    font-size: 12px;
-                    font-weight: 600;
-                    wrap: word-wrap;
+                Rectangle {
+                    background: Theme.warning-bg;
+                    border-radius: Theme.chip-radius;
+                    border-width: 1px;
+                    border-color: Theme.accent;
+                    VerticalLayout {
+                        padding: 10px;
+                        Text {
+                            text: root.disclosure-line;
+                            color: Theme.warning;
+                            font-size: 12px;
+                            font-weight: 700;
+                            wrap: word-wrap;
+                        }
+                    }
                 }
                 Text {
                     text: root.about-line;
@@ -43,5 +53,6 @@ export component AboutScreen inherits Rectangle {
                 }
             }
         }
+        Rectangle { vertical-stretch: 1; }
     }
 }

@@ -110,11 +110,14 @@ export component CaseScreen inherits Rectangle {
     in-out property <bool> report-finalizable: false;
     in-out property <[string]> activity-lines;
     in-out property <[string]> exception-lines: [];
+    in-out property <[string]> recent-case-titles: [];
+    in-out property <[string]> recent-case-labels: [];
     callback open-case-clicked();
     callback import-evidence-clicked();
     callback quick-verify-clicked();
     callback load-demo-clicked();
     callback navigate(string);
+    callback recent-case-clicked(int);
 
     background: transparent;
     property <bool> has-case: case-title != "" && case-title != "(no case)";
@@ -148,7 +151,7 @@ export component CaseScreen inherits Rectangle {
 
     // -------- Empty / first-run: 2 columns (guide | action) --------
     if !root.has-case: VerticalLayout {
-        padding: 20px;
+        padding: 16px;
         spacing: 16px;
 
         VerticalLayout {
@@ -277,6 +280,21 @@ export component CaseScreen inherits Rectangle {
                         clicked => {
                             root.more-open = false;
                             root.quick-verify-clicked();
+                        }
+                    }
+                    if root.recent-case-titles.length > 0: VerticalLayout {
+                        spacing: 6px;
+                        Text {
+                            text: Strings.recent-cases;
+                            color: Theme.text-secondary;
+                            font-size: 11px;
+                            font-weight: 800;
+                            letter-spacing: 0.5px;
+                        }
+                        for title[index] in root.recent-case-titles: PlaceRow {
+                            label: title + (index < root.recent-case-labels.length ? " · " + root.recent-case-labels[index] : "");
+                            enabled: true;
+                            clicked => { root.recent-case-clicked(index); }
                         }
                     }
                     Rectangle {

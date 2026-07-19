@@ -58,7 +58,10 @@ export global Theme {
     in-out property <color> shadow: #00000018;
     in-out property <color> icon-muted: #8A94A0;
     in-out property <color> icon-active: #AF622E;
-    in-out property <string> font-ui: "Inter";
+    out property <string> font-ui: "Inter";
+    // Letter-spacing for Acquire-like display labels (Inter fallback; no Avenir host dep).
+    out property <float> tracking-label: 0.5;
+    in-out property <bool> reduce-motion: false;
 
     public function apply(is-dark: bool) {
         dark = is-dark;

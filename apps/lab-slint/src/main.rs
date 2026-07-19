@@ -242,11 +242,37 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.set_artifact_provenances(ModelRc::new(VecModel::from(provenances)));
 
         let timeline: Vec<SharedString> = snap
-            .timeline_labels
+            .filtered_timeline_labels()
+            .into_iter()
+            .map(|s| s.into())
+            .collect();
+        ui.set_timeline_labels(ModelRc::new(VecModel::from(timeline)));
+        ui.set_timeline_tz(snap.timeline_tz.clone().into());
+        ui.set_timeline_filter(snap.timeline_filter_query.clone().into());
+        ui.set_selected_search_index(snap.selected_search_index.map(|i| i as i32).unwrap_or(-1));
+        ui.set_hashset_pin(snap.hashset_pin.clone().unwrap_or_default().into());
+        let export_fmts: Vec<SharedString> = snap
+            .export_format_labels
             .iter()
             .map(|s| s.clone().into())
             .collect();
-        ui.set_timeline_labels(ModelRc::new(VecModel::from(timeline)));
+        ui.set_export_format_labels(ModelRc::new(VecModel::from(export_fmts)));
+        ui.set_selected_export_format(snap.selected_export_format as i32);
+        let recent_titles: Vec<SharedString> = snap
+            .recent_cases
+            .iter()
+            .map(|r| r.title.clone().into())
+            .collect();
+        let recent_labels: Vec<SharedString> = snap
+            .recent_cases
+            .iter()
+            .map(|r| format!("{} · {}", r.state_label, r.modified_label).into())
+            .collect();
+        ui.set_recent_case_titles(ModelRc::new(VecModel::from(recent_titles)));
+        ui.set_recent_case_labels(ModelRc::new(VecModel::from(recent_labels)));
+        ui.set_prefs_open(snap.prefs_open);
+        ui.set_reduce_motion(snap.reduce_motion);
+        ui.set_prefs_last_case(snap.prefs_last_case.clone().into());
 
         let claims: Vec<SharedString> = snap
             .findings
@@ -410,6 +436,7 @@ fn main() -> Result<(), slint::PlatformError> {
         if let Some(ui) = ui_weak.upgrade() {
             let mut snap = snap_search.borrow_mut();
             let q = ui.get_search_query().to_string();
+            snap.clear_search_selection();
             if snap.demo_seed {
                 snap.set_search(q.clone(), vec![format!("hit: demo matching '{q}'")]);
             } else if let Some(sess) = sess_search.borrow_mut().as_mut() {
@@ -621,12 +648,22 @@ fn main() -> Result<(), slint::PlatformError> {
             if let Some(sess) = sess_ex.borrow().as_ref() {
                 match sess.export_formats(lab_core::ExportMode::Draft) {
                     Ok(parts) => {
+                        snap.export_format_labels =
+                            parts.iter().map(|(k, d)| format!("{k} ({d})")).collect();
+                        if snap.selected_export_format >= snap.export_format_labels.len() {
+                            snap.selected_export_format = 0;
+                        }
+                        let chosen = snap
+                            .export_format_labels
+                            .get(snap.selected_export_format)
+                            .cloned()
+                            .unwrap_or_else(|| "default".into());
                         snap.export_status = parts
                             .iter()
                             .map(|(k, d)| format!("{k}={d}"))
                             .collect::<Vec<_>>()
                             .join("; ");
-                        snap.push_log("export · formats written (digests)");
+                        snap.push_log(format!("export · {chosen}"));
                     }
                     Err(e) => {
                         snap.export_status = format!("export failed: {e:?}");
@@ -1021,6 +1058,113 @@ fn main() -> Result<(), slint::PlatformError> {
             snap.quick_verify_timeline_lines.clear();
             snap.open_case("(no case)", 0, 0);
             snap.navigate_to(NavScreen::CaseHome);
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_pp = Rc::clone(&snapshot);
+    ui.on_page_prev_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_pp.borrow_mut();
+            snap.page_prev();
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_pn = Rc::clone(&snapshot);
+    ui.on_page_next_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_pn.borrow_mut();
+            snap.page_next();
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_cp = Rc::clone(&snapshot);
+    ui.on_copy_path_clicked(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_cp.borrow_mut();
+            if let Some(f) = snap.selected_file() {
+                let path = f.path.clone();
+                // ponytail: best-effort OS clipboard; no new dep
+                let _ = std::process::Command::new("pbcopy")
+                    .stdin(std::process::Stdio::piped())
+                    .spawn()
+                    .and_then(|mut c| {
+                        use std::io::Write;
+                        if let Some(stdin) = c.stdin.as_mut() {
+                            let _ = stdin.write_all(path.as_bytes());
+                        }
+                        c.wait()
+                    });
+                snap.push_log(format!("copied path · {path}"));
+                snap.last_action = "Copied to clipboard".into();
+            }
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_sr = Rc::clone(&snapshot);
+    ui.on_search_row_selected(move |idx| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_sr.borrow_mut();
+            snap.select_search_hit(idx as usize);
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_ef = Rc::clone(&snapshot);
+    ui.on_export_format_selected(move |idx| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_ef.borrow_mut();
+            snap.selected_export_format = idx.max(0) as usize;
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_rc = Rc::clone(&snapshot);
+    ui.on_recent_case_clicked(move |_idx| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_rc.borrow_mut();
+            // Reuse open-case flow; recent path stored in prefs_last_case when available.
+            snap.push_log("recent case · open via Open Case");
+            snap.last_action = "Open Case to load recent".into();
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_tf = Rc::clone(&snapshot);
+    ui.on_timeline_filter_changed(move |q| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_tf.borrow_mut();
+            snap.set_timeline_filter(q.as_str());
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_pt = Rc::clone(&snapshot);
+    ui.on_prefs_toggled(move || {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_pt.borrow_mut();
+            snap.prefs_open = !snap.prefs_open;
+            apply(&ui, &snap);
+        }
+    });
+
+    let ui_weak = ui.as_weak();
+    let snap_rm = Rc::clone(&snapshot);
+    ui.on_reduce_motion_toggled(move |v| {
+        if let Some(ui) = ui_weak.upgrade() {
+            let mut snap = snap_rm.borrow_mut();
+            snap.reduce_motion = v;
             apply(&ui, &snap);
         }
     });

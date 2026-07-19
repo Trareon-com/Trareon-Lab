@@ -47,6 +47,7 @@ export component LabStatusBar inherits Rectangle {
     callback toggle-log-clicked();
     callback toggle-inspector-clicked();
     callback cancel-progress-clicked();
+    callback prefs-clicked();
 
     height: Theme.status-height;
     background: Theme.status-bar-bg;
@@ -135,7 +136,7 @@ export component LabStatusBar inherits Rectangle {
                     mouse-cursor: pointer;
                     clicked => { root.cancel-progress-clicked(); }
                     Text {
-                        text: "Cancel";
+                        text: Strings.cancel;
                         color: Theme.text-secondary;
                         font-size: 10px;
                         horizontal-alignment: center;
@@ -166,6 +167,11 @@ export component LabStatusBar inherits Rectangle {
                 label: Strings.toggle-inspector;
                 active: root.inspector-open;
                 clicked => { root.toggle-inspector-clicked(); }
+            }
+            ToggleChip {
+                label: Strings.prefs;
+                active: false;
+                clicked => { root.prefs-clicked(); }
             }
         }
     }

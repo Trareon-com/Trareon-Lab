@@ -9,6 +9,7 @@ export component BookmarksScreen inherits Rectangle {
     in-out property <[string]> finding-uuids;
     in-out property <int> bookmark-count;
     callback navigate-report();
+    callback go-evidence-clicked();
 
     background: transparent;
     property <bool> empty: finding-claims.length == 0 && bookmark-count == 0;
@@ -23,6 +24,9 @@ export component BookmarksScreen inherits Rectangle {
         EmptyState {
             title: Strings.empty-no-bookmarks;
             body: Strings.empty-hint-bookmarks;
+            show-cta: true;
+            cta-label: Strings.go-evidence;
+            cta-clicked => { root.go-evidence-clicked(); }
             vertical-stretch: 1;
         }
     }
@@ -36,15 +40,12 @@ export component BookmarksScreen inherits Rectangle {
             VerticalLayout {
                 padding: 14px;
                 spacing: 10px;
-                HorizontalLayout {
-                    Text {
-                        text: Strings.status-bookmarks + " · " + root.bookmark-count;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        font-weight: 800;
-                        letter-spacing: 0.5px;
-                        horizontal-stretch: 1;
-                    }
+                Text {
+                    text: Strings.status-bookmarks + " · " + root.bookmark-count;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 0.5px;
                 }
                 Flickable {
                     vertical-stretch: 1;
@@ -95,7 +96,13 @@ export component BookmarksScreen inherits Rectangle {
                     font-weight: 800;
                     letter-spacing: 0.5px;
                 }
-                Text {
+                if root.selected-claim == "": Text {
+                    text: Strings.claim-select-hint;
+                    color: Theme.text-secondary;
+                    font-size: 12px;
+                    wrap: word-wrap;
+                }
+                if root.selected-claim != "": Text {
                     text: Strings.work-product-hint;
                     color: Theme.text-secondary;
                     font-size: 12px;
@@ -118,6 +125,7 @@ export component BookmarksScreen inherits Rectangle {
                 LabButton {
                     primary: true;
                     prominent: true;
+                    enabled: root.selected-claim != "";
                     label: Strings.go-report;
                     clicked => { root.navigate-report(); }
                 }

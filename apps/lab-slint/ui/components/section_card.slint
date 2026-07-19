@@ -1,5 +1,6 @@
 import { Theme } from "../theme.slint";
 
+/// Titled panel — same elevation family as PanelCard.
 export component SectionCard inherits Rectangle {
     in-out property <string> title: "";
     in-out property <bool> show-title: true;
@@ -7,7 +8,10 @@ export component SectionCard inherits Rectangle {
     background: Theme.surface;
     border-width: 1px;
     border-color: Theme.border;
-    border-radius: 8px;
+    border-radius: Theme.panel-radius;
+    drop-shadow-blur: 10px;
+    drop-shadow-color: Theme.shadow;
+    drop-shadow-offset-y: 2px;
     horizontal-stretch: 1;
     vertical-stretch: 1;
     clip: true;
@@ -19,6 +23,7 @@ export component SectionCard inherits Rectangle {
         if root.show-title: Text {
             text: root.title;
             color: Theme.text-primary;
+            font-family: Theme.font-ui;
             font-size: 13px;
             font-weight: 700;
         }

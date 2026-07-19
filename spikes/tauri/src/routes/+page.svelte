@@ -98,8 +98,9 @@
 
 <main class="wrap">
   <header>
-    <h1>Trareon Lab Gate A — C-TAURI</h1>
-    <p class="sub">Tauri 2 + Svelte 5 · Rust owns case logic · webview is presentation only</p>
+    <p class="brand">TRAREON <span>|</span> LAB</p>
+    <h1>Gate A — C-TAURI spike</h1>
+    <p class="sub">Spike only · Tauri 2 + Svelte 5 · copper shell tokens match Lab Slint · not the shipping UI</p>
   </header>
 
   <section class="toolbar" aria-label="Case actions">
@@ -152,9 +153,17 @@
 
 <style>
   :root {
-    color: #142019;
-    background: #e8f0ea;
-    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    --canvas: #f4f6f8;
+    --surface: #ffffff;
+    --border: #d8dde3;
+    --text: #1e2a36;
+    --mute: #5f6f7f;
+    --copper: #af622e;
+    --copper-muted: #fff4ec;
+    --shadow: #00000018;
+    color: var(--text);
+    background: var(--canvas);
+    font-family: Inter, "Segoe UI", sans-serif;
   }
   .wrap {
     margin: 0;
@@ -162,14 +171,25 @@
     min-height: 100vh;
     box-sizing: border-box;
   }
+  .brand {
+    margin: 0 0 0.35rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--mute);
+  }
+  .brand span {
+    color: var(--copper);
+  }
   h1 {
     margin: 0;
-    font-size: 1.35rem;
+    font-size: 1.25rem;
+    font-weight: 800;
   }
   .sub {
     margin: 0.25rem 0 1rem;
-    color: #3d5244;
-    font-size: 0.9rem;
+    color: var(--mute);
+    font-size: 0.85rem;
   }
   .toolbar {
     display: flex;
@@ -183,32 +203,36 @@
     flex-direction: column;
     font-size: 0.75rem;
     gap: 0.2rem;
+    color: var(--mute);
+    font-weight: 600;
   }
   input,
   button {
     font: inherit;
     padding: 0.45rem 0.7rem;
-    border: 1px solid #6a8572;
-    border-radius: 4px;
-    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
   }
   button {
     cursor: pointer;
-    background: #1f4d36;
+    background: var(--copper);
     color: #fff;
-    border-color: #1f4d36;
+    border-color: var(--copper);
+    font-weight: 700;
   }
   button:focus-visible,
   input:focus-visible,
   tr:focus-visible {
-    outline: 2px solid #0b6e4f;
+    outline: 2px solid #c96a38;
     outline-offset: 2px;
   }
   .status {
     margin: 0 0 0.75rem;
     padding: 0.5rem 0.65rem;
-    background: #d7e6db;
-    border-left: 3px solid #1f4d36;
+    background: var(--copper-muted);
+    border-left: 3px solid var(--copper);
+    border-radius: 0 6px 6px 0;
   }
   .panes {
     display: grid;
@@ -218,8 +242,10 @@
   }
   .table {
     overflow: auto;
-    background: #fff;
-    border: 1px solid #9bb3a4;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px var(--shadow);
   }
   table {
     width: 100%;
@@ -230,25 +256,32 @@
   td {
     text-align: left;
     padding: 0.35rem 0.5rem;
-    border-bottom: 1px solid #d5e2d9;
+    border-bottom: 1px solid var(--border);
   }
   tr.selected {
-    background: #c5ddcf;
+    background: var(--copper-muted);
   }
   .detail {
-    background: #fff;
-    border: 1px solid #9bb3a4;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px var(--shadow);
     padding: 0.75rem;
   }
   .detail h2 {
     margin: 0 0 0.5rem;
-    font-size: 1rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--mute);
+    text-transform: uppercase;
   }
   pre {
     white-space: pre-wrap;
     word-break: break-word;
     margin: 0;
     font-size: 0.85rem;
+    font-family: ui-monospace, monospace;
   }
   @media (max-width: 800px) {
     .panes {

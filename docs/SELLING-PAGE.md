@@ -5,7 +5,19 @@
 
 ## Features
 
-Offline case examination, `.fsnap` import, disk raw ingest, FS browsing, Windows/macOS/Linux artifact subsets, bookmarks, signed offline share packs, timeline, draft/sealed reports.
+Offline examination workbench (ASCII copper shell):
+
+- **Case home** — open/create case, workflow guide, recent cases, Quick Verify (ephemeral)
+- **Evidence** — file list with pagination, integrity badges, hex inspector, carving
+- **Search** — artifact hits, YARA / hash-set panels, bookmark from selection
+- **Timeline** — Plaso/Hayabusa CSV import, filter + timezone readout
+- **Bookmarks → Report** — claim queue, finalize blockers / SoD, multi-format export
+- **LAB tools** — Artifacts, Graph (Find Related edges), Runs compare, Transfer (Ed25519 packages), Capabilities matrix
+- Offline-first: `.fsnap` / raw disk ingest, FS browsing, Windows/macOS/Linux artifact subsets
+
+## Screenshots
+
+See `docs/media/feature-*.png` (home, evidence, search, timeline, bookmarks, report, artifacts, graph, runs, transfer, capabilities, about, hex, palette).
 
 ## Limits
 

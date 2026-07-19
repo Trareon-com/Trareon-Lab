@@ -2,7 +2,7 @@ import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
 import { LabButton } from "../components/lab_button.slint";
 import { EmptyState } from "../components/empty_state.slint";
-import { SectionCard } from "../components/section_card.slint";
+import { PanelCard } from "../components/panel_card.slint";
 
 /// Full-width hex pop-out — same pipeline as Inspector Hex tab.
 export component HexScreen inherits Rectangle {
@@ -17,7 +17,7 @@ export component HexScreen inherits Rectangle {
 
     if !root.has-selection: EmptyState {
         title: Strings.hex-title;
-        body: "Select a file in Evidence — hex uses the same reader as the Inspector.";
+        body: Strings.hex-empty-body;
         show-cta: true;
         cta-label: Strings.go-evidence;
         cta-clicked => { root.open-evidence-clicked(); }
@@ -30,14 +30,15 @@ export component HexScreen inherits Rectangle {
             spacing: 8px;
             Text {
                 text: Strings.hex-title;
-                color: Theme.text-primary;
-                font-size: 14px;
-                font-weight: 700;
+                color: Theme.text-secondary;
+                font-size: 11px;
+                font-weight: 800;
+                letter-spacing: 0.5px;
                 vertical-alignment: center;
                 horizontal-stretch: 1;
             }
-            LabButton { primary: false; label: "◀ Prev"; clicked => { root.prev-clicked(); } }
-            LabButton { primary: false; label: "Next ▶"; clicked => { root.next-clicked(); } }
+            LabButton { primary: false; label: Strings.hex-prev; clicked => { root.prev-clicked(); } }
+            LabButton { primary: false; label: Strings.hex-next; clicked => { root.next-clicked(); } }
         }
         Text {
             text: root.hex-status;
@@ -45,18 +46,22 @@ export component HexScreen inherits Rectangle {
             font-size: 12px;
             wrap: word-wrap;
         }
-        SectionCard {
-            show-title: false;
+        PanelCard {
             vertical-stretch: 1;
-            Flickable {
-                viewport-width: parent.width;
-                VerticalLayout {
-                    spacing: 1px;
-                    for line in root.hex-lines: Text {
-                        text: line;
-                        color: Theme.mono-fg;
-                        font-family: "monospace";
-                        font-size: 11px;
+            VerticalLayout {
+                padding: 12px;
+                Flickable {
+                    vertical-stretch: 1;
+                    viewport-width: parent.width - 24px;
+                    VerticalLayout {
+                        spacing: 1px;
+                        width: parent.width - 24px;
+                        for line in root.hex-lines: Text {
+                            text: line;
+                            color: Theme.mono-fg;
+                            font-family: "monospace";
+                            font-size: 11px;
+                        }
                     }
                 }
             }

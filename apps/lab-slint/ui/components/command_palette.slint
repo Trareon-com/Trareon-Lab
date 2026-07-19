@@ -1,6 +1,7 @@
 import { LineEdit } from "std-widgets.slint";
 import { Theme } from "../theme.slint";
 import { Strings } from "../strings.slint";
+import { ListRow } from "list_row.slint";
 
 /// Raycast-style command palette overlay.
 export component CommandPalette inherits Rectangle {
@@ -22,20 +23,25 @@ export component CommandPalette inherits Rectangle {
         y: parent.height * 0.18;
         width: min(520px, parent.width - 48px);
         height: min(360px, parent.height * 0.55);
-        background: Theme.surface-raised;
+        background: Theme.surface;
         border-width: 1px;
         border-color: Theme.border;
-        border-radius: 6px;
+        border-radius: Theme.panel-radius;
+        drop-shadow-blur: 16px;
+        drop-shadow-color: Theme.shadow;
+        drop-shadow-offset-y: 4px;
+        clip: true;
 
         VerticalLayout {
-            padding: 8px;
-            spacing: 6px;
+            padding: 12px;
+            spacing: 8px;
 
             Text {
                 text: Strings.command-palette;
                 color: Theme.text-secondary;
                 font-size: 11px;
-                font-weight: 700;
+                font-weight: 800;
+                letter-spacing: 0.5px;
             }
 
             LineEdit {
@@ -49,30 +55,26 @@ export component CommandPalette inherits Rectangle {
                 }
             }
 
-            Flickable {
+            if root.commands.length == 0: Text {
+                text: Strings.command-hint;
+                color: Theme.icon-muted;
+                font-size: 12px;
+                horizontal-stretch: 1;
                 vertical-stretch: 1;
-                viewport-width: parent.width - 16px;
+                vertical-alignment: center;
+                horizontal-alignment: center;
+            }
+
+            if root.commands.length > 0: Flickable {
+                vertical-stretch: 1;
+                viewport-width: parent.width - 24px;
                 VerticalLayout {
                     spacing: 2px;
-                    width: parent.width - 16px;
-                    for cmd[index] in root.commands: Rectangle {
-                        height: 28px;
-                        border-radius: 4px;
-                        background: index == root.selected-index ? Theme.row-hover : transparent;
-                        HorizontalLayout {
-                            padding-left: 8px;
-                            padding-right: 8px;
-                            Text {
-                                text: cmd;
-                                color: Theme.text-primary;
-                                font-size: 12px;
-                                vertical-alignment: center;
-                                overflow: elide;
-                            }
-                        }
-                        TouchArea {
-                            clicked => { root.command-activated(cmd); }
-                        }
+                    width: parent.width - 24px;
+                    for cmd[index] in root.commands: ListRow {
+                        primary: cmd;
+                        selected: index == root.selected-index;
+                        clicked => { root.command-activated(cmd); }
                     }
                 }
             }

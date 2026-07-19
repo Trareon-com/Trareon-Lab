@@ -69,15 +69,27 @@ export component EvidenceScreen inherits Rectangle {
     in-out property <int> selected-file-index: -1;
     in-out property <string> filter-text: "";
     in-out property <[string]> carve-hit-lines: [];
+    in-out property <int> list-total: 0;
+    in-out property <int> list-offset: 0;
+    in-out property <int> list-page-size: 200;
     callback import-evidence-clicked();
     callback evidence-row-selected(int);
     callback run-carving-clicked();
     callback bookmark-clicked();
     callback open-hex-clicked();
+    callback page-prev-clicked();
+    callback page-next-clicked();
+    callback copy-path-clicked();
 
     background: transparent;
     property <bool> has-files: evidence-names.length > 0;
     property <bool> has-selection: selected-file-index >= 0 && selected-file-index < evidence-names.length;
+    property <int> page-from: root.list-total == 0 ? 0 : root.list-offset + 1;
+    property <int> page-to: root.list-total == 0 ? 0
+        : (root.list-offset + root.list-page-size) < root.list-total
+            ? (root.list-offset + root.list-page-size) : root.list-total;
+    property <bool> can-page-prev: root.list-offset > 0;
+    property <bool> can-page-next: root.list-offset + root.list-page-size < root.list-total;
     property <string> sel-name: root.has-selection ? root.evidence-names[root.selected-file-index] : "";
     property <string> sel-path: root.has-selection && root.selected-file-index < root.evidence-paths.length
         ? root.evidence-paths[root.selected-file-index] : "";
@@ -123,12 +135,35 @@ export component EvidenceScreen inherits Rectangle {
                         clicked => { root.run-carving-clicked(); }
                     }
                 }
-                Text {
-                    text: Strings.files-title;
-                    color: Theme.text-secondary;
-                    font-size: 11px;
-                    font-weight: 800;
-                    letter-spacing: 0.5px;
+                HorizontalLayout {
+                    spacing: 8px;
+                    Text {
+                        text: Strings.files-title;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                        vertical-alignment: center;
+                        horizontal-stretch: 1;
+                    }
+                    Text {
+                        text: Strings.page-showing + " \{root.page-from}–\{root.page-to} " + Strings.page-of + " \{root.list-total}";
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        vertical-alignment: center;
+                    }
+                    LabButton {
+                        primary: false;
+                        enabled: root.can-page-prev;
+                        label: Strings.page-prev;
+                        clicked => { root.page-prev-clicked(); }
+                    }
+                    LabButton {
+                        primary: false;
+                        enabled: root.can-page-next;
+                        label: Strings.page-next;
+                        clicked => { root.page-next-clicked(); }
+                    }
                 }
                 Flickable {
                     vertical-stretch: 1;
@@ -177,11 +212,10 @@ export component EvidenceScreen inherits Rectangle {
                     font-weight: 800;
                     letter-spacing: 0.5px;
                 }
-                if !root.has-selection: Text {
-                    text: Strings.empty-no-selection;
-                    color: Theme.text-secondary;
-                    font-size: 12px;
-                    wrap: word-wrap;
+                if !root.has-selection: EmptyState {
+                    title: Strings.empty-no-selection;
+                    body: Strings.empty-hint-evidence;
+                    vertical-stretch: 1;
                 }
                 if root.has-selection: VerticalLayout {
                     spacing: 8px;
@@ -223,8 +257,13 @@ export component EvidenceScreen inherits Rectangle {
                     }
                     LabButton {
                         primary: false;
-                        label: Strings.hex-title;
+                        label: Strings.open-hex;
                         clicked => { root.open-hex-clicked(); }
+                    }
+                    if root.sel-path != "": LabButton {
+                        primary: false;
+                        label: Strings.copy-path;
+                        clicked => { root.copy-path-clicked(); }
                     }
                 }
                 Rectangle { vertical-stretch: 1; }

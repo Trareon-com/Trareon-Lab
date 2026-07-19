@@ -89,5 +89,7 @@ fn carve_refuses_oversize_image() {
     let err = carver.carve(&mut img, &mut NullProgress).unwrap_err();
     let msg = format!("{err:?}");
     assert!(msg.contains("carve refused") || msg.contains("Limited"));
-    assert!(DEFAULT_MAX_CARVE_BYTES >= 64 * 1024 * 1024);
+    const {
+        assert!(DEFAULT_MAX_CARVE_BYTES >= 64 * 1024 * 1024);
+    };
 }

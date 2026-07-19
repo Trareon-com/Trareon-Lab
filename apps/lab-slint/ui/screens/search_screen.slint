@@ -4,26 +4,32 @@ import { Strings } from "../strings.slint";
 import { EmptyState } from "../components/empty_state.slint";
 import { LabButton } from "../components/lab_button.slint";
 import { PanelCard } from "../components/panel_card.slint";
+import { ListRow } from "../components/list_row.slint";
 
 export component SearchScreen inherits Rectangle {
     in-out property <string> search-query;
     in-out property <[string]> search-results;
-    in-out property <[string]> artifact-kinds;
-    in-out property <[string]> artifact-summaries;
-    in-out property <[string]> artifact-provenances;
+    in-out property <[string]> artifact-kinds: [];
+    in-out property <[string]> artifact-summaries: [];
+    in-out property <[string]> artifact-provenances: [];
     in-out property <bool> search-attempted: false;
     in-out property <string> search-coverage-label: "";
     in-out property <[string]> yara-hit-lines: [];
     in-out property <[string]> hashset-hit-lines: [];
+    in-out property <string> hashset-pin: "";
+    in-out property <int> selected-search-index: -1;
     callback search-submitted();
     callback query-changed(string);
     callback open-in-evidence-clicked();
     callback bookmark-hit-clicked();
+    callback search-row-selected(int);
 
     background: transparent;
     property <bool> use-artifacts: artifact-kinds.length > 0;
     property <int> hit-count: use-artifacts ? artifact-kinds.length : search-results.length;
     property <bool> show-empty: search-attempted && hit-count == 0;
+    property <bool> show-idle: !search-attempted && hit-count == 0;
+    property <bool> has-selection: selected-search-index >= 0 && selected-search-index < hit-count;
 
     HorizontalLayout {
         padding: 12px;
@@ -65,35 +71,48 @@ export component SearchScreen inherits Rectangle {
                     font-size: 11px;
                     wrap: word-wrap;
                 }
-                if root.yara-hit-lines.length > 0: VerticalLayout {
-                    spacing: 2px;
-                    Text {
-                        text: Strings.yara-hits;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        font-weight: 700;
-                    }
-                    for line in root.yara-hit-lines: Text {
-                        text: line;
-                        color: Theme.mono-fg;
-                        font-family: "monospace";
-                        font-size: 11px;
-                    }
+                if root.hashset-pin != "": Text {
+                    text: Strings.hashset-pin-label + ": " + root.hashset-pin;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-family: "monospace";
+                    wrap: word-wrap;
                 }
-                if root.hashset-hit-lines.length > 0: VerticalLayout {
-                    spacing: 2px;
-                    Text {
-                        text: Strings.hashset-hits;
-                        color: Theme.text-secondary;
-                        font-size: 11px;
-                        font-weight: 700;
-                    }
-                    for line in root.hashset-hit-lines: Text {
-                        text: line;
-                        color: Theme.mono-fg;
-                        font-family: "monospace";
-                        font-size: 11px;
-                    }
+                Text {
+                    text: Strings.yara-hits;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 700;
+                }
+                if root.yara-hit-lines.length == 0: Text {
+                    text: Strings.yara-empty;
+                    color: Theme.icon-muted;
+                    font-size: 11px;
+                    wrap: word-wrap;
+                }
+                for line in root.yara-hit-lines: Text {
+                    text: line;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
+                }
+                Text {
+                    text: Strings.hashset-hits;
+                    color: Theme.text-secondary;
+                    font-size: 11px;
+                    font-weight: 700;
+                }
+                if root.hashset-hit-lines.length == 0: Text {
+                    text: Strings.hashset-empty;
+                    color: Theme.icon-muted;
+                    font-size: 11px;
+                    wrap: word-wrap;
+                }
+                for line in root.hashset-hit-lines: Text {
+                    text: line;
+                    color: Theme.mono-fg;
+                    font-family: "monospace";
+                    font-size: 11px;
                 }
                 Rectangle { vertical-stretch: 1; }
             }
@@ -125,21 +144,28 @@ export component SearchScreen inherits Rectangle {
                     spacing: 8px;
                     LabButton {
                         primary: false;
+                        enabled: root.has-selection;
                         label: Strings.open-in-evidence;
                         clicked => { root.open-in-evidence-clicked(); }
                     }
                     LabButton {
                         primary: true;
+                        enabled: root.has-selection;
                         label: Strings.add-bookmark;
                         clicked => { root.bookmark-hit-clicked(); }
                     }
+                }
+                if show-idle: EmptyState {
+                    title: Strings.search-idle-title;
+                    body: Strings.empty-hint-search-idle;
+                    vertical-stretch: 1;
                 }
                 if show-empty: EmptyState {
                     title: Strings.empty-no-search;
                     body: Strings.empty-hint-search;
                     vertical-stretch: 1;
                 }
-                if !show-empty: Flickable {
+                if !show-idle && !show-empty: Flickable {
                     vertical-stretch: 1;
                     viewport-width: parent.width - 28px;
                     VerticalLayout {
@@ -147,49 +173,26 @@ export component SearchScreen inherits Rectangle {
                         width: parent.width - 28px;
                         if root.use-artifacts: VerticalLayout {
                             spacing: 2px;
-                            for kind[index] in root.artifact-kinds: Rectangle {
-                                height: 36px;
-                                border-radius: Theme.chip-radius;
-                                HorizontalLayout {
-                                    padding-left: 8px;
-                                    padding-right: 8px;
-                                    spacing: 8px;
-                                    Text {
-                                        text: kind;
-                                        color: Theme.accent;
-                                        font-size: 11px;
-                                        font-weight: 700;
-                                        width: 100px;
-                                        vertical-alignment: center;
-                                        overflow: elide;
-                                    }
-                                    Text {
-                                        text: index < root.artifact-summaries.length ? root.artifact-summaries[index] : "";
-                                        color: Theme.text-primary;
-                                        font-size: 12px;
-                                        horizontal-stretch: 1;
-                                        vertical-alignment: center;
-                                        overflow: elide;
-                                    }
-                                    Text {
-                                        text: index < root.artifact-provenances.length ? root.artifact-provenances[index] : "";
-                                        color: Theme.mono-fg;
-                                        font-family: "monospace";
-                                        font-size: 10px;
-                                        width: 120px;
-                                        vertical-alignment: center;
-                                        overflow: elide;
-                                    }
+                            for kind[index] in root.artifact-kinds: ListRow {
+                                leading: kind;
+                                primary: index < root.artifact-summaries.length ? root.artifact-summaries[index] : "";
+                                trailing: index < root.artifact-provenances.length ? root.artifact-provenances[index] : "";
+                                selected: root.selected-search-index == index;
+                                clicked => {
+                                    root.selected-search-index = index;
+                                    root.search-row-selected(index);
                                 }
                             }
                         }
                         if !root.use-artifacts: VerticalLayout {
                             spacing: 2px;
-                            for row in root.search-results: Text {
-                                text: row;
-                                color: Theme.text-primary;
-                                font-size: 12px;
-                                overflow: elide;
+                            for row[index] in root.search-results: ListRow {
+                                primary: row;
+                                selected: root.selected-search-index == index;
+                                clicked => {
+                                    root.selected-search-index = index;
+                                    root.search-row-selected(index);
+                                }
                             }
                         }
                     }

@@ -13,8 +13,11 @@ export component ReportScreen inherits Rectangle {
     in-out property <bool> report-finalizable: false;
     in-out property <[string]> report-blockers: [];
     in-out property <string> export-status: "";
+    in-out property <[string]> export-format-labels: [];
+    in-out property <int> selected-export-format: 0;
     callback export-clicked();
     callback transfer-export-clicked();
+    callback export-format-selected(int);
 
     background: transparent;
     property <bool> empty: finding-claims.length == 0;
@@ -65,6 +68,40 @@ export component ReportScreen inherits Rectangle {
                         color: Theme.danger;
                         font-size: 12px;
                         wrap: word-wrap;
+                    }
+                }
+                if root.export-format-labels.length > 0: VerticalLayout {
+                    spacing: 6px;
+                    Text {
+                        text: Strings.export-format;
+                        color: Theme.text-secondary;
+                        font-size: 11px;
+                        font-weight: 800;
+                        letter-spacing: 0.5px;
+                    }
+                    for fmt[index] in root.export-format-labels: Rectangle {
+                        height: 28px;
+                        border-radius: Theme.chip-radius;
+                        border-width: 1px;
+                        border-color: root.selected-export-format == index ? Theme.accent : Theme.border;
+                        background: root.selected-export-format == index ? Theme.accent-muted : Theme.surface;
+                        HorizontalLayout {
+                            padding-left: 10px;
+                            padding-right: 10px;
+                            Text {
+                                text: fmt;
+                                color: Theme.text-primary;
+                                font-size: 12px;
+                                font-weight: root.selected-export-format == index ? 700 : 500;
+                                vertical-alignment: center;
+                            }
+                        }
+                        TouchArea {
+                            clicked => {
+                                root.selected-export-format = index;
+                                root.export-format-selected(index);
+                            }
+                        }
                     }
                 }
                 if root.export-status != "": Text {
