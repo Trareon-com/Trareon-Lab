@@ -250,12 +250,7 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.set_timeline_tz(snap.timeline_tz.clone().into());
         ui.set_timeline_filter(snap.timeline_filter_query.clone().into());
         ui.set_selected_search_index(snap.selected_search_index.map(|i| i as i32).unwrap_or(-1));
-        ui.set_hashset_pin(
-            snap.hashset_pin
-                .clone()
-                .unwrap_or_default()
-                .into(),
-        );
+        ui.set_hashset_pin(snap.hashset_pin.clone().unwrap_or_default().into());
         let export_fmts: Vec<SharedString> = snap
             .export_format_labels
             .iter()
@@ -653,10 +648,8 @@ fn main() -> Result<(), slint::PlatformError> {
             if let Some(sess) = sess_ex.borrow().as_ref() {
                 match sess.export_formats(lab_core::ExportMode::Draft) {
                     Ok(parts) => {
-                        snap.export_format_labels = parts
-                            .iter()
-                            .map(|(k, d)| format!("{k} ({d})"))
-                            .collect();
+                        snap.export_format_labels =
+                            parts.iter().map(|(k, d)| format!("{k} ({d})")).collect();
                         if snap.selected_export_format >= snap.export_format_labels.len() {
                             snap.selected_export_format = 0;
                         }

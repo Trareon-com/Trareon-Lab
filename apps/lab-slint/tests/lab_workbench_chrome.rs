@@ -20,13 +20,7 @@ const WORKFLOW_NAV: &[&str] = &[
     "Bookmarks",
     "Report",
 ];
-const LAB_NAV: &[&str] = &[
-    "Artifacts",
-    "Graph",
-    "Runs",
-    "Transfer",
-    "QuickVerify",
-];
+const LAB_NAV: &[&str] = &["Artifacts", "Graph", "Runs", "Transfer", "QuickVerify"];
 const SUPPORT_NAV: &[&str] = &["Capabilities", "About"];
 
 #[test]
